@@ -45,9 +45,9 @@ var pc_grid_template = [
 var pc_grid = [];
 
 var pc_LEFT = 0;
-var pc_TOP = 1;
+var pc_UP = 1;
 var pc_RIGHT = 2;
-var pc_BOTTOM = 3;
+var pc_DOWN = 3;
 var pc_FPS = 20;
 var pc_FRAMES_PER_CELL = 5;
 
@@ -123,7 +123,7 @@ function iterateGame() {
 		// into a wall
 		else if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][Math.floor(1.*pc_pacman_x/pc_FRAMES_PER_CELL)]))
 			pc_pacman_x++;
-	} else if (pc_pacman_direction == pc_TOP) {
+	} else if (pc_pacman_direction == pc_UP) {
 		pc_pacman_y--;
 		// out of the grid
 		if (pc_pacman_y < 0)
@@ -227,7 +227,7 @@ function drawPacMan(canvas, ctx) {
 	ctx.fillStyle = "#777700";
 	if (pc_pacman_direction == pc_LEFT)
 		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI+Math.PI/pacman_mouth, Math.PI-Math.PI/pacman_mouth,false);
-	else if (pc_pacman_direction == pc_TOP)
+	else if (pc_pacman_direction == pc_UP)
 		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, -Math.PI/2+Math.PI/pacman_mouth, -Math.PI/2-Math.PI/pacman_mouth,false);
 	else if (pc_pacman_direction == pc_RIGHT)
 		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI/pacman_mouth, -Math.PI/pacman_mouth,false);
