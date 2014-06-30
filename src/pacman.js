@@ -67,10 +67,11 @@ function initGame() {
 	// Already launched?
 	if (pc_pacman_x != -1 || pc_pacman_y != -1)
 		return;
+	pc_pacman_direction = pc_LEFT;
 
 	// Copy the grid into local grid
 	pc_grid = pc_grid_template.slice();
-	
+
 	// Find the starting point
 	var height = pc_grid.length;
 	var width = pc_grid[0].length;
