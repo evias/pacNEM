@@ -58,6 +58,7 @@ var pc_FRAMES_PER_CELL = 5;
 var pc_pacman_x = -1;
 var pc_pacman_y = -1;
 var pc_pacman_direction = pc_LEFT;
+var pc_current_frame = -1;
 
 /**
  * Initialize the game
@@ -65,9 +66,10 @@ var pc_pacman_direction = pc_LEFT;
 
 function initGame() {
 	// Already launched?
-	if (pc_pacman_x != -1 || pc_pacman_y != -1)
+	if (pc_pacman_x != -1 || pc_pacman_y != -1 || pc_current_frame != -1)
 		return;
 	pc_pacman_direction = pc_LEFT;
+	pc_current_frame = 0;
 
 	// Copy the grid into local grid
 	pc_grid = pc_grid_template.slice();
@@ -111,7 +113,8 @@ function iterateGame() {
 	// Draw game
 	drawEmptyGameBoard(canvas, ctx);
 	drawPacMan(canvas, ctx);
-
+	
+	pc_current_frame++;
 	setTimeout(iterateGame, 1000/pc_FPS);
 }
 
@@ -171,17 +174,18 @@ function drawEmptyGameBoard(canvas, ctx) {
 function drawPacMan(canvas, ctx) {
 	var pacman_px_x = (1.*pc_pacman_x/pc_FRAMES_PER_CELL +.5)*pc_SIZE +5;
 	var pacman_px_y = (1.*pc_pacman_y/pc_FRAMES_PER_CELL +.5)*pc_SIZE +5;
+	var pacman_mouth = pc_current_frame%pc_FRAMES_PER_CELL +3;
 
 	ctx.beginPath();
 	ctx.fillStyle = "#777700";
 	if (pc_pacman_direction == pc_LEFT)
-		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI+Math.PI/7, Math.PI-Math.PI/7,false);
+		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI+Math.PI/pacman_mouth, Math.PI-Math.PI/pacman_mouth,false);
 	else if (pc_pacman_direction == pc_TOP)
-		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, -Math.PI/2+Math.PI/7, -Math.PI/2-Math.PI/7,false);
+		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, -Math.PI/2+Math.PI/pacman_mouth, -Math.PI/2-Math.PI/pacman_mouth,false);
 	else if (pc_pacman_direction == pc_RIGHT)
-		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI/7, -Math.PI/7,false);
+		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI/pacman_mouth, -Math.PI/pacman_mouth,false);
 	else
-		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI/2+Math.PI/7, Math.PI/2+-Math.PI/7,false);
+		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI/2+Math.PI/pacman_mouth, Math.PI/2-Math.PI/pacman_mouth,false);
 	ctx.lineTo(pacman_px_x, pacman_px_y);
 	ctx.fill();
 }
