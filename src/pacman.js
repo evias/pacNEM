@@ -114,6 +114,31 @@ function iterateGame() {
 	var height = pc_grid.length;
 	var width = pc_grid[0].length;
 	
+	// Change of direction
+	// Opposite direction
+	if (pc_pacman_direction == (pc_pacman_next_direction+2)%4)
+		pc_pacman_direction = pc_pacman_next_direction;
+	// Move ended? and possible direction
+	else if (pc_pacman_x%pc_FRAMES_PER_CELL == 0 && pc_pacman_y%pc_FRAMES_PER_CELL == 0) {
+		// Check if possible direction
+		var cell_x = pc_pacman_x/pc_FRAMES_PER_CELL;
+		var cell_y = pc_pacman_y/pc_FRAMES_PER_CELL;
+
+		if (pc_pacman_next_direction == pc_LEFT) {
+		       if ((cell_x > 0 && !isForbiddenForPacMan(pc_grid[cell_y][cell_x-1]) || (cell_x == 0 && !isForbiddenForPacMan(pc_grid[cell_y][width-1]))))
+			       pc_pacman_direction = pc_pacman_next_direction;
+		} else if (pc_pacman_next_direction == pc_UP) {
+		       if ((cell_y > 0 && !isForbiddenForPacMan(pc_grid[cell_y-1][cell_x]) || (cell_y == 0 && !isForbiddenForPacMan(pc_grid[height-1][cell_x]))))
+			       pc_pacman_direction = pc_pacman_next_direction;
+		} else if (pc_pacman_next_direction == pc_RIGHT) {
+		       if ((cell_x < width-1 && !isForbiddenForPacMan(pc_grid[cell_y][cell_x+1]) || (cell_x == width-1 && !isForbiddenForPacMan(pc_grid[cell_y][0]))))
+			       pc_pacman_direction = pc_pacman_next_direction;
+		} else {
+		       if ((cell_y < height-1 && !isForbiddenForPacMan(pc_grid[cell_y+1][cell_x]) || (cell_y == height-1 && !isForbiddenForPacMan(pc_grid[0][cell_x]))))
+			       pc_pacman_direction = pc_pacman_next_direction;
+		}
+	}
+	
 	// Move characters
 	if (pc_pacman_direction == pc_LEFT) {
 		pc_pacman_x--;
