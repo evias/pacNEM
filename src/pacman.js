@@ -48,7 +48,7 @@ var pc_LEFT = 0;
 var pc_TOP = 1;
 var pc_RIGHT = 2;
 var pc_BOTTOM = 3;
-var pc_FPS = 10;
+var pc_FPS = 20;
 var pc_FRAMES_PER_CELL = 5;
 
 /**
@@ -58,6 +58,7 @@ var pc_FRAMES_PER_CELL = 5;
 var pc_pacman_x = -1;
 var pc_pacman_y = -1;
 var pc_pacman_direction = pc_LEFT;
+var pc_pacman_next_direction = pc_LEFT;
 var pc_current_frame = -1;
 
 /**
@@ -69,6 +70,7 @@ function initGame() {
 	if (pc_pacman_x != -1 || pc_pacman_y != -1 || pc_current_frame != -1)
 		return;
 	pc_pacman_direction = pc_LEFT;
+	pc_pacman_next_direction = pc_LEFT;
 	pc_current_frame = 0;
 
 	// Copy the grid into local grid
@@ -109,13 +111,58 @@ function iterateGame() {
 	if (! canvas.getContext)
 		return;
 	var ctx = canvas.getContext('2d');
+	var height = pc_grid.length;
+	var width = pc_grid[0].length;
 	
+	// Move characters
+	if (pc_pacman_direction == pc_LEFT) {
+		pc_pacman_x--;
+		// out of the grid
+		if (pc_pacman_x < 0)
+			pc_pacman_x = (width -1) * pc_FRAMES_PER_CELL;
+		// into a wall
+		else if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][Math.floor(1.*pc_pacman_x/pc_FRAMES_PER_CELL)]))
+			pc_pacman_x++;
+	} else if (pc_pacman_direction == pc_TOP) {
+		pc_pacman_y--;
+		// out of the grid
+		if (pc_pacman_y < 0)
+			pc_pacman_y = (height -1) * pc_FRAMES_PER_CELL;
+		// into a wall
+		else if (isForbiddenForPacMan(pc_grid[Math.floor(1.*pc_pacman_y/pc_FRAMES_PER_CELL)][pc_pacman_x/pc_FRAMES_PER_CELL]))
+			pc_pacman_y++;
+	} else if (pc_pacman_direction == pc_RIGHT) {
+		pc_pacman_x++;
+		// out of the grid
+		if (pc_pacman_x > (width -1) * pc_FRAMES_PER_CELL)
+			pc_pacman_x = 0;
+		// into a wall
+		else if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][Math.ceil(1.*pc_pacman_x/pc_FRAMES_PER_CELL)]))
+			pc_pacman_x--;
+	} else {
+		pc_pacman_y++;
+		// out of the grid
+		if (pc_pacman_y > (height -1) * pc_FRAMES_PER_CELL)
+			pc_pacman_y = 0;
+		// into a wall
+		else if (isForbiddenForPacMan(pc_grid[Math.ceil(1.*pc_pacman_y/pc_FRAMES_PER_CELL)][pc_pacman_x/pc_FRAMES_PER_CELL]))
+			pc_pacman_y--;
+	}
+
 	// Draw game
 	drawEmptyGameBoard(canvas, ctx);
 	drawPacMan(canvas, ctx);
 	
 	pc_current_frame++;
 	setTimeout(iterateGame, 1000/pc_FPS);
+}
+
+/**
+ * Is forbidden for PacMan
+ */
+
+function isForbiddenForPacMan(cell_type) {
+	return cell_type == "#" || cell_type == "g" || cell_type == "_";
 }
 
 /**
