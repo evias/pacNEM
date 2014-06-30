@@ -143,34 +143,42 @@ function iterateGame() {
 	if (pc_pacman_direction == pc_LEFT) {
 		pc_pacman_x--;
 		// out of the grid
-		if (pc_pacman_x < 0)
+		if (pc_pacman_x < 0) {
 			pc_pacman_x = (width -1) * pc_FRAMES_PER_CELL;
+			if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][pc_pacman_x/pc_FRAMES_PER_CELL]))
+				pc_pacman_x = 0;
 		// into a wall
-		else if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][Math.floor(1.*pc_pacman_x/pc_FRAMES_PER_CELL)]))
+		} else if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][Math.floor(1.*pc_pacman_x/pc_FRAMES_PER_CELL)]))
 			pc_pacman_x++;
 	} else if (pc_pacman_direction == pc_UP) {
 		pc_pacman_y--;
 		// out of the grid
-		if (pc_pacman_y < 0)
+		if (pc_pacman_y < 0) {
 			pc_pacman_y = (height -1) * pc_FRAMES_PER_CELL;
+			if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][pc_pacman_x/pc_FRAMES_PER_CELL]))
+				pc_pacman_y = 0;
 		// into a wall
-		else if (isForbiddenForPacMan(pc_grid[Math.floor(1.*pc_pacman_y/pc_FRAMES_PER_CELL)][pc_pacman_x/pc_FRAMES_PER_CELL]))
+		} else if (isForbiddenForPacMan(pc_grid[Math.floor(1.*pc_pacman_y/pc_FRAMES_PER_CELL)][pc_pacman_x/pc_FRAMES_PER_CELL]))
 			pc_pacman_y++;
 	} else if (pc_pacman_direction == pc_RIGHT) {
 		pc_pacman_x++;
 		// out of the grid
-		if (pc_pacman_x > (width -1) * pc_FRAMES_PER_CELL)
+		if (pc_pacman_x > (width -1) * pc_FRAMES_PER_CELL) {
 			pc_pacman_x = 0;
+			if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][pc_pacman_x/pc_FRAMES_PER_CELL]))
+				pc_pacman_x = (width -1) * pc_FRAMES_PER_CELL;
 		// into a wall
-		else if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][Math.ceil(1.*pc_pacman_x/pc_FRAMES_PER_CELL)]))
+		} else if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][Math.ceil(1.*pc_pacman_x/pc_FRAMES_PER_CELL)]))
 			pc_pacman_x--;
 	} else {
 		pc_pacman_y++;
 		// out of the grid
-		if (pc_pacman_y > (height -1) * pc_FRAMES_PER_CELL)
+		if (pc_pacman_y > (height -1) * pc_FRAMES_PER_CELL) {
 			pc_pacman_y = 0;
+			if (isForbiddenForPacMan(pc_grid[pc_pacman_y/pc_FRAMES_PER_CELL][pc_pacman_x/pc_FRAMES_PER_CELL]))
+				pc_pacman_y = (height -1) * pc_FRAMES_PER_CELL;
 		// into a wall
-		else if (isForbiddenForPacMan(pc_grid[Math.ceil(1.*pc_pacman_y/pc_FRAMES_PER_CELL)][pc_pacman_x/pc_FRAMES_PER_CELL]))
+		} else if (isForbiddenForPacMan(pc_grid[Math.ceil(1.*pc_pacman_y/pc_FRAMES_PER_CELL)][pc_pacman_x/pc_FRAMES_PER_CELL]))
 			pc_pacman_y--;
 	}
 
