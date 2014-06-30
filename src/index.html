@@ -1,6 +1,19 @@
 <html>
   <head>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
     <script type="text/javascript" src="./pacman.js"></script>
+    <script type="text/javascript">
+      $(document).keydown(function(e){
+        if (e.keyCode == 37) //left
+          pc_pacman_next_direction = pc_LEFT;
+        else if (e.keyCode == 38) //up
+          pc_pacman_next_direction = pc_TOP;
+        else if (e.keyCode == 39) //right
+          pc_pacman_next_direction = pc_RIGHT;
+        else if (e.keyCode == 40) //down
+          pc_pacman_next_direction = pc_BOTTOM;
+      });
+    </script>
   </head>
   <body>
     <canvas id="myCanvas" height="0" width="0"></canvas>
