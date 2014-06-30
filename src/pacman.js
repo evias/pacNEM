@@ -42,23 +42,92 @@ var pc_grid_template = [
 	"#..........................#",
 	"############################",
 ];
+var pc_grid = [];
 
-function drawEmptyGameBoard(pc_grid) {
-	/**
-	 * Draw the Game Board based on pc_grid
-	 */
+var pc_LEFT = 0;
+var pc_TOP = 1;
+var pc_RIGHT = 2;
+var pc_BOTTOM = 3;
+var pc_FPS = 10;
+var pc_FRAMES_PER_CELL = 5;
 
+/**
+ * User position
+ */
+
+var pc_pacman_x = -1;
+var pc_pacman_y = -1;
+var pc_pacman_direction = pc_LEFT;
+
+/**
+ * Initialize the game
+ */
+
+function initGame() {
+	// Already launched?
+	if (pc_pacman_x != -1 || pc_pacman_y != -1)
+		return;
+
+	// Copy the grid into local grid
+	pc_grid = pc_grid_template.slice();
+	
+	// Find the starting point
+	var height = pc_grid.length;
+	var width = pc_grid[0].length;
+	for (i=0 ; i!=width ; i++) {
+		for (j=0 ; j!=height ; j++) {
+			if (pc_grid[j][i] == 's') {
+				pc_pacman_x = i * pc_FRAMES_PER_CELL;
+				pc_pacman_y = j * pc_FRAMES_PER_CELL;
+			}
+		}
+	}
+	
+	// Resize canvas
+	var canvas = document.getElementById('myCanvas');
+	if (! canvas.getContext)
+		return;
+	var ctx = canvas.getContext('2d');
+	var height = pc_grid.length;
+	var width = pc_grid[0].length;
+	canvas.width = width*pc_SIZE +10;
+	canvas.height = height*pc_SIZE +10;
+	
+	// Launch the game
+	iterateGame();
+}
+
+/**
+ * Iterate inside the game
+ */
+
+function iterateGame() {
 	var canvas = document.getElementById('myCanvas');
 	if (! canvas.getContext)
 		return;
 	var ctx = canvas.getContext('2d');
 	
+	// Draw game
+	drawEmptyGameBoard(canvas, ctx);
+	drawPacMan(canvas, ctx);
+
+	setTimeout(iterateGame, 1000/pc_FPS);
+}
+
+/**
+ * Draw an empty game board
+ */
+
+function drawEmptyGameBoard(canvas, ctx) {
+	/**
+	 * Draw the Game Board based on pc_grid
+	 */
+
 	// Retrieve grid dimensions
 	var height = pc_grid.length;
 	var width = pc_grid[0].length;
-	canvas.width = width*pc_SIZE +10;
-	canvas.height = height*pc_SIZE +10;
-
+	
+	// Draw Game Board
 	ctx.beginPath();
 	ctx.fillStyle = "white";
 	ctx.fillRect(0, 0, width*pc_SIZE +10, height*pc_SIZE +10);
@@ -92,4 +161,19 @@ function drawEmptyGameBoard(pc_grid) {
 			}
 		}
 	}
+}
+
+/**
+ * Draw the PacMan
+ */
+
+function drawPacMan(canvas, ctx) {
+	var pacman_px_x = (1.*pc_pacman_x/pc_FRAMES_PER_CELL +.5)*pc_SIZE +5;
+	var pacman_px_y = (1.*pc_pacman_y/pc_FRAMES_PER_CELL +.5)*pc_SIZE +5;
+
+	ctx.beginPath();
+	ctx.fillStyle = "#777700";
+	ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI/7, -Math.PI/7,false);
+	ctx.lineTo(pacman_px_x, pacman_px_y);
+	ctx.fill();
 }
