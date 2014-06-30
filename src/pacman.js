@@ -173,7 +173,14 @@ function drawPacMan(canvas, ctx) {
 
 	ctx.beginPath();
 	ctx.fillStyle = "#777700";
-	ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI/7, -Math.PI/7,false);
+	if (pc_pacman_direction == pc_LEFT)
+		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI+Math.PI/7, Math.PI-Math.PI/7,false);
+	else if (pc_pacman_direction == pc_TOP)
+		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, -Math.PI/2+Math.PI/7, -Math.PI/2-Math.PI/7,false);
+	else if (pc_pacman_direction == pc_RIGHT)
+		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI/7, -Math.PI/7,false);
+	else
+		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI/2+Math.PI/7, Math.PI/2+-Math.PI/7,false);
 	ctx.lineTo(pacman_px_x, pacman_px_y);
 	ctx.fill();
 }
