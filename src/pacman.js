@@ -345,10 +345,17 @@ function initGame() {
 	pc_ghosts_starts_y = new Array();
 
 	// Copy the grid into local grid
-	pc_grid = pc_grid_template.slice();
+	pc_grid = new Array();
 	pc_truefalse_grid_template = new Array();
-	var height = pc_grid.length;
-	var width = pc_grid[0].length;
+	var height = pc_grid_template.length;
+	var width = pc_grid_template[0].length;
+	for (var j=0 ; j!=height ; j++) {
+		var line = new Array();
+		for (var i=0 ; i!=width ; i++) {
+			line.push(pc_grid_template[j][i]);
+		}
+		pc_grid.push(line);
+	}
 	for (var j=0 ; j!=height ; j++) {
 		var line = new Array();
 		for (var i=0 ; i!=width ; i++) {
