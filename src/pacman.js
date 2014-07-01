@@ -23,8 +23,8 @@ var pc_grid_template = [
 	"######.#####.##.#####.######",
 	"######.##..........##.######",
 	"######.##.###__###.##.######",
-	"######.##.#gggggg#.##.######",
-	"      ....#gggggg#....      ",
+	"######.##.#gg__gg#.##.######",
+	"      ....#gg__gg#....      ",
 	"######.##.#gggggg#.##.######",
 	"######.##.########.##.######",
 	"######.##..........##.######",
@@ -77,6 +77,67 @@ function Ghost() {
 		this.direction = Math.floor(Math.random() * 4);
 	};
 	this.move = function() {
+		// if on the center of a cell: change direction?
+		if (this.x%pc_FRAMES_PER_CELL == 0 && this.y%pc_FRAMES_PER_CELL == 0) {
+			var height = pc_grid.length;
+			var width = pc_grid[0].length;
+			
+			// Check if possible direction
+			var cell_x = this.x/pc_FRAMES_PER_CELL;
+			var cell_y = this.y/pc_FRAMES_PER_CELL;
+			var available_directions = new Array();
+			
+			var cell_x_move, cell_y_move;
+
+			//  Check LEFT
+			if (cell_x > 0)
+				cell_x_move = cell_x -1;
+			else
+				cell_x_move = width -1;
+			cell_y_move = cell_y;
+			if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
+				available_directions.push(pc_LEFT);
+			
+			//  Check UP
+			cell_x_move = cell_x;
+			if (cell_y > 0)
+				cell_y_move = cell_y -1;
+			else
+				cell_y_move = height -1;
+			if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
+				available_directions.push(pc_UP);
+			
+			//  Check RIGHT
+			if (cell_x < width -1)
+				cell_x_move = cell_x +1;
+			else
+				cell_x_move = 0;
+			cell_y_move = cell_y;
+			if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
+				available_directions.push(pc_RIGHT);
+			
+			//  Check DOWN
+			cell_x_move = cell_x;
+			if (cell_y < height -1)
+				cell_y_move = cell_y +1;
+			else
+				cell_y_move = 0;
+			if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
+				available_directions.push(pc_DOWN);
+
+			// Remove the direction which is at the opposite of the current one
+			// if there is at least another choice
+			if (available_directions.length > 1) {
+				var index = available_directions.indexOf((this.direction +2)%4);
+				if (index > -1)
+					available_directions.splice(index, 1);
+			}
+			
+			// Update direction
+			this.direction = available_directions[Math.floor(Math.random()*available_directions.length)];
+		}
+
+		// Move following this.direction
 		new_position = moveCharacter(this.x, this.y, this.direction, false);
 		this.x = new_position[0];
 		this.y = new_position[1];
@@ -259,6 +320,18 @@ function moveCharacter(x, y, direction, pacman) {
  * Is forbidden for PacMan/Ghost
  */
 
+function isForbiddenForGhost(target_cell_type, current_cell_type) {
+	if (current_cell_type == "g")
+		return target_cell_type == "#";
+	if (current_cell_type == "_")
+		return target_cell_type == "#" || target_cell_type == "g";
+	return target_cell_type == "#" || target_cell_type == "g" || target_cell_type == "_";
+}
+
+function isForbiddenForPacMan(target_cell_type) {
+	return target_cell_type == "#" || target_cell_type == "g" || target_cell_type == "_";
+}
+
 function isForbiddenFor(target_cell_type, x_old, y_old, direction, pacman=false) {
 	if (! pacman) {
 		if (direction == pc_LEFT)
@@ -269,17 +342,10 @@ function isForbiddenFor(target_cell_type, x_old, y_old, direction, pacman=false)
 			current_cell_type = pc_grid[y_old/pc_FRAMES_PER_CELL][Math.floor(1.*x_old/pc_FRAMES_PER_CELL)];
 		else
 			current_cell_type = pc_grid[Math.floor(1.*y_old/pc_FRAMES_PER_CELL)][x_old/pc_FRAMES_PER_CELL];
-
-		if (current_cell_type == "g")
-			return target_cell_type == "#";
-		if (current_cell_type == "_")
-			return target_cell_type == "#" || target_cell_type == "g";
+		
+		return isForbiddenForGhost(target_cell_type, current_cell_type);
 	}
-	return target_cell_type == "#" || target_cell_type == "g" || target_cell_type == "_";
-}
-
-function isForbiddenForPacMan(target_cell_type) {
-	return isForbiddenFor(target_cell_type, null, null, null, true);
+	return isForbiddenForPacMan(target_cell_type);
 }
 
 /**
