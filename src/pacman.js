@@ -1,3 +1,4 @@
+var pc_DIFFICULTY = 1; // 0: easy, 1: hard
 // Draw parameters
 var pc_SIZE = 16;
 
@@ -43,6 +44,7 @@ var pc_grid_template = [
 	"############################",
 ];
 var pc_grid = new Array();
+var pc_truefalse_grid_template = new Array();
 
 var pc_LEFT = 0;
 var pc_UP = 1;
@@ -62,6 +64,83 @@ var pc_pacman_next_direction = pc_LEFT;
 var pc_current_frame = -1;
 
 /**
+ * Requirements for A* implementation
+ * used to find the "shortest path" to reach the PacMan
+ */
+
+function HeapElement(x, y, initial_direction, dist_from_start, dist_to_end) {
+	this.x = x;
+	this.y = y;
+	this.initial_direction = initial_direction;
+	this.dist_from_start = dist_from_start; // real distance
+	this.dist_to_end = dist_to_end; // distance measured for a line
+	this.dist = dist_from_start + dist_to_end;
+}
+
+function Heap() {
+	this.elements = new Array();
+	this.num_elements = 0;
+	this.push = function(heap_element) {
+		// room available?
+		if (this.elements.length > this.num_elements)
+			this.elements[this.num_elements] = heap_element;
+		else
+			this.elements.push(heap_element);
+		
+		this.num_elements++;
+		this.moveUp(this.num_elements -1);
+	};
+	this.pop = function() {
+		var head_heap_elt = this.elements[0];
+		this.num_elements--;
+
+		if (this.num_elements == 0)
+			return head_heap_elt;
+		
+		this.elements[0] = this.elements[this.num_elements];
+		this.moveDown(0);
+		return head_heap_elt;
+	};
+	this.free = function() {
+		this.elements = new Array();
+	};
+	this.size = function() {
+		return this.num_elements;
+	}
+	this.moveUp = function(id) {
+		if (id == 0)
+			return;
+
+		var parent_id = Math.floor((id -1)/2);
+		if (this.elements[id].dist < this.elements[parent_id].dist) {
+			var tmp_heap_elt = this.elements[id];
+			this.elements[id] = this.elements[parent_id];
+			this.elements[parent_id] = tmp_heap_elt;
+			this.moveUp(parent_id);
+		}
+	};
+	this.moveDown = function(id) {
+		var child1_id = id*2 +1;
+		if (child1_id >= this.num_elements) // it does not have any child
+			return;
+		
+		var child_id = child1_id;
+		var child2_id = id*2 +2;
+		if (child2_id < this.num_elements) { // only one child
+			if (this.elements[child2_id].dist < this.elements[child1_id].dist) {
+				child_id = child2_id;
+			}
+		}
+		if (this.elements[child_id].dist < this.elements[id].dist) {
+			var tmp_heap_elt = this.elements[id];
+			this.elements[id] = this.elements[child_id];
+			this.elements[child_id] = tmp_heap_elt;
+			this.moveDown(child_id);
+		}
+	};
+}
+
+/**
  * Ghosts
  */
 
@@ -76,66 +155,167 @@ function Ghost() {
 		this.y = pc_ghosts_starts_y[rand_starting_pt];
 		this.direction = Math.floor(Math.random() * 4);
 	};
-	this.move = function() {
-		// if on the center of a cell: change direction?
-		if (this.x%pc_FRAMES_PER_CELL == 0 && this.y%pc_FRAMES_PER_CELL == 0) {
-			var height = pc_grid.length;
-			var width = pc_grid[0].length;
-			
-			// Check if possible direction
-			var cell_x = this.x/pc_FRAMES_PER_CELL;
-			var cell_y = this.y/pc_FRAMES_PER_CELL;
-			var available_directions = new Array();
-			
-			var cell_x_move, cell_y_move;
+	this.changeDirectionStupid = function() {
+		var height = pc_grid.length;
+		var width = pc_grid[0].length;
+		
+		// Check if possible direction
+		var cell_x = this.x/pc_FRAMES_PER_CELL;
+		var cell_y = this.y/pc_FRAMES_PER_CELL;
+		var available_directions = new Array();
+		
+		var cell_x_move, cell_y_move;
 
-			//  Check LEFT
-			if (cell_x > 0)
-				cell_x_move = cell_x -1;
-			else
-				cell_x_move = width -1;
-			cell_y_move = cell_y;
-			if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
-				available_directions.push(pc_LEFT);
-			
-			//  Check UP
-			cell_x_move = cell_x;
-			if (cell_y > 0)
-				cell_y_move = cell_y -1;
-			else
-				cell_y_move = height -1;
-			if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
-				available_directions.push(pc_UP);
-			
-			//  Check RIGHT
-			if (cell_x < width -1)
-				cell_x_move = cell_x +1;
-			else
-				cell_x_move = 0;
-			cell_y_move = cell_y;
-			if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
-				available_directions.push(pc_RIGHT);
-			
-			//  Check DOWN
-			cell_x_move = cell_x;
-			if (cell_y < height -1)
-				cell_y_move = cell_y +1;
-			else
-				cell_y_move = 0;
-			if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
-				available_directions.push(pc_DOWN);
+		//  Check LEFT
+		if (cell_x > 0)
+			cell_x_move = cell_x -1;
+		else
+			cell_x_move = width -1;
+		cell_y_move = cell_y;
+		if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
+			available_directions.push(pc_LEFT);
+		
+		//  Check UP
+		cell_x_move = cell_x;
+		if (cell_y > 0)
+			cell_y_move = cell_y -1;
+		else
+			cell_y_move = height -1;
+		if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
+			available_directions.push(pc_UP);
+		
+		//  Check RIGHT
+		if (cell_x < width -1)
+			cell_x_move = cell_x +1;
+		else
+			cell_x_move = 0;
+		cell_y_move = cell_y;
+		if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
+			available_directions.push(pc_RIGHT);
+		
+		//  Check DOWN
+		cell_x_move = cell_x;
+		if (cell_y < height -1)
+			cell_y_move = cell_y +1;
+		else
+			cell_y_move = 0;
+		if (! isForbiddenForGhost(pc_grid[cell_y_move][cell_x_move], pc_grid[cell_y][cell_x]))
+			available_directions.push(pc_DOWN);
 
-			// Remove the direction which is at the opposite of the current one
-			// if there is at least another choice
-			if (available_directions.length > 1) {
-				var index = available_directions.indexOf((this.direction +2)%4);
-				if (index > -1)
-					available_directions.splice(index, 1);
+		// Remove the direction which is at the opposite of the current one
+		// if there is at least another choice
+		if (available_directions.length > 1) {
+			var index = available_directions.indexOf((this.direction +2)%4);
+			if (index > -1)
+				available_directions.splice(index, 1);
+		}
+		
+		// Update direction
+		this.direction = available_directions[Math.floor(Math.random()*available_directions.length)];
+	};
+	this.distanceCells = function(x1, y1, x2, y2) {
+		return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
+	};
+	this.createHeapElement = function(x, y, truefalse_grid, previous, current_direction, target_x, target_y) {
+		if (truefalse_grid[y][x]) {
+			truefalse_grid[y][x] = false;
+			var dist_to_target = this.distanceCells(x, y, target_x, target_y);
+			var elt = new HeapElement(x, y, previous.initial_direction, previous.dist_from_start +1, dist_to_target);
+			if (elt.initial_direction == -1)
+				elt.initial_direction = current_direction;
+			return elt;
+		}
+		return null;
+	};
+	this.changeDirectionAStar = function() {
+		var height = pc_grid.length;
+		var width = pc_grid[0].length;
+		
+		var cell_x = this.x/pc_FRAMES_PER_CELL;
+		var cell_y = this.y/pc_FRAMES_PER_CELL;
+		if (pc_grid[cell_y][cell_x] == "g" || pc_grid[cell_y][cell_x] == "_")
+			return this.changeDirectionStupid();
+		
+		var target_x = Math.floor(pc_pacman_x/pc_FRAMES_PER_CELL);
+		var target_y = Math.floor(pc_pacman_y/pc_FRAMES_PER_CELL);
+		
+		var heap = new Heap();
+		heap.push(new HeapElement(cell_x, cell_y, -1, 0, this.distanceCells(cell_x, cell_y, target_x, target_y)));
+		
+		var truefalse_grid = new Array();
+		for (var j=0 ; j!=pc_truefalse_grid_template.length ; j++) {
+			truefalse_grid.push(pc_truefalse_grid_template[j].slice());
+		}
+		truefalse_grid[cell_y][cell_x] = false;
+		
+		var num_elts = 0;
+		var height = pc_grid.length;
+		var width = pc_grid[0].length;
+		while (heap.size() > 0) {
+			// Limit the number of loops
+			num_elts++;
+			if (num_elts >= 1000) {
+				this.direction = current_elt.initial_direction;
+			}
+
+			var current_elt = heap.pop();
+			var elt = null;
+
+			elt = this.createHeapElement((current_elt.x -1 +width)%width, current_elt.y, truefalse_grid, current_elt, pc_LEFT, target_x, target_y);
+			if (elt != null) {
+				if (elt.x == target_x && elt.y == target_y) {
+					this.direction = elt.initial_direction;
+					return;
+				}
+				heap.push(elt);
+			}
+
+			elt = this.createHeapElement((current_elt.x +1)%width, current_elt.y, truefalse_grid, current_elt, pc_RIGHT, target_x, target_y);
+			if (elt != null) {
+				if (elt.x == target_x && elt.y == target_y) {
+					this.direction = elt.initial_direction;
+					return;
+				}
+				heap.push(elt);
+			}
+
+			elt = this.createHeapElement(current_elt.x, (current_elt.y -1 +height)%height, truefalse_grid, current_elt, pc_UP, target_x, target_y);
+			if (elt != null) {
+				if (elt.x == target_x && elt.y == target_y) {
+					this.direction = elt.initial_direction;
+					return;
+				}
+				heap.push(elt);
 			}
 			
-			// Update direction
-			this.direction = available_directions[Math.floor(Math.random()*available_directions.length)];
+			elt = this.createHeapElement(current_elt.x, (current_elt.y +1)%height, truefalse_grid, current_elt, pc_DOWN, target_x, target_y);
+			if (elt != null) {
+				if (elt.x == target_x && elt.y == target_y) {
+					this.direction = elt.initial_direction;
+					return;
+				}
+				heap.push(elt);
+			}
+			
+			// if only one direction is possible from this point
+			if (current_elt.initial_direction == -1 && heap.size() == 1) {
+				this.direction = heap.pop().initial_direction;
+				return;
+			}
 		}
+	};
+	this.changeDirection = function() {
+		// if on the center of a cell: change direction?
+		if (this.x%pc_FRAMES_PER_CELL == 0 && this.y%pc_FRAMES_PER_CELL == 0) {
+			if (pc_DIFFICULTY == 0)
+				this.changeDirectionStupid();
+			else
+				this.changeDirectionAStar();
+		}
+	};
+	this.move = function() {
+		// Change direction if necessary/possible
+		this.changeDirection();
 
 		// Move following this.direction
 		new_position = moveCharacter(this.x, this.y, this.direction, false);
@@ -166,10 +346,18 @@ function initGame() {
 
 	// Copy the grid into local grid
 	pc_grid = pc_grid_template.slice();
-
-	// Find the starting point
+	pc_truefalse_grid_template = new Array();
 	var height = pc_grid.length;
 	var width = pc_grid[0].length;
+	for (var j=0 ; j!=height ; j++) {
+		var line = new Array();
+		for (var i=0 ; i!=width ; i++) {
+			line.push(pc_grid[j][i] == "." || pc_grid[j][i] == "o" || pc_grid[j][i] == "s" || pc_grid[j][i] == " ");
+		}
+		pc_truefalse_grid_template.push(line);
+	}
+
+	// Find the starting point
 	for (var i=0 ; i!=width ; i++) {
 		for (var j=0 ; j!=height ; j++) {
 			if (pc_grid[j][i] == 's') {
@@ -245,7 +433,6 @@ function iterateGame() {
 	new_position = moveCharacter(pc_pacman_x, pc_pacman_y, pc_pacman_direction, true);
 	pc_pacman_x = new_position[0];
 	pc_pacman_y = new_position[1];
-	
 	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
 		pc_ghosts[i].move();
 	}
@@ -332,7 +519,7 @@ function isForbiddenForPacMan(target_cell_type) {
 	return target_cell_type == "#" || target_cell_type == "g" || target_cell_type == "_";
 }
 
-function isForbiddenFor(target_cell_type, x_old, y_old, direction, pacman=false) {
+function isForbiddenFor(target_cell_type, x_old, y_old, direction, pacman) {
 	if (! pacman) {
 		if (direction == pc_LEFT)
 			current_cell_type = pc_grid[y_old/pc_FRAMES_PER_CELL][Math.ceil(1.*x_old/pc_FRAMES_PER_CELL)];
