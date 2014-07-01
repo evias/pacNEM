@@ -1,4 +1,4 @@
-var pc_DIFFICULTY = 1; // 0: easy, 1: hard
+var pc_DIFFICULTY = 0.5; // float between 0 and 1, 0: random, 1: a*
 // Draw parameters
 var pc_SIZE = 16;
 
@@ -307,10 +307,10 @@ function Ghost() {
 	this.changeDirection = function() {
 		// if on the center of a cell: change direction?
 		if (this.x%pc_FRAMES_PER_CELL == 0 && this.y%pc_FRAMES_PER_CELL == 0) {
-			if (pc_DIFFICULTY == 0)
-				this.changeDirectionStupid();
-			else
+			if (Math.random() < pc_DIFFICULTY)
 				this.changeDirectionAStar();
+			else
+				this.changeDirectionStupid();
 		}
 	};
 	this.move = function() {
