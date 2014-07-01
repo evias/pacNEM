@@ -71,13 +71,16 @@ function Ghost() {
 	this.direction = -1;
 	this.color = "#ff0000";
 	this.restart = function() {
-		this.x = 0;
-		this.y = 0;
-		this.direction = pc_LEFT;
+		var rand_starting_pt = Math.floor(Math.random() * pc_ghosts_starts_x.length);
+		this.x = pc_ghosts_starts_x[rand_starting_pt];
+		this.y = pc_ghosts_starts_y[rand_starting_pt];
+		this.direction = Math.floor(Math.random() * 4);
 	};
 }
-var pc_NUM_GHOSTS = 1;
+var pc_NUM_GHOSTS = 4;
 var pc_ghosts = new Array();
+var pc_ghosts_starts_x = new Array();
+var pc_ghosts_starts_y = new Array();
 
 /**
  * Initialize the game
@@ -91,13 +94,8 @@ function initGame() {
 	pc_pacman_next_direction = pc_LEFT;
 	pc_current_frame = 0;
 	pc_ghosts = new Array();
-
-	// Create ghosts
-	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
-		ghost = new Ghost();
-		ghost.restart();
-		pc_ghosts.push(ghost);
-	}
+	pc_ghosts_starts_x = new Array();
+	pc_ghosts_starts_y = new Array();
 
 	// Copy the grid into local grid
 	pc_grid = pc_grid_template.slice();
@@ -110,8 +108,18 @@ function initGame() {
 			if (pc_grid[j][i] == 's') {
 				pc_pacman_x = i * pc_FRAMES_PER_CELL;
 				pc_pacman_y = j * pc_FRAMES_PER_CELL;
+			} else if (pc_grid[j][i] == 'g') {
+				pc_ghosts_starts_x.push(i * pc_FRAMES_PER_CELL);
+				pc_ghosts_starts_y.push(j * pc_FRAMES_PER_CELL);
 			}
 		}
+	}
+	
+	// Create ghosts
+	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
+		ghost = new Ghost();
+		ghost.restart();
+		pc_ghosts.push(ghost);
 	}
 	
 	// Resize canvas
@@ -212,8 +220,6 @@ function iterateGame() {
 	drawEmptyGameBoard(canvas, ctx);
 	drawPacMan(canvas, ctx);
 	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
-		console.log(i);
-		console.log(pc_ghosts[i]);
 		drawGhost(canvas, ctx, pc_ghosts[i]);
 	}
 
