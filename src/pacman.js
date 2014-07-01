@@ -62,6 +62,7 @@ var pc_pacman_y = -1;
 var pc_pacman_direction = pc_LEFT;
 var pc_pacman_next_direction = pc_LEFT;
 var pc_current_frame = -1;
+var pc_num_cheeses = -1;
 
 /**
  * Requirements for A* implementation
@@ -343,6 +344,7 @@ function initGame() {
 	pc_ghosts = new Array();
 	pc_ghosts_starts_x = new Array();
 	pc_ghosts_starts_y = new Array();
+	pc_num_cheeses = 0;
 
 	// Copy the grid into local grid
 	pc_grid = new Array();
@@ -353,6 +355,8 @@ function initGame() {
 		var line = new Array();
 		for (var i=0 ; i!=width ; i++) {
 			line.push(pc_grid_template[j][i]);
+			if (pc_grid_template[j][i] == "." || pc_grid_template[j][i] == "o")
+				pc_num_cheeses++;
 		}
 		pc_grid.push(line);
 	}
@@ -411,6 +415,16 @@ function iterateGame() {
 	var height = pc_grid.length;
 	var width = pc_grid[0].length;
 	
+	// Eat the cheese if there is one
+	if (pc_pacman_x%pc_FRAMES_PER_CELL == 0 && pc_pacman_y%pc_FRAMES_PER_CELL == 0) {
+		var cell_x = pc_pacman_x/pc_FRAMES_PER_CELL;
+		var cell_y = pc_pacman_y/pc_FRAMES_PER_CELL;
+		if (pc_grid[cell_y][cell_x] == "." || pc_grid[cell_y][cell_x] == "o") {
+			pc_grid[cell_y][cell_x] = " ";
+			pc_num_cheeses--;
+		}
+	}
+
 	// Change of direction
 	// Opposite direction
 	if (pc_pacman_direction == (pc_pacman_next_direction+2)%4)
