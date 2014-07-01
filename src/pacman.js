@@ -42,7 +42,7 @@ var pc_grid_template = [
 	"#..........................#",
 	"############################",
 ];
-var pc_grid = [];
+var pc_grid = new Array();
 
 var pc_LEFT = 0;
 var pc_UP = 1;
@@ -62,6 +62,23 @@ var pc_pacman_next_direction = pc_LEFT;
 var pc_current_frame = -1;
 
 /**
+ * Ghosts
+ */
+
+function Ghost() {
+	this.x = -1;
+	this.y = -1;
+	this.direction = -1;
+	this.color = "#ff0000";
+	this.restart = function() {
+		this.x = 0;
+		this.y = 0;
+		this.direction = pc_LEFT;
+	};
+}
+var pc_ghosts = new Array();
+
+/**
  * Initialize the game
  */
 
@@ -72,6 +89,14 @@ function initGame() {
 	pc_pacman_direction = pc_LEFT;
 	pc_pacman_next_direction = pc_LEFT;
 	pc_current_frame = 0;
+	pc_ghosts = new Array();
+
+	// Create ghosts
+	for (i=0 ; i!=1 ; i++) {
+		ghost = new Ghost();
+		ghost.restart();
+		pc_ghosts.push(ghost);
+	}
 
 	// Copy the grid into local grid
 	pc_grid = pc_grid_template.slice();
@@ -185,7 +210,9 @@ function iterateGame() {
 	// Draw game
 	drawEmptyGameBoard(canvas, ctx);
 	drawPacMan(canvas, ctx);
-	
+	for (i=0 ; i!=pc_ghosts.length ; i++)
+		drawGhost(canvas, ctx, pc_ghosts[i]);
+
 	pc_current_frame++;
 	setTimeout(iterateGame, 1000/pc_FPS);
 }
@@ -267,5 +294,34 @@ function drawPacMan(canvas, ctx) {
 	else
 		ctx.arc(pacman_px_x, pacman_px_y, .45*pc_SIZE, Math.PI/2+Math.PI/pacman_mouth, Math.PI/2-Math.PI/pacman_mouth,false);
 	ctx.lineTo(pacman_px_x, pacman_px_y);
+	ctx.fill();
+}
+
+/**
+ * Draw a ghost
+ */
+
+function drawGhost(canvas, ctx, ghost) {
+	var ghost_px_x = (1.*ghost.x/pc_FRAMES_PER_CELL +.5)*pc_SIZE +5;
+	var ghost_px_y = (1.*ghost.y/pc_FRAMES_PER_CELL +.5)*pc_SIZE +5;
+
+	ctx.beginPath();
+	ctx.fillStyle = ghost.color;
+	ctx.arc(ghost_px_x, ghost_px_y -.05*pc_SIZE, .4*pc_SIZE, Math.PI, 2*Math.PI, false);
+	var begin_x = ghost_px_x +.4*pc_SIZE;
+	var end_x = ghost_px_x -.4*pc_SIZE;
+	var min_x = ghost_px_y +.25*pc_SIZE;
+	var max_x = ghost_px_y +.45*pc_SIZE;
+	var num_min = 3;
+
+	ctx.lineTo(begin_x, max_x);
+	for (i=0 ; i!=2*num_min-1 ; i++) {
+		var current_x = begin_x + (end_x-begin_x)*(i+1)/(2*num_min);
+		if (i%2 == 0)
+			ctx.lineTo(current_x, min_x);
+		else
+			ctx.lineTo(current_x, max_x);
+	}
+	ctx.lineTo(end_x, max_x);
 	ctx.fill();
 }
