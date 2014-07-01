@@ -76,6 +76,7 @@ function Ghost() {
 		this.direction = pc_LEFT;
 	};
 }
+var pc_NUM_GHOSTS = 1;
 var pc_ghosts = new Array();
 
 /**
@@ -92,7 +93,7 @@ function initGame() {
 	pc_ghosts = new Array();
 
 	// Create ghosts
-	for (i=0 ; i!=1 ; i++) {
+	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
 		ghost = new Ghost();
 		ghost.restart();
 		pc_ghosts.push(ghost);
@@ -104,8 +105,8 @@ function initGame() {
 	// Find the starting point
 	var height = pc_grid.length;
 	var width = pc_grid[0].length;
-	for (i=0 ; i!=width ; i++) {
-		for (j=0 ; j!=height ; j++) {
+	for (var i=0 ; i!=width ; i++) {
+		for (var j=0 ; j!=height ; j++) {
 			if (pc_grid[j][i] == 's') {
 				pc_pacman_x = i * pc_FRAMES_PER_CELL;
 				pc_pacman_y = j * pc_FRAMES_PER_CELL;
@@ -210,8 +211,11 @@ function iterateGame() {
 	// Draw game
 	drawEmptyGameBoard(canvas, ctx);
 	drawPacMan(canvas, ctx);
-	for (i=0 ; i!=pc_ghosts.length ; i++)
+	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
+		console.log(i);
+		console.log(pc_ghosts[i]);
 		drawGhost(canvas, ctx, pc_ghosts[i]);
+	}
 
 	pc_current_frame++;
 	setTimeout(iterateGame, 1000/pc_FPS);
@@ -254,8 +258,8 @@ function drawEmptyGameBoard(canvas, ctx) {
 	ctx.closePath();
 	ctx.stroke();
 	
-	for (i=0 ; i!=width ; i++) {
-		for (j=0 ; j!=height ; j++) {
+	for (var i=0 ; i!=width ; i++) {
+		for (var j=0 ; j!=height ; j++) {
 			if (pc_grid[j][i] == '#') {
 				ctx.fillStyle = "#777777";
 				ctx.fillRect(i*pc_SIZE +5, j*pc_SIZE +5, pc_SIZE, pc_SIZE);
@@ -313,10 +317,11 @@ function drawGhost(canvas, ctx, ghost) {
 	var min_x = ghost_px_y +.25*pc_SIZE;
 	var max_x = ghost_px_y +.45*pc_SIZE;
 	var num_min = 3;
+	var animate_padding = (end_x-begin_x)/(2*num_min) * ((pc_current_frame%pc_FRAMES_PER_CELL)/(pc_FRAMES_PER_CELL-1) -.5);
 
 	ctx.lineTo(begin_x, max_x);
-	for (i=0 ; i!=2*num_min-1 ; i++) {
-		var current_x = begin_x + (end_x-begin_x)*(i+1)/(2*num_min);
+	for (var i=0 ; i!=2*num_min-1 ; i++) {
+		var current_x = begin_x + (end_x-begin_x)*(i+1)/(2*num_min) + animate_padding;
 		if (i%2 == 0)
 			ctx.lineTo(current_x, min_x);
 		else
