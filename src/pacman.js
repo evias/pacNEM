@@ -81,6 +81,7 @@ var pc_NUM_GHOSTS = 4;
 var pc_ghosts = new Array();
 var pc_ghosts_starts_x = new Array();
 var pc_ghosts_starts_y = new Array();
+var pc_GHOSTS_COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ff7700"];
 
 /**
  * Initialize the game
@@ -119,6 +120,7 @@ function initGame() {
 	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
 		ghost = new Ghost();
 		ghost.restart();
+		ghost.color = pc_GHOSTS_COLORS[i%pc_GHOSTS_COLORS.length];
 		pc_ghosts.push(ghost);
 	}
 	
