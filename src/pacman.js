@@ -840,20 +840,50 @@ function drawGhost(canvas, ctx, ghost) {
 	ctx.arc(ghost_px_x, ghost_px_y -.05*pc_SIZE, .4*pc_SIZE, Math.PI, 2*Math.PI, false);
 	var begin_x = ghost_px_x +.4*pc_SIZE;
 	var end_x = ghost_px_x -.4*pc_SIZE;
-	var min_x = ghost_px_y +.25*pc_SIZE;
-	var max_x = ghost_px_y +.45*pc_SIZE;
+	var min_y = ghost_px_y +.25*pc_SIZE;
+	var max_y = ghost_px_y +.45*pc_SIZE;
 	var num_min = 3;
 	var animate_padding = (end_x-begin_x)/(2*num_min) * ((pc_current_frame%pc_FRAMES_PER_CELL)/(pc_FRAMES_PER_CELL-1) -.5);
 
-	ctx.lineTo(begin_x, max_x);
+	ctx.lineTo(begin_x, max_y);
 	for (var i=0 ; i!=2*num_min-1 ; i++) {
 		var current_x = begin_x + (end_x-begin_x)*(i+1)/(2*num_min) + animate_padding;
 		if (i%2 == 0)
-			ctx.lineTo(current_x, min_x);
+			ctx.lineTo(current_x, min_y);
 		else
-			ctx.lineTo(current_x, max_x);
+			ctx.lineTo(current_x, max_y);
 	}
-	ctx.lineTo(end_x, max_x);
+	ctx.lineTo(end_x, max_y);
+	ctx.fill();
+
+	min_y = ghost_px_y +.05*pc_SIZE;
+	max_y = ghost_px_y +.2*pc_SIZE;
+	ctx.beginPath();
+	ctx.lineWidth = (Math.floor(pc_current_frame/3)%3) +1;
+	if (ghost.under_big_cheese_effect == 0) {
+		ctx.strokeStyle = "rgba(0,0,0,.5)";
+		ctx.fillStyle = "rgba(0,0,0,.5)";
+	} else {
+		ctx.strokeStyle = "white";
+		ctx.fillStyle = "white";
+	}
+	for (var i=0 ; i!=2*num_min-1 ; i++) {
+		var current_x = begin_x + (end_x-begin_x)*(i+1)/(2*num_min);
+		if (i%2 == 0)
+			ctx.lineTo(current_x, min_y);
+		else
+			ctx.lineTo(current_x, max_y);
+	}
+	ctx.stroke();
+
+	ctx.beginPath();
+	ctx.arc(ghost_px_x -.12*pc_SIZE, ghost_px_y -.17*pc_SIZE, .1*pc_SIZE, 0, Math.PI, false);
+	ctx.arc(ghost_px_x -.12*pc_SIZE, ghost_px_y -.21*pc_SIZE, .1*pc_SIZE, Math.PI, 2*Math.PI, false);
+	ctx.fill();
+	
+	ctx.beginPath();
+	ctx.arc(ghost_px_x +.12*pc_SIZE, ghost_px_y -.17*pc_SIZE, .1*pc_SIZE, 0, Math.PI, false);
+	ctx.arc(ghost_px_x +.12*pc_SIZE, ghost_px_y -.21*pc_SIZE, .1*pc_SIZE, Math.PI, 2*Math.PI, false);
 	ctx.fill();
 }
 
