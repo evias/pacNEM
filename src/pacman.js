@@ -412,19 +412,9 @@ function initGame() {
 		pc_ghosts.push(ghost);
 	}
 	
-	// Resize canvas
-	var canvas = document.getElementById('myCanvas');
-	if (! canvas.getContext)
-		return;
-	var ctx = canvas.getContext('2d');
-	var height = pc_grid_template.length;
-	var width = pc_grid_template[0].length;
-	canvas.width = width*pc_SIZE +10;
-	canvas.height = height*pc_SIZE +10;
-	
 	// Launch the game
 	newGame();
-	iterateGame();
+	hideCanvas();
 }
 
 /**
@@ -551,13 +541,9 @@ function iterateGame() {
 				
 				// Remove points
 				pc_points = new Array()
-
-				// Still alive?
-				if (pc_lifes >= 0) {
-					setTimeout(iterateGame, 1000/pc_FPS);
-					return;
-				} else
-					return; // end of the game
+				
+				hideCanvas();
+				return;
 			}
 		}
 	}
@@ -586,7 +572,7 @@ function iterateGame() {
 		}
 		if (pc_num_cheeses == 0) {
 			newGame();
-			setTimeout(iterateGame, 1000/pc_FPS);
+			hideCanvas();
 			return;
 		}
 	}
@@ -644,6 +630,36 @@ function iterateGame() {
 
 	pc_current_frame++;
 	setTimeout(iterateGame, 1000/pc_FPS);
+}
+
+/**
+ * Hide current canvas
+ */
+
+var pc_hide_canvas_frame = 0;
+function hideCanvas() {
+	if (pc_hide_canvas_frame >= pc_FPS)
+		pc_hide_canvas_frame = 0;
+	
+	var canvas = document.getElementById('myCanvas');
+	if (! canvas.getContext)
+		return;
+	var ctx = canvas.getContext('2d');
+	var height = pc_grid.length*pc_SIZE +10;
+	var width = pc_grid[0].length*pc_SIZE +10;
+
+	ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+	ctx.fillRect(0, 0, width, height * (pc_hide_canvas_frame+1)/(pc_hide_canvas_frame+3));
+
+	pc_hide_canvas_frame++;
+	if (pc_hide_canvas_frame >= pc_FPS) {
+		if (pc_lifes >= 0)
+			setTimeout(iterateGame, 1000/pc_FPS);
+		else
+			setTimeout(onLoadDisplay, 1000/pc_FPS);
+		return;
+	}
+	setTimeout(hideCanvas, 1000/pc_FPS);
 }
 
 /**
