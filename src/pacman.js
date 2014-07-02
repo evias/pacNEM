@@ -343,6 +343,8 @@ var pc_ghosts_starts_x = new Array();
 var pc_ghosts_starts_y = new Array();
 var pc_GHOSTS_COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ff7700"];
 var pc_GHOSTS_BIG_CHEESE_FRAMES = 200;
+var pc_big_cheese_effect = 0;
+var pc_killed_ghosts = 0;
 
 /**
  * Initialize the game
@@ -390,7 +392,10 @@ function initGame() {
 function newGame() {
 	pc_num_games++;
 	pc_DIFFICULTY = 1.*(pc_num_games -1)/pc_num_games;
-	
+	pc_big_cheese_effect = 0;
+	pc_killed_ghosts = 0;
+	document.getElementById('multiplicator').innerHTML = (1+pc_killed_ghosts);
+
 	// Restart PacMan
 	pc_pacman_direction = pc_LEFT;
 	pc_pacman_next_direction = pc_LEFT;
@@ -468,15 +473,25 @@ function iterateGame() {
 	var height = pc_grid.length;
 	var width = pc_grid[0].length;
 	
+	if (pc_big_cheese_effect > 0) {
+		pc_big_cheese_effect--;
+		if (pc_big_cheese_effect == 0) {
+			pc_killed_ghosts = 0;
+			document.getElementById('multiplicator').innerHTML = (1+pc_killed_ghosts);
+		}
+	}
+
 	// Check for contact between PacMan and a ghost
 	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
 		// Contact detected
 		if (Math.abs(pc_ghosts[i].x - pc_pacman_x) + Math.abs(pc_ghosts[i].y - pc_pacman_y) <= 1) {
 			// Under big cheese effect
 			if (pc_ghosts[i].under_big_cheese_effect != 0) {
-				pc_score += 100;
+				pc_score += 100 * (1+pc_killed_ghosts);
 				document.getElementById('score').innerHTML = pc_score;
 				pc_ghosts[i].restart();
+				pc_killed_ghosts++;
+				document.getElementById('multiplicator').innerHTML = (1+pc_killed_ghosts);
 			} else {
 				pc_lifes--;
 				document.getElementById('lifes').innerHTML = Math.max(0, pc_lifes);
@@ -484,6 +499,11 @@ function iterateGame() {
 				// Move both PacMan and Ghosts to their starting point
 				movePacManAtStart();
 				moveGhostsAtStart();
+
+				// Remove multiplicators
+				pc_big_cheese_effect = 0;
+				pc_killed_ghosts = 0;
+				document.getElementById('multiplicator').innerHTML = (1+pc_killed_ghosts);
 
 				// Still alive?
 				if (pc_lifes >= 0) {
@@ -501,9 +521,12 @@ function iterateGame() {
 		var cell_y = pc_pacman_y/pc_FRAMES_PER_CELL;
 		if (pc_grid[cell_y][cell_x] == "." || pc_grid[cell_y][cell_x] == "o") {
 			if (pc_grid[cell_y][cell_x] == ".")
-				pc_score += 10;
+				pc_score += 10 * (1+pc_killed_ghosts);
 			else {
-				pc_score += 50;
+				pc_score += 50 * (1+pc_killed_ghosts);
+				if (pc_big_cheese_effect == 0)
+					pc_killed_ghosts = 0;
+				pc_big_cheese_effect = pc_GHOSTS_BIG_CHEESE_FRAMES;
 				for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
 					//TODO? only if out of safe zone
 					pc_ghosts[i].under_big_cheese_effect = pc_GHOSTS_BIG_CHEESE_FRAMES;

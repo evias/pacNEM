@@ -50,3 +50,8 @@ a:hover
 	color: #ff0000;
 }
 
+.game #multiplicator::before
+{
+	content: "x";
+}
+
