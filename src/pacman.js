@@ -65,6 +65,7 @@ var pc_current_frame = -1;
 var pc_num_cheeses = -1;
 var pc_num_games = -1;
 var pc_score = -1;
+var pc_lifes = 0;
 
 /**
  * Requirements for A* implementation
@@ -338,14 +339,17 @@ var pc_GHOSTS_COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ff7700"];
 
 function initGame() {
 	// Already launched?
-	if (pc_pacman_x != -1 || pc_pacman_y != -1 || pc_current_frame != -1)
+	if (pc_lifes > 0)
 		return;
 	pc_ghosts = new Array();
 	pc_ghosts_starts_x = new Array();
 	pc_ghosts_starts_y = new Array();
 	pc_num_games = 0;
 	pc_score = 0;
-	
+	document.getElementById('score').innerHTML = pc_score;
+	pc_lifes = 3;
+	document.getElementById('lifes').innerHTML = pc_lifes;
+
 	// Create ghosts
 	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
 		ghost = new Ghost();
@@ -405,6 +409,22 @@ function newGame() {
 		pc_truefalse_grid_template.push(line);
 	}
 
+	// Move PacMan at its starting point
+	movePacManAtStart();	
+	
+	// Move all ghosts to their starting point
+	moveGhostsAtStart();
+}
+
+/**
+ * Find PacMan starting point
+ * Find Ghosts starting point
+ */
+
+function movePacManAtStart() {
+	var height = pc_grid_template.length;
+	var width = pc_grid_template[0].length;
+	
 	// Find the starting point
 	for (var i=0 ; i!=width ; i++) {
 		for (var j=0 ; j!=height ; j++) {
@@ -417,7 +437,9 @@ function newGame() {
 			}
 		}
 	}
-	
+}
+
+function moveGhostsAtStart() {
 	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
 		pc_ghosts[i].restart();
 	}
@@ -435,6 +457,26 @@ function iterateGame() {
 	var height = pc_grid.length;
 	var width = pc_grid[0].length;
 	
+	// Check for contact between PacMan and a ghost
+	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
+		// Contact detected
+		if (Math.abs(pc_ghosts[i].x - pc_pacman_x) + Math.abs(pc_ghosts[i].y - pc_pacman_y) <= 1) {
+			pc_lifes--;
+			document.getElementById('lifes').innerHTML = Math.max(0, pc_lifes);
+
+			// Move both PacMan and Ghosts to their starting point
+			movePacManAtStart();
+			moveGhostsAtStart();
+
+			// Still alive?
+			if (pc_lifes >= 0) {
+				setTimeout(iterateGame, 1000/pc_FPS);
+				return;
+			} else
+				return; // end of the game
+		}
+	}
+
 	// Eat the cheese if there is one
 	if (pc_pacman_x%pc_FRAMES_PER_CELL == 0 && pc_pacman_y%pc_FRAMES_PER_CELL == 0) {
 		var cell_x = pc_pacman_x/pc_FRAMES_PER_CELL;

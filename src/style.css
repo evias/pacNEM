@@ -36,10 +36,17 @@ a:hover
 	text-decoration: none;
 	background-color: #888888;
 	color: #ffffff;
+	line-height: 1.2em;
 }
 
 .game #score::before
 {
 	content: "Score: ";
+}
+
+.game #lifes::after
+{
+	content: "❤";
+	color: #ff0000;
 }
 
