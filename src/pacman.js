@@ -233,7 +233,14 @@ function Ghost() {
 		this.direction = available_directions[Math.floor(Math.random()*available_directions.length)];
 	};
 	this.distanceCells = function(x1, y1, x2, y2) {
-		return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
+		var width = pc_grid[0].length
+		var height = pc_grid.length
+		
+		// Deltas take into account possible paths from side to side
+		var delta_x = Math.min(Math.abs(x1-x2), Math.abs(x1-x2+width), Math.abs(x2-x1+width));
+		var delta_y = Math.min(Math.abs(y1-y2), Math.abs(y1-y2+height), Math.abs(y2-y1+height));
+
+		return Math.sqrt(delta_x*delta_x+delta_y*delta_y);
 	};
 	this.createHeapElement = function(x, y, truefalse_grid, previous, current_direction, target_x, target_y) {
 		if (truefalse_grid[y][x]) {
