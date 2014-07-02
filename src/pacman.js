@@ -360,6 +360,35 @@ var pc_big_cheese_effect = 0;
 var pc_killed_ghosts = 0;
 
 /**
+ * On load: display grid
+ */
+
+function onLoadDisplay() {
+	// Resize canvas
+	var canvas = document.getElementById('myCanvas');
+	if (! canvas.getContext)
+		return;
+	var ctx = canvas.getContext('2d');
+	var height = pc_grid_template.length;
+	var width = pc_grid_template[0].length;
+	canvas.width = width*pc_SIZE +10;
+	canvas.height = height*pc_SIZE +10;
+	
+	// Generate pc_grid
+	pc_grid = new Array();
+	for (var j=0 ; j!=height ; j++) {
+		var line = new Array();
+		for (var i=0 ; i!=width ; i++) {
+			line.push(pc_grid_template[j][i]);
+		}
+		pc_grid.push(line);
+	}
+	
+	// Draw board
+	drawEmptyGameBoard(canvas, ctx);
+}
+
+/**
  * Initialize the game
  */
 
