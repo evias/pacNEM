@@ -446,6 +446,7 @@ function iterateGame() {
 				pc_score += 50;
 			pc_grid[cell_y][cell_x] = " ";
 			pc_num_cheeses--;
+			document.getElementById('score').innerHTML = pc_score;
 		}
 		if (pc_num_cheeses == 0) {
 			newGame();
