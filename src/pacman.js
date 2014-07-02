@@ -63,6 +63,8 @@ var pc_pacman_direction = pc_LEFT;
 var pc_pacman_next_direction = pc_LEFT;
 var pc_current_frame = -1;
 var pc_num_cheeses = -1;
+var pc_num_games = -1;
+var pc_score = -1;
 
 /**
  * Requirements for A* implementation
@@ -338,15 +340,50 @@ function initGame() {
 	// Already launched?
 	if (pc_pacman_x != -1 || pc_pacman_y != -1 || pc_current_frame != -1)
 		return;
-	pc_pacman_direction = pc_LEFT;
-	pc_pacman_next_direction = pc_LEFT;
-	pc_current_frame = 0;
 	pc_ghosts = new Array();
 	pc_ghosts_starts_x = new Array();
 	pc_ghosts_starts_y = new Array();
-	pc_num_cheeses = 0;
+	pc_num_games = 0;
+	pc_score = 0;
+	
+	// Create ghosts
+	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
+		ghost = new Ghost();
+		ghost.color = pc_GHOSTS_COLORS[i%pc_GHOSTS_COLORS.length];
+		pc_ghosts.push(ghost);
+	}
+	
+	// Resize canvas
+	var canvas = document.getElementById('myCanvas');
+	if (! canvas.getContext)
+		return;
+	var ctx = canvas.getContext('2d');
+	var height = pc_grid_template.length;
+	var width = pc_grid_template[0].length;
+	canvas.width = width*pc_SIZE +10;
+	canvas.height = height*pc_SIZE +10;
+	
+	// Launch the game
+	newGame();
+	iterateGame();
+}
 
+/**
+ * Start a new game
+ */
+
+function newGame() {
+	pc_num_games++;
+	pc_DIFFICULTY = 1.*(pc_num_games -1)/pc_num_games;
+	
+	// Restart PacMan
+	pc_pacman_direction = pc_LEFT;
+	pc_pacman_next_direction = pc_LEFT;
+	pc_current_frame = 0;
+	
 	// Copy the grid into local grid
+	// Count cheeses
+	pc_num_cheeses = 0;
 	pc_grid = new Array();
 	pc_truefalse_grid_template = new Array();
 	var height = pc_grid_template.length;
@@ -381,26 +418,9 @@ function initGame() {
 		}
 	}
 	
-	// Create ghosts
 	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
-		ghost = new Ghost();
-		ghost.restart();
-		ghost.color = pc_GHOSTS_COLORS[i%pc_GHOSTS_COLORS.length];
-		pc_ghosts.push(ghost);
+		pc_ghosts[i].restart();
 	}
-	
-	// Resize canvas
-	var canvas = document.getElementById('myCanvas');
-	if (! canvas.getContext)
-		return;
-	var ctx = canvas.getContext('2d');
-	var height = pc_grid.length;
-	var width = pc_grid[0].length;
-	canvas.width = width*pc_SIZE +10;
-	canvas.height = height*pc_SIZE +10;
-	
-	// Launch the game
-	iterateGame();
 }
 
 /**
@@ -420,8 +440,17 @@ function iterateGame() {
 		var cell_x = pc_pacman_x/pc_FRAMES_PER_CELL;
 		var cell_y = pc_pacman_y/pc_FRAMES_PER_CELL;
 		if (pc_grid[cell_y][cell_x] == "." || pc_grid[cell_y][cell_x] == "o") {
+			if (pc_grid[cell_y][cell_x] == ".")
+				pc_score += 10;
+			else
+				pc_score += 50;
 			pc_grid[cell_y][cell_x] = " ";
 			pc_num_cheeses--;
+		}
+		if (pc_num_cheeses == 0) {
+			newGame();
+			setTimeout(iterateGame, 1000/pc_FPS);
+			return;
 		}
 	}
 
