@@ -68,6 +68,19 @@ var pc_score = -1;
 var pc_lifes = 0;
 
 /**
+ * Display points
+ */
+
+function DisplayPoints(x, y, color, value) {
+	this.x = x;
+	this.y = y;
+	this.value = value;
+	this.iter = 0;
+	this.color = color;
+}
+var pc_points = new Array();
+
+/**
  * Requirements for A* implementation
  * used to find the "shortest path" to reach the PacMan
  */
@@ -395,6 +408,7 @@ function newGame() {
 	pc_big_cheese_effect = 0;
 	pc_killed_ghosts = 0;
 	document.getElementById('multiplicator').innerHTML = (1+pc_killed_ghosts);
+	pc_points = new Array();
 
 	// Restart PacMan
 	pc_pacman_direction = pc_LEFT;
@@ -488,6 +502,7 @@ function iterateGame() {
 			// Under big cheese effect
 			if (pc_ghosts[i].under_big_cheese_effect != 0) {
 				pc_score += 100 * (1+pc_killed_ghosts);
+				pc_points.push(new DisplayPoints(pc_pacman_x/pc_FRAMES_PER_CELL, pc_pacman_y/pc_FRAMES_PER_CELL, pc_ghosts[i].color, 100 * (1+pc_killed_ghosts)));
 				document.getElementById('score').innerHTML = pc_score;
 				pc_ghosts[i].restart();
 				pc_killed_ghosts++;
@@ -504,6 +519,9 @@ function iterateGame() {
 				pc_big_cheese_effect = 0;
 				pc_killed_ghosts = 0;
 				document.getElementById('multiplicator').innerHTML = (1+pc_killed_ghosts);
+				
+				// Remove points
+				pc_points = new Array()
 
 				// Still alive?
 				if (pc_lifes >= 0) {
@@ -520,10 +538,11 @@ function iterateGame() {
 		var cell_x = pc_pacman_x/pc_FRAMES_PER_CELL;
 		var cell_y = pc_pacman_y/pc_FRAMES_PER_CELL;
 		if (pc_grid[cell_y][cell_x] == "." || pc_grid[cell_y][cell_x] == "o") {
-			if (pc_grid[cell_y][cell_x] == ".")
+			if (pc_grid[cell_y][cell_x] == ".") {
 				pc_score += 10 * (1+pc_killed_ghosts);
-			else {
+			} else {
 				pc_score += 50 * (1+pc_killed_ghosts);
+				pc_points.push(new DisplayPoints(cell_x, cell_y, "#000000", 50 * (1+pc_killed_ghosts)));
 				if (pc_big_cheese_effect == 0)
 					pc_killed_ghosts = 0;
 				pc_big_cheese_effect = pc_GHOSTS_BIG_CHEESE_FRAMES;
@@ -581,6 +600,17 @@ function iterateGame() {
 	drawPacMan(canvas, ctx);
 	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
 		drawGhost(canvas, ctx, pc_ghosts[i]);
+	}
+	
+	// Draw points
+	for (var i=0 ; i != pc_points.length ; i++) {
+		drawPoints(canvas, ctx, pc_points[i]);
+	}
+	for (var i=0 ; i != pc_points.length ; i++) {
+		if (pc_points[i].iter >= pc_FPS/2) {
+			pc_points.splice(i, 1);
+			i--;
+		}
 	}
 
 	pc_current_frame++;
@@ -781,3 +811,15 @@ function drawGhost(canvas, ctx, ghost) {
 	ctx.lineTo(end_x, max_x);
 	ctx.fill();
 }
+
+/**
+ * Draw points
+ */
+
+function drawPoints(canvas, ctx, pts) {
+	ctx.fillStyle = pts.color;
+	ctx.font = "bold " + Math.ceil(5+4*pts.iter*pc_SIZE/3/pc_FPS) + "px Arial";
+	ctx.fillText("+" + pts.value, pts.x*pc_SIZE +5, pts.y*pc_SIZE +5);
+	pts.iter++;
+}
+
