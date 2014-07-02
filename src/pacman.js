@@ -153,7 +153,9 @@ function Ghost() {
 	this.y = -1;
 	this.direction = -1;
 	this.color = "#ff0000";
+	this.under_big_cheese_effect = 0;
 	this.restart = function() {
+		this.under_big_cheese_effect = 0;
 		var rand_starting_pt = Math.floor(Math.random() * pc_ghosts_starts_x.length);
 		this.x = pc_ghosts_starts_x[rand_starting_pt];
 		this.y = pc_ghosts_starts_y[rand_starting_pt];
@@ -311,8 +313,9 @@ function Ghost() {
 	this.changeDirection = function() {
 		// if on the center of a cell: change direction?
 		if (this.x%pc_FRAMES_PER_CELL == 0 && this.y%pc_FRAMES_PER_CELL == 0) {
-			if (Math.random() < pc_DIFFICULTY)
+			if (this.under_big_cheese_effect == 0 && Math.random() < pc_DIFFICULTY)
 				this.changeDirectionAStar();
+			// Purely random move if big cheese effect
 			else
 				this.changeDirectionStupid();
 		}
@@ -322,9 +325,16 @@ function Ghost() {
 		this.changeDirection();
 
 		// Move following this.direction
-		new_position = moveCharacter(this.x, this.y, this.direction, false);
-		this.x = new_position[0];
-		this.y = new_position[1];
+		// No move half of the time if under big cheese effect
+		if (this.under_big_cheese_effect == 0 || this.under_big_cheese_effect%2 == 0) {
+			new_position = moveCharacter(this.x, this.y, this.direction, false);
+			this.x = new_position[0];
+			this.y = new_position[1];
+		}
+
+		// Decrease big cheese effect
+		if (this.under_big_cheese_effect > 0)
+			this.under_big_cheese_effect--;
 	};
 }
 var pc_NUM_GHOSTS = 4;
@@ -332,6 +342,7 @@ var pc_ghosts = new Array();
 var pc_ghosts_starts_x = new Array();
 var pc_ghosts_starts_y = new Array();
 var pc_GHOSTS_COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ff7700"];
+var pc_GHOSTS_BIG_CHEESE_FRAMES = 200;
 
 /**
  * Initialize the game
@@ -461,19 +472,26 @@ function iterateGame() {
 	for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
 		// Contact detected
 		if (Math.abs(pc_ghosts[i].x - pc_pacman_x) + Math.abs(pc_ghosts[i].y - pc_pacman_y) <= 1) {
-			pc_lifes--;
-			document.getElementById('lifes').innerHTML = Math.max(0, pc_lifes);
+			// Under big cheese effect
+			if (pc_ghosts[i].under_big_cheese_effect != 0) {
+				pc_score += 100;
+				document.getElementById('score').innerHTML = pc_score;
+				pc_ghosts[i].restart();
+			} else {
+				pc_lifes--;
+				document.getElementById('lifes').innerHTML = Math.max(0, pc_lifes);
 
-			// Move both PacMan and Ghosts to their starting point
-			movePacManAtStart();
-			moveGhostsAtStart();
+				// Move both PacMan and Ghosts to their starting point
+				movePacManAtStart();
+				moveGhostsAtStart();
 
-			// Still alive?
-			if (pc_lifes >= 0) {
-				setTimeout(iterateGame, 1000/pc_FPS);
-				return;
-			} else
-				return; // end of the game
+				// Still alive?
+				if (pc_lifes >= 0) {
+					setTimeout(iterateGame, 1000/pc_FPS);
+					return;
+				} else
+					return; // end of the game
+			}
 		}
 	}
 
@@ -484,8 +502,13 @@ function iterateGame() {
 		if (pc_grid[cell_y][cell_x] == "." || pc_grid[cell_y][cell_x] == "o") {
 			if (pc_grid[cell_y][cell_x] == ".")
 				pc_score += 10;
-			else
+			else {
 				pc_score += 50;
+				for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
+					//TODO? only if out of safe zone
+					pc_ghosts[i].under_big_cheese_effect = pc_GHOSTS_BIG_CHEESE_FRAMES;
+				}
+			}
 			pc_grid[cell_y][cell_x] = " ";
 			pc_num_cheeses--;
 			document.getElementById('score').innerHTML = pc_score;
@@ -705,11 +728,17 @@ function drawPacMan(canvas, ctx) {
  */
 
 function drawGhost(canvas, ctx, ghost) {
+	if (ghost.under_big_cheese_effect != 0 && ghost.under_big_cheese_effect <= pc_GHOSTS_BIG_CHEESE_FRAMES/5 && (ghost.under_big_cheese_effect%4 == 1 || ghost.under_big_cheese_effect%4 == 2))
+		return;
+
 	var ghost_px_x = (1.*ghost.x/pc_FRAMES_PER_CELL +.5)*pc_SIZE +5;
 	var ghost_px_y = (1.*ghost.y/pc_FRAMES_PER_CELL +.5)*pc_SIZE +5;
 
 	ctx.beginPath();
-	ctx.fillStyle = ghost.color;
+	if (ghost.under_big_cheese_effect == 0)
+		ctx.fillStyle = ghost.color;
+	else
+		ctx.fillStyle = "#777777";
 	ctx.arc(ghost_px_x, ghost_px_y -.05*pc_SIZE, .4*pc_SIZE, Math.PI, 2*Math.PI, false);
 	var begin_x = ghost_px_x +.4*pc_SIZE;
 	var end_x = ghost_px_x -.4*pc_SIZE;
