@@ -1,10 +1,9 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
     <script type="text/javascript" src="./pacman.js"></script>
     <script type="text/javascript">
-      $(document).keydown(function(e){
+      document.onkeydown = function(e){
         if (e.keyCode == 37) //left
           pc_pacman_next_direction = pc_LEFT;
         else if (e.keyCode == 38) //up
@@ -13,7 +12,7 @@
           pc_pacman_next_direction = pc_RIGHT;
         else if (e.keyCode == 40) //down
           pc_pacman_next_direction = pc_DOWN;
-      });
+      };
     </script>
     <link href="style.css" type="text/css" rel="stylesheet" media="all" />
   </head>
