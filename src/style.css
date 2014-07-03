@@ -1,6 +1,11 @@
+body
+{
+	text-align: center;
+}
+
 canvas
 {
-	display: block;
+	display: inline-block;
 }
 
 a
@@ -21,6 +26,11 @@ a
 a:hover
 {
 	background-color: #8888ff;
+}
+
+.game
+{
+	margin-top: 5px;
 }
 
 .game span
