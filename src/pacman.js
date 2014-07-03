@@ -272,7 +272,12 @@ function Ghost() {
 		for (var j=0 ; j!=pc_truefalse_grid_template.length ; j++) {
 			truefalse_grid.push(pc_truefalse_grid_template[j].slice());
 		}
-		truefalse_grid[cell_y][cell_x] = false;
+		
+		// Cannot walk on other ghosts path
+		// the idea is to reach the target by taking several paths
+		for (var i=0 ; i!=pc_NUM_GHOSTS ; i++) {
+			truefalse_grid[Math.floor(pc_ghosts[i].y/pc_FRAMES_PER_CELL)][Math.floor(pc_ghosts[i].x/pc_FRAMES_PER_CELL)] = false;
+		}
 		
 		var num_elts = 0;
 		var height = pc_grid.length;
