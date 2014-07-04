@@ -435,7 +435,7 @@ function initGame() {
 
 function newGame() {
 	pc_num_games++;
-	pc_DIFFICULTY = 1.*(pc_num_games)/(pc_num_games +1);
+	pc_DIFFICULTY = 1.*(pc_num_games)/(pc_num_games +7);
 	pc_big_cheese_effect = 0;
 	pc_killed_ghosts = 0;
 	document.getElementById('multiplicator').innerHTML = (1+pc_killed_ghosts);
