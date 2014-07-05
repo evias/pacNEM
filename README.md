@@ -3,4 +3,4 @@ js-pacman
 
 Another basic PacMan written in JavaScript for fun
 
-Try it at: http://pacman.dubien.org/
+Facebook app: https://apps.facebook.com/hardcore_pacman/
