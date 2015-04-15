@@ -1,0 +1,11 @@
+{
+	"name": "js-pacman",
+	"version": "0.1.0",
+	"dependencies":
+	{
+		"socket.io": "~1.3.5"
+	},
+	"author": "Nicolas Dubien <github@dubien.org>",
+	"description": "Another basic PacMan written in JavaScript for fun"
+}
+
