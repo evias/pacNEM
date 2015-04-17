@@ -9,16 +9,15 @@
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     
     <script type="text/javascript" src="js/pacman.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript">
-      document.onkeydown = function(e){
-        if (e.keyCode == 37) //left
-          pc_pacman_next_direction = pc_LEFT;
-        else if (e.keyCode == 38) //up
-          pc_pacman_next_direction = pc_UP;
-        else if (e.keyCode == 39) //right
-          pc_pacman_next_direction = pc_RIGHT;
-        else if (e.keyCode == 40) //down
-          pc_pacman_next_direction = pc_DOWN;
+      var socket = io.connect(window.location.protocol + '//' + window.location.host);
+      var client_game = new ClientGame(socket);
+      socket.on('ready', client_game.serverReady);
+      socket.on('end_of_game', client_game.serverEndOfGame);
+      socket.on('update', client_game.serverUpdate);
+      document.onkeydown = function(e) {
+        socket.emit('keydown', e.keyCode);
       };
       window.addEventListener("keydown", function(e) {
         // space and arrow keys
@@ -29,15 +28,14 @@
     </script>
     <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
   </head>
-  <body onload="onLoadDisplay()">
+  <body>
     <canvas id="myCanvas" height="0" width="0"></canvas>
     <div class="game">
       <span id="score">0</span>
       <span id="lifes">0</span>
       <span id="multiplicator">1</span>
     </div>
-    <a href="#" onclick="javascript:initGame();">Play</a>
+    <a href="#" onclick="javascript:client_game.start();">Play</a>
     <a href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
-    <a href="http://pacman.dubien.org/" target="_blank">Facebook App</a>
   </body>
 </html>
