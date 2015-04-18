@@ -600,6 +600,7 @@ var PacMan = function() {
 
 var Game = function(io, sid) {
 	var me_ = this;
+	var start_time_ = Date.now();
 
 	var pacman_ = new PacMan();
 	var ghosts_ = new Array();
@@ -743,6 +744,7 @@ var Game = function(io, sid) {
 		
 		var state = {};
 		pacman_.move(map_);
+		state['elapsed'] = Date.now() - start_time_;
 		state["pacman"] = {
 				"x": pacman_.getX(),
 				"y": pacman_.getY(),

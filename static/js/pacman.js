@@ -89,13 +89,16 @@ var ClientGame = function(socket) {
 	var socket_ = socket;
 	var frame_ = 0;
 	var ongoing_game_ = false;
+	var ongoing_refresh_ = false;
 	var grid_ = undefined;
+	var last_elapsed_ = 0;
 	
 	this.start = function() {
 		if (! ongoing_game_) {
 			// Ask the server to start a new game session
 			console.log('Sent: new');
 			socket_.emit('new');
+			last_elapsed_ = 0;
 		}
 	};
 	
@@ -141,6 +144,15 @@ var ClientGame = function(socket) {
 	this.serverUpdate = function(rawdata) {
 		console.log('Received: update with ' + rawdata);
 		var data = JSON.parse(rawdata);
+
+		if (!ongoing_refresh_ && data['elapsed'] < last_elapsed_) {
+			return;
+		}
+		ongoing_refresh_ = true;
+		last_elapsed_ = data['elapsed'];
+
+		console.debug("Last frame received: " + last_elapsed_);
+
 		var canvas = document.getElementById('myCanvas');
 		if (! canvas.getContext) {
 			return;
@@ -155,6 +167,7 @@ var ClientGame = function(socket) {
 		}
 		
 		frame_++;
+		ongoing_refresh_ = false;
 	};
 };
 
