@@ -8,34 +8,12 @@ var app = require('express')(),
 	io = require('socket.io').listen(server),
 	path = require('path');
 
-var _room = require('./www/room.js'),
+var logger = require('./www/logger.js'),
+	_room = require('./www/room.js'),
 	Room = _room.Room,
 	RoomManager = require('./www/room_manager.js').RoomManager;
 
 var __smartfilename = path.basename(__filename);
-
-// Add ability to access line number
-// http://stackoverflow.com/questions/11386492/accessing-line-number-in-v8-javascript-chrome-node-js
-Object.defineProperty(global, '__stack', {
-	get: function(){
-		var orig = Error.prepareStackTrace;
-		Error.prepareStackTrace = function(_, stack){ return stack; };
-		var err = new Error;
-		Error.captureStackTrace(err, arguments.callee);
-		var stack = err.stack;
-		Error.prepareStackTrace = orig;
-		return stack;
-	}
-});
-Object.defineProperty(global, '__line', {
-	get: function(){
-		return __stack[1].getLineNumber();
-	}
-});
-
-var _log = function(line, description) {
-	return __smartfilename + '\t:' + line + '\t' + description;
-};
 
 // Serve static files: homepage, js, css, favicon...
 app
@@ -110,7 +88,7 @@ io.sockets.on('connection', function(socket) {
 	socket.on('start', function() {
 		var room = room_manager.getRoom(socket.id);
 		if (! room) {
-			console.log(_log(__line, 'Room is not defined for #' + socket.id));
+			logger.warn(__smartfilename, __line, 'Room is not defined for ' + socket.id);
 			return;
 		}
 		room.startGame(socket.id);
@@ -123,18 +101,13 @@ io.sockets.on('connection', function(socket) {
 			return;
 		}
 
-		console.log('Update direction based on "' + keycode + '"');
 		if (keycode == 37) {
-			console.log('+-> Left');
 			room.receiveKeyboard(socket.id, _room.LEFT);
 		} else if (keycode == 38) {
-			console.log('+-> Up');
 			room.receiveKeyboard(socket.id, _room.UP);
 		} else if (keycode == 39) {
-			console.log('+-> Right');
 			room.receiveKeyboard(socket.id, _room.RIGHT);
 		} else if (keycode == 40) {
-			console.log('+-> Down');
 			room.receiveKeyboard(socket.id, _room.DOWN);
 		}
 	});
