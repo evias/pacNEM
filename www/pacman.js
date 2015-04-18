@@ -675,7 +675,7 @@ var Game = function(io, sid) {
 				ghosts_[i].setDifficulty(1. * (num_rounds_ * num_rounds_) / (num_rounds_ * num_rounds_ +7));
 			}
 			
-			io.sockets.emit('ready', JSON.stringify({
+			io.sockets.to(sid).emit('ready', JSON.stringify({
 					'constants':
 					{
 						'FRAMES_PER_CELL': FRAMES_PER_CELL,
@@ -684,9 +684,8 @@ var Game = function(io, sid) {
 					},
 					'map': map_,
 			}));
-			//io.sockets.to('Socket#' + sid).emit('ready');
 		} else {
-			io.sockets.emit('end_of_game');
+			io.sockets.to(sid).emit('end_of_game');
 		}
 	};
 
@@ -781,7 +780,7 @@ var Game = function(io, sid) {
 					"cheese_effect": ghosts_[i].getUnderCheeseEffect(),
 			});
 		}
-		io.sockets.emit("update", JSON.stringify(state));
+		io.sockets.to(sid).emit("update", JSON.stringify(state));
 		console.log(JSON.stringify(state));
 		setTimeout(me_.iterate, 1000/FPS);
 	};
