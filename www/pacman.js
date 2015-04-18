@@ -9,6 +9,10 @@ var LEFT = 0,
 	RIGHT = 2,
 	DOWN = 3;
 
+var directionToString = function(direction) {
+	return ["LEFT", "UP", "RIGHT", "DOWN"][direction];
+};
+
 var CHEESE_EFFECT_FRAMES = 200;
 var NUM_GHOSTS = 4;
 var FPS = 20;
@@ -270,6 +274,10 @@ function isForbiddenFor(map, target_cell_type, x_old, y_old, direction, pacman) 
  */
 
 var Ghost = function() {
+	if (! Ghost.last_id) {
+		Ghost.last_id = 1;
+	}
+	var id_ = Ghost.last_id++;
 	var x_ = -1, y_ = -1;
 	var direction_ = -1;
 	var under_cheese_effect_ = 0;
@@ -346,7 +354,7 @@ var Ghost = function() {
 		// Remove the direction which is at the opposite of the current one
 		// if there is at least another choice
 		if (available_directions.length > 1) {
-			var index = available_directions.indexOf((this.direction +2) % 4);
+			var index = available_directions.indexOf((direction_ +2) % 4);
 			if (index > -1) {
 				available_directions.splice(index, 1);
 			}
@@ -467,9 +475,11 @@ var Ghost = function() {
 		if (x_ % FRAMES_PER_CELL == 0 && y_ % FRAMES_PER_CELL == 0) {
 			if (! this.isUnderCheeseEffect() && Math.random() < difficulty_) {
 				this.changeDirectionAStar(map, bool_map, pacman, ghosts);
+				console.log('(a*)     Ghost #' + id_ + ' change his mind and goes to the ' + directionToString(direction_));
 			// Purely random move if big cheese effect
 			} else {
 				this.changeDirectionStupid(map);
+				console.log('(stupid) Ghost #' + id_ + ' change his mind and goes to the ' + directionToString(direction_));
 			}
 		}
 	};
