@@ -493,6 +493,10 @@ var Ghost = function() {
 	};
 
 	this.isUnderCheeseEffect = function() {
+		return under_cheese_effect_ != 0;
+	};
+
+	this.getUnderCheeseEffect = function() {
 		return under_cheese_effect_;
 	};
 
@@ -662,6 +666,12 @@ var Game = function(io, sid) {
 			}
 			
 			io.sockets.emit('ready', JSON.stringify({
+					'constants':
+					{
+						'FRAMES_PER_CELL': FRAMES_PER_CELL,
+						'FPS': FPS,
+						'CHEESE_EFFECT_FRAMES': CHEESE_EFFECT_FRAMES,
+					},
 					'map': map_,
 			}));
 			//io.sockets.to('Socket#' + sid).emit('ready');
@@ -757,6 +767,7 @@ var Game = function(io, sid) {
 			state["ghosts"].push({
 					"x": ghosts_[i].getX(),
 					"y": ghosts_[i].getY(),
+					"cheese_effect": ghosts_[i].getUnderCheeseEffect(),
 			});
 		}
 		io.sockets.emit("update", JSON.stringify(state));

@@ -10,9 +10,9 @@ var LEFT = 0,
 var SIZE = 16;
 var GHOSTS_COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ff7700"];
 
+// Updated based on server's values
 var FPS = 20;
-
-// TODO also available server-side
+var CHEESE_EFFECT_FRAMES = 200;
 var FRAMES_PER_CELL = 5;
 
 var TransitionHelper = function(callback) {
@@ -63,6 +63,9 @@ var ClientGame = function(socket) {
 		console.log('Received: ready with rawdata');
 		var data = JSON.parse(rawdata);
 		grid_ = data['map'];
+		FPS = data['constants']['FPS'];
+		CHEESE_FRAMES = data['constants']['CHEESE_FRAMES'];
+		FRAMES_PER_CELL = data['constants']['FRAMES_PER_CELL'];
 			
 		if (! ongoing_game_) {
 			ongoing_game_ = true;
@@ -214,8 +217,9 @@ function drawPacMan(canvas, ctx, frame, pacman) {
  */
 
 function drawGhost(canvas, ctx, frame, ghost, color) {
-	//if (ghost.under_big_cheese_effect != 0 && ghost.under_big_cheese_effect <= pc_GHOSTS_BIG_CHEESE_FRAMES/5 && (ghost.under_big_cheese_effect%4 == 1 || ghost.under_big_cheese_effect%4 == 2))
-	//	return;
+	if (ghost['cheese_effect'] != 0 && ghost['cheese_effect'] <= CHEESE_EFFECT_FRAMES/5 && (ghost['cheese_effect']%4 == 1 || ghost['cheese_effect']%4 == 2)) {
+		return;
+	}
 
 	var ghost_px_x = (1. * ghost['x'] / FRAMES_PER_CELL +.5) * SIZE +5;
 	var ghost_px_y = (1. * ghost['y'] / FRAMES_PER_CELL +.5) * SIZE +5;
@@ -248,13 +252,13 @@ function drawGhost(canvas, ctx, frame, ghost, color) {
 	max_y = ghost_px_y +.2 * SIZE;
 	ctx.beginPath();
 	ctx.lineWidth = (Math.floor(frame/3)%3) +1;
-	//if (ghost.under_big_cheese_effect == 0) {
+	if (ghost['cheese_effect'] == 0) {
 		ctx.strokeStyle = "rgba(0,0,0,.5)";
 		ctx.fillStyle = "rgba(0,0,0,.5)";
-	//} else {
-	//	ctx.strokeStyle = "white";
-	//	ctx.fillStyle = "white";
-	//}
+	} else {
+		ctx.strokeStyle = "white";
+		ctx.fillStyle = "white";
+	}
 	for (var i=0 ; i!=2*num_min-1 ; i++) {
 		var current_x = begin_x + (end_x-begin_x)*(i+1)/(2*num_min);
 		if (i%2 == 0)
