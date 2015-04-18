@@ -42,6 +42,14 @@ var TransitionHelper = function(callback) {
 	}
 };
 
+var DisplayPoints = function(x, y, color, value) {
+	this.x = x;
+	this.y = y;
+	this.value = value;
+	this.iter = 0;
+	this.color = color;
+};
+
 var ClientGame = function(socket) {
 	var socket_ = socket;
 	var frame_ = 0;
@@ -49,7 +57,8 @@ var ClientGame = function(socket) {
 	var ongoing_refresh_ = false;
 	var grid_ = undefined;
 	var last_elapsed_ = 0;
-	
+	var points_ = new Array();
+
 	this.start = function() {
 		if (! ongoing_game_) {
 			// Ask the server to start a new game session
@@ -111,6 +120,13 @@ var ClientGame = function(socket) {
 			var y = data['eat'][i]['y'];
 			grid_[y][x] = ' ';
 		}
+		for (var i = 0 ; i != data['points'].length ; i++) {
+			points_.push(new DisplayPoints(
+					data['points'][i]['x'],
+					data['points'][i]['y'],
+					data['points'][i]['type'] == 'ghost' ? GHOSTS_COLORS[data['points'][i]['index'] % GHOSTS_COLORS.length] : '#000000',
+					data['points'][i]['amount']));
+		}
 
 		if (!ongoing_refresh_ && data['elapsed'] < last_elapsed_) {
 			return;
@@ -131,6 +147,15 @@ var ClientGame = function(socket) {
 		drawPacMan(canvas, ctx, frame_, data['pacman']);
 		for (var i = 0 ; i != data['ghosts'].length ; i++) {
 			drawGhost(canvas, ctx, frame_, data['ghosts'][i], GHOSTS_COLORS[i %GHOSTS_COLORS.length]);
+		}
+		for (var i=0 ; i != points_.length ; i++) {
+			drawPoints(canvas, ctx, points_[i]);
+		}
+		for (var i=0 ; i != points_.length ; i++) {
+			if (points_[i].iter >= FPS/2) {
+				points_.splice(i, 1);
+				i--;
+			}
 		}
 		
 		frame_++;
@@ -277,5 +302,16 @@ function drawGhost(canvas, ctx, frame, ghost, color) {
 	ctx.arc(ghost_px_x +.12*SIZE, ghost_px_y -.17*SIZE, .1*SIZE, 0, Math.PI, false);
 	ctx.arc(ghost_px_x +.12*SIZE, ghost_px_y -.21*SIZE, .1*SIZE, Math.PI, 2*Math.PI, false);
 	ctx.fill();
+}
+
+/**
+ *  * Draw points
+ *   */
+
+function drawPoints(canvas, ctx, pts) {
+		ctx.fillStyle = pts.color;
+		ctx.font = "bold " + Math.ceil(5 + 4*pts.iter*SIZE/3/FPS) + "px Arial";
+		ctx.fillText("+" + pts.value, pts.x*SIZE +5, pts.y*SIZE +5);
+		pts.iter++;
 }
 

@@ -716,6 +716,7 @@ var Game = function(io, sid) {
 					score_ += 100 * (1 + combo_ghosts_);
 					state['points'].push({
 							"type": "ghost",
+							"index": i,
 							"x": pacman_.getX()/FRAMES_PER_CELL,
 							"y": pacman_.getY()/FRAMES_PER_CELL,
 							"amount": 100 * (1 + combo_ghosts_),
