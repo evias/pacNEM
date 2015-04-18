@@ -620,54 +620,52 @@ var Game = function(io, sid) {
 		if (! pacman_.isAlive()) {
 			return;
 		}
-
-		if (num_cheeses_ == 0 || num_cheeses_ == -1) {
-			num_rounds_++;
-		}
-		
-		pacman_.restart();
-		for (var i=0 ; i!=ghosts_.length ; i++) {
-			ghosts_[i].restart();
-			ghosts_[i].setDifficulty(1. * (num_rounds_ * num_rounds_) / (num_rounds_ * num_rounds_ +7));
-		}
-		
-		under_cheese_effect_ = 0;
-		if (num_cheeses_ != 0) {
-			combo_ghosts_ = 0;
-		}
-
-		if (num_cheeses_ == 0 || num_cheeses_ == -1) {
-			num_cheeses_ = 0;
-			map_ = new Array();
-			bool_map_ = new Array();
-			var height = GRID.length;
-			var width = GRID[0].length;
-			for (var j=0 ; j!=height ; j++) {
-				var map_line = new Array();
-				var bool_map_line = new Array();
-				for (var i=0 ; i!=width ; i++) {
-					map_line.push(GRID[j][i]);
-					bool_map_line.push(GRID[j][i] == "." || GRID[j][i] == "o" || GRID[j][i] == "s" || GRID[j][i] == " ");
-					if (GRID[j][i] == "." || GRID[j][i] == "o") {
-						num_cheeses_++;
-					}
-				}
-				map_.push(map_line);
-				bool_map_.push(bool_map_line);
-			}
-		}
-
 		setTimeout(this.iterate, 1000/FPS);
 	};
 
 	this.refresh = function() {
-		console.log('refresh');
 		if (pacman_.isAlive()) {
-			console.log('ready');
-			io.sockets.emit('ready');
+			// Prepare the game configuration
+			// Map
+			under_cheese_effect_ = 0;
+			if (num_cheeses_ != 0) {
+				combo_ghosts_ = 0;
+			}
+
+			if (num_cheeses_ == 0 || num_cheeses_ == -1) {
+				num_rounds_++;
+				num_cheeses_ = 0;
+				map_ = new Array();
+				bool_map_ = new Array();
+				var height = GRID.length;
+				var width = GRID[0].length;
+				for (var j=0 ; j!=height ; j++) {
+					var map_line = new Array();
+					var bool_map_line = new Array();
+					for (var i=0 ; i!=width ; i++) {
+						map_line.push(GRID[j][i]);
+						bool_map_line.push(GRID[j][i] == "." || GRID[j][i] == "o" || GRID[j][i] == "s" || GRID[j][i] == " ");
+						if (GRID[j][i] == "." || GRID[j][i] == "o") {
+							num_cheeses_++;
+						}
+					}
+					map_.push(map_line);
+					bool_map_.push(bool_map_line);
+				}
+			}
+			
+			// Characters
+			pacman_.restart();
+			for (var i=0 ; i!=ghosts_.length ; i++) {
+				ghosts_[i].restart();
+				ghosts_[i].setDifficulty(1. * (num_rounds_ * num_rounds_) / (num_rounds_ * num_rounds_ +7));
+			}
+			
+			io.sockets.emit('ready', JSON.stringify({
+					'map': map_,
+			}));
 			//io.sockets.to('Socket#' + sid).emit('ready');
 		} else {
-			console.log('end_of_game');
 			io.sockets.emit('end_of_game');
 		}
 	};
@@ -677,6 +675,10 @@ var Game = function(io, sid) {
 	};
 
 	this.iterate = function() {
+		var state = {};
+		state['points'] = new Array();
+		state['eat'] = new Array();
+
 		// Manage cheese effect depletion
 		if (under_cheese_effect_ > 0) {
 			under_cheese_effect_--;
@@ -692,12 +694,12 @@ var Game = function(io, sid) {
 				// Under cheese effect
 				if (ghosts_[i].isUnderCheeseEffect()) {
 					score_ += 100 * (1 + combo_ghosts_);
-					io.sockets.emit('points', JSON.stringify({
+					state['points'].push({
 							"type": "ghost",
 							"x": pacman_.getX()/FRAMES_PER_CELL,
 							"y": pacman_.getY()/FRAMES_PER_CELL,
 							"amount": 100 * (1 + combo_ghosts_),
-					}));
+					});
 					ghosts_[i].restart();
 					combo_ghosts_++;
 				// No cheese effect
@@ -718,21 +720,21 @@ var Game = function(io, sid) {
 					score_ += 10 * (1 + combo_ghosts_);
 				} else {
 					score_ += 50 * (1 + combo_ghosts_);
-					io.sockets.emit('points', JSON.stringify({
+					state['points'].push({
 							"type": "cheese_effect",
 							"x": cell_x,
 							"y": cell_y,
 							"amount": 50 * (1 + combo_ghosts_),
-					}));
+					});
 					under_cheese_effect_ = CHEESE_EFFECT_FRAMES;
 					for (var i=0 ; i != ghosts_.length ; i++) {
 						ghosts_[i].setUnderCheeseEffect(CHEESE_EFFECT_FRAMES);
 					}
 				}
-				io.sockets.emit('eat', JSON.stringify({
+				state['eat'].push({
 						"x": cell_x,
 						"y": cell_y,
-				}));
+				});
 				map_[cell_y][cell_x] = " ";
 				num_cheeses_--;
 			}
@@ -742,7 +744,6 @@ var Game = function(io, sid) {
 			}
 		}
 		
-		var state = {};
 		pacman_.move(map_);
 		state['elapsed'] = Date.now() - start_time_;
 		state["pacman"] = {

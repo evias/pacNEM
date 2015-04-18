@@ -15,49 +15,6 @@ var FPS = 20;
 // TODO also available server-side
 var FRAMES_PER_CELL = 5;
 
-// TODO should be transfered through socket.io
-// Legend:
-//  #: wall
-//   : no cheese
-//  .: cheese
-//  o: big cheese
-//  s: starting point
-//  g: ghost starting point
-//  _: forbidden for player
-var GRID = [
-	"############################",
-	"#............##............#",
-	"#.####.#####.##.#####.####.#",
-	"#o####.#####.##.#####.####o#",
-	"#.####.#####.##.#####.####.#",
-	"#..........................#",
-	"#.####.##.########.##.####.#",
-	"#.####.##.########.##.####.#",
-	"#......##....##....##......#",
-	"######.#####.##.#####.######",
-	"######.#####.##.#####.######",
-	"######.##..........##.######",
-	"######.##.###__###.##.######",
-	"######.##.#gg__gg#.##.######",
-	"      ....#gg__gg#....      ",
-	"######.##.#gggggg#.##.######",
-	"######.##.########.##.######",
-	"######.##..........##.######",
-	"######.##.########.##.######",
-	"######.##.########.##.######",
-	"#............##............#",
-	"#.####.#####.##.#####.####.#",
-	"#o####.#####.##.#####.####o#",
-	"#...##.......s........##...#",
-	"###.##.##.########.##.##.###",
-	"###.##.##.########.##.##.###",
-	"#......##....##....##......#",
-	"#.##########.##.##########.#",
-	"#.##########.##.##########.#",
-	"#..........................#",
-	"############################",
-];
-
 var TransitionHelper = function(callback) {
 	var callback_ = callback;
 	var frame_ = 0;
@@ -102,9 +59,10 @@ var ClientGame = function(socket) {
 		}
 	};
 	
-	this.serverReady = function() {
-		console.log('Received: ready');
-		grid_ = GRID;
+	this.serverReady = function(rawdata) {
+		console.log('Received: ready with rawdata');
+		var data = JSON.parse(rawdata);
+		grid_ = data['map'];
 			
 		if (! ongoing_game_) {
 			ongoing_game_ = true;
@@ -144,6 +102,12 @@ var ClientGame = function(socket) {
 	this.serverUpdate = function(rawdata) {
 		console.log('Received: update with ' + rawdata);
 		var data = JSON.parse(rawdata);
+
+		for (var i = 0 ; i != data['eat'].length ; i++) {
+			var x = data['eat'][i]['x'];
+			var y = data['eat'][i]['y'];
+			grid_[y][x] = ' ';
+		}
 
 		if (!ongoing_refresh_ && data['elapsed'] < last_elapsed_) {
 			return;
