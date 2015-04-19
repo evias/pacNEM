@@ -36,36 +36,43 @@ app
 var room_manager = new RoomManager(io);
 
 io.sockets.on('connection', function(socket) {
+	logger.info(__smartfilename, __line, '[' + socket.id + '] ()');
 	room_manager.register(socket.id);
 	
 	// Unregister the socket from the underlying RoomManager
 	socket.on('close', function () {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] close()');
 		room_manager.disconnect(socket.id);
 	});
 
 	// Rename the user
 	socket.on('change_username', function(username) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] change_username(' + username + ')');
 		room_manager.changeUsername(socket.id, username);
 	});
 
 	// Join an existing room
 	socket.on('join_room', function(room_id) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] join_room(' + room_id + ')');
 		room_manager.joinRoom(socket.id, room_id);
 	});
 
 	// Create a new room
 	socket.on('create_room', function() {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] create_room()');
 		room_manager.createRoom(socket.id);
 	});
 
 	// Leave a room
 	socket.on('leave_room', function() {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] leave_room()');
 		room_manager.leaveRoom(socket.id);
 	});
 
 	// Ask to launch the game inside the room
 	// The game will not start immediately and other members can cancel its launch
 	socket.on('run_game', function() {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] run_game()');
 		var room = room_manager.getRoom(socket.id);
 		if (room) {
 			room.runGame();
@@ -74,14 +81,18 @@ io.sockets.on('connection', function(socket) {
 	
 	// Cancel game
 	socket.on('cancel_game', function() {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] cancel_game()');
 		var room = room_manager.getRoom(socket.id);
-		if (room) {
-			room.cancelGame();
+		if (! room) {
+			logger.warn(__smartfilename, __line, 'Room is not defined for ' + socket.id);
+			return;
 		}
+		room.cancelGame();
 	});
 
 	// Start the game
 	socket.on('start', function() {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] start()');
 		var room = room_manager.getRoom(socket.id);
 		if (! room) {
 			logger.warn(__smartfilename, __line, 'Room is not defined for ' + socket.id);
@@ -92,6 +103,7 @@ io.sockets.on('connection', function(socket) {
 	
 	// Update the direction of the player
 	socket.on('keydown', function(keycode) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] keydown(' + keycode + ')');
 		var room = room_manager.getRoom(socket.id);
 		if (! room) {
 			return;
