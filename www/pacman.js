@@ -560,6 +560,7 @@ var PacMan = function() {
 	var cheese_power_ = 0;
 	var combo_ = 0;
 	var score_ = 0;
+	var killed_recently_ = 0;
 
 	this.restart = function(x, y) {
 		x_ = x;
@@ -622,6 +623,18 @@ var PacMan = function() {
 				combo_ = 0;
 			}
 		}
+
+		if (killed_recently_ > 0) {
+			killed_recently_--;
+		}
+	};
+
+	this.hasBeenKilledRecently = function() {
+		return killed_recently_ != 0;
+	};
+
+	this.setKilledRecently = function(killed_recently) {
+		killed_recently_ = killed_recently;
 	};
 
 	this.getDirection = function() {
@@ -678,6 +691,7 @@ var PacMan = function() {
 				'combo': combo_,
 				'cheese_power': cheese_power_,
 				'score': score_,
+				'killed_recently': killed_recently_,
 		};
 	};
 };
@@ -762,7 +776,8 @@ var Game = function(io, sids) {
 				pacmans_[i].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL);
 				if (map_[pacman_y][pacman_x] == "." || map_[pacman_y][pacman_x] == "o") {
 					num_cheeses_--;
-				}	
+				}
+				pacmans_[i].setKilledRecently(0);
 				map_[pacman_y][pacman_x] = " ";
 				start_received_from_.push(false);
 			}
@@ -803,6 +818,10 @@ var Game = function(io, sids) {
 		
 		for (var j=0 ; j!=pacmans_.length ; j++) {
 			var pacman = pacmans_[j];
+			if (pacman.hasBeenKilledRecently()) {
+				continue;
+			}
+
 			// Check for contact between PacMan and a ghost
 			for (var i=0 ; i!=ghosts_.length ; i++) {
 				// Contact detected
@@ -825,6 +844,11 @@ var Game = function(io, sids) {
 						if (pacmans_.length == 1) {
 							self.refresh();
 							return;
+						} else {
+							var pacman_x =  PACMAN_STARTS[pacmans_.length -1][j]['x'];
+							var pacman_y =  PACMAN_STARTS[pacmans_.length -1][j]['y'];
+							pacmans_[j].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL);
+							pacman.setKilledRecently(FPS);
 						}
 					}
 				}

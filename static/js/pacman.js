@@ -219,6 +219,10 @@ function drawEmptyGameBoard(canvas, ctx, grid) {
  */
 
 function drawPacMan(canvas, ctx, frame, pacman) {
+	if (pacman["killed_recently"] != 0 && pacman["killed_recently"]%4 < 2) {
+		return;
+	}
+	
 	var pacman_px_x = (1. * pacman['x'] / FRAMES_PER_CELL +.5) * SIZE +5;
 	var pacman_px_y = (1. * pacman['y'] / FRAMES_PER_CELL +.5) * SIZE +5;
 	var pacman_mouth = frame % FRAMES_PER_CELL +3;
