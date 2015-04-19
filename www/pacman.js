@@ -86,10 +86,8 @@ var PACMAN_STARTS = [
 	],
 ];
 
-// Possible starting points for ghosts and pacman
+// Possible starting points for ghosts
 // Computed from GRID
-var PACMAN_START_X = PACMAN_STARTS[0][0]['x'] * FRAMES_PER_CELL;
-var PACMAN_START_Y = PACMAN_STARTS[0][0]['y'] * FRAMES_PER_CELL;
 var GHOST_STARTS_X = new Array();
 var GHOST_STARTS_Y = new Array();
 {
@@ -563,9 +561,9 @@ var PacMan = function() {
 	var combo_ = 0;
 	var score_ = 0;
 
-	this.restart = function() {
-		x_ = PACMAN_START_X;
-		y_ = PACMAN_START_Y;
+	this.restart = function(x, y) {
+		x_ = x;
+		y_ = y;
 		direction_ = LEFT;
 		next_direction_ = LEFT;
 	};
@@ -693,7 +691,7 @@ var Game = function(io, sids) {
 	var me_ = this;
 	var start_time_ = Date.now();
 
-	var pacman_ = new PacMan();
+	var pacmans_ = new Array();
 	var ghosts_ = new Array();
 	var num_rounds_ = 0;
 	
@@ -706,14 +704,22 @@ var Game = function(io, sids) {
 	var last_timeout_ = undefined;
 
 	this.start = function() {
-		if (! pacman_.isAlive()) {
+		var one_is_alive = false;
+		for (var i =0 ; i!=pacmans_.length ; i++) {
+			one_is_alive |= pacmans_[i].isAlive();
+		}
+		if (! one_is_alive) {
 			return;
 		}
 		last_timeout_ = setTimeout(this.iterate, 1000/FPS);
 	};
 
 	this.refresh = function() {
-		if (pacman_.isAlive()) {
+		var one_is_alive = false;
+		for (var i =0 ; i!=pacmans_.length ; i++) {
+			one_is_alive |= pacmans_[i].isAlive();
+		}
+		if (one_is_alive) {
 			// Prepare the game configuration
 			// Map
 			if (num_cheeses_ == 0 || num_cheeses_ == -1) {
@@ -739,13 +745,15 @@ var Game = function(io, sids) {
 			}
 			
 			// Characters
-			pacman_.restart();
-			var pacman_x = Math.floor(pacman_.getX() / FRAMES_PER_CELL);
-			var pacman_y = Math.floor(pacman_.getY() / FRAMES_PER_CELL);
-			if (map_[pacman_y][pacman_x] == "." || map_[pacman_y][pacman_x] == "o") {
-				num_cheeses_--;
-			}	
-			map_[pacman_y][pacman_x] = " ";
+			for (var i = 0 ; i!=pacmans_.length ; i++) {
+				var pacman_x =  PACMAN_STARTS[pacmans_.length -1][i]['x'];
+				var pacman_y =  PACMAN_STARTS[pacmans_.length -1][i]['y'];
+				pacmans_[i].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL);
+				if (map_[pacman_y][pacman_x] == "." || map_[pacman_y][pacman_x] == "o") {
+					num_cheeses_--;
+				}	
+				map_[pacman_y][pacman_x] = " ";
+			}
 			
 			for (var i=0 ; i!=ghosts_.length ; i++) {
 				ghosts_[i].restart();
@@ -770,8 +778,8 @@ var Game = function(io, sids) {
 		}
 	};
 
-	this.setPacmanDirection = function(direction) {
-		pacman_.setNextDirection(direction);
+	this.setPacmanDirection = function(direction, id) {
+		pacmans_[id].setNextDirection(direction);
 	};
 
 	this.iterate = function() {
@@ -780,71 +788,87 @@ var Game = function(io, sids) {
 		var state = {};
 		state['points'] = new Array();
 		state['eat'] = new Array();
+		
+		for (var j=0 ; j!=pacmans_.length ; j++) {
+			var pacman = pacmans_[j];
+			// Check for contact between PacMan and a ghost
+			for (var i=0 ; i!=ghosts_.length ; i++) {
+				// Contact detected
+				if (Math.abs(ghosts_[i].getX() - pacman.getX()) + Math.abs(ghosts_[i].getY() - pacman.getY()) <= 1) {
+					// Under cheese effect
+					if (pacman.hasCheesePower() && ghosts_[i].isUnderCheeseEffect()) {
+						var increase = pacman.increaseScore(100);
+						state['points'].push({
+								"type": "ghost",
+								"index": i,
+								"x": pacman.getX()/FRAMES_PER_CELL,
+								"y": pacman.getY()/FRAMES_PER_CELL,
+								"amount": increase,
+						});
+						ghosts_[i].restart();
+						pacman.increaseCombo();
+					// No cheese effect
+					} else {
+						pacman.kill();
+						me_.refresh();
+						return;
+					}
+				}
+			}
 
-		// Check for contact between PacMan and a ghost
-		for (var i=0 ; i!=ghosts_.length ; i++) {
-			// Contact detected
-			if (Math.abs(ghosts_[i].getX() - pacman_.getX()) + Math.abs(ghosts_[i].getY() - pacman_.getY()) <= 1) {
-				// Under cheese effect
-				if (pacman_.hasCheesePower() && ghosts_[i].isUnderCheeseEffect()) {
-					var increase = pacman_.increaseScore(100);
-					state['points'].push({
-							"type": "ghost",
-							"index": i,
-							"x": pacman_.getX()/FRAMES_PER_CELL,
-							"y": pacman_.getY()/FRAMES_PER_CELL,
-							"amount": increase,
+			// Eat the cheese if there is one
+			if (pacman.getX() % FRAMES_PER_CELL == 0 && pacman.getY() % FRAMES_PER_CELL == 0) {
+				var cell_x = pacman.getX() / FRAMES_PER_CELL;
+				var cell_y = pacman.getY() / FRAMES_PER_CELL;
+				if (map_[cell_y][cell_x] == "." || map_[cell_y][cell_x] == "o") {
+					if (map_[cell_y][cell_x] == ".") {
+						pacman.increaseScore(10);
+					} else {
+						var increase = pacman.increaseScore(50);
+						state['points'].push({
+								"type": "cheese_effect",
+								"x": cell_x,
+								"y": cell_y,
+								"amount": increase,
+						});
+						pacman.setCheesePower(CHEESE_EFFECT_FRAMES);
+						for (var i=0 ; i != ghosts_.length ; i++) {
+							ghosts_[i].setUnderCheeseEffect(CHEESE_EFFECT_FRAMES);
+						}
+					}
+					state['eat'].push({
+							"x": cell_x,
+							"y": cell_y,
 					});
-					ghosts_[i].restart();
-					pacman_.increaseCombo();
-				// No cheese effect
-				} else {
-					pacman_.kill();
+					map_[cell_y][cell_x] = " ";
+					num_cheeses_--;
+				}
+				if (num_cheeses_ == 0) {
 					me_.refresh();
 					return;
 				}
 			}
 		}
-
-		// Eat the cheese if there is one
-		if (pacman_.getX() % FRAMES_PER_CELL == 0 && pacman_.getY() % FRAMES_PER_CELL == 0) {
-			var cell_x = pacman_.getX() / FRAMES_PER_CELL;
-			var cell_y = pacman_.getY() / FRAMES_PER_CELL;
-			if (map_[cell_y][cell_x] == "." || map_[cell_y][cell_x] == "o") {
-				if (map_[cell_y][cell_x] == ".") {
-					pacman_.increaseScore(10);
-				} else {
-					var increase = pacman_.increaseScore(50);
-					state['points'].push({
-							"type": "cheese_effect",
-							"x": cell_x,
-							"y": cell_y,
-							"amount": increase,
-					});
-					pacman_.setCheesePower(CHEESE_EFFECT_FRAMES);
-					for (var i=0 ; i != ghosts_.length ; i++) {
-						ghosts_[i].setUnderCheeseEffect(CHEESE_EFFECT_FRAMES);
-					}
-				}
-				state['eat'].push({
-						"x": cell_x,
-						"y": cell_y,
-				});
-				map_[cell_y][cell_x] = " ";
-				num_cheeses_--;
-			}
-			if (num_cheeses_ == 0) {
-				me_.refresh();
-				return;
-			}
-		}
 		
-		pacman_.move(map_);
 		state['elapsed'] = Date.now() - start_time_;
-		state["pacman"] = pacman_.toDictionary();
+		state["pacmans"] = new Array();
+		for (var i=0 ; i!=pacmans_.length ; i++) {
+			pacmans_[i].move(map_);
+			state["pacmans"].push(pacmans_[i].toDictionary());
+		}
 		state["ghosts"] = new Array();
 		for (var i=0 ; i != ghosts_.length ; i++) {
-			ghosts_[i].move(map_, bool_map_, pacman_, ghosts_);
+			var nearest = -1;
+			var nearest_distance = -1;
+			for (var j=0 ; j!=pacmans_.length ; j++) {
+				var pacman = pacmans_[j];
+				var distance = distanceCells(map_, ghosts_[i].getX(), ghosts_[i].getY(), pacman.getX(), pacman.getY());
+				if (j == 0 || nearest_distance > distance) {
+					nearest = j;
+					nearest_distance = distance;
+				}
+			}
+			ghosts_[i].move(map_, bool_map_, pacmans_[nearest], ghosts_);
 			state["ghosts"].push(ghosts_[i].toDictionary());
 		}
 		for (var i = 0 ; i != sids_.length ; i++) {
@@ -860,6 +884,9 @@ var Game = function(io, sids) {
 	};
 	
 	{
+		for (var i=0 ; i!=sids_.length ; i++) {
+			pacmans_.push(new PacMan());
+		}
 		for (var i=0 ; i!=NUM_GHOSTS ; i++) {
 			ghosts_.push(new Ghost());
 		}

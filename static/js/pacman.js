@@ -144,7 +144,9 @@ var ClientGame = function(socket) {
 		
 		// Draw game
 		drawEmptyGameBoard(canvas, ctx, grid_);
-		drawPacMan(canvas, ctx, frame_, data['pacman']);
+		for (var i = 0 ; i != data['pacmans'].length ; i++) {
+			drawPacMan(canvas, ctx, frame_, data['pacmans'][i]);
+		}
 		for (var i = 0 ; i != data['ghosts'].length ; i++) {
 			drawGhost(canvas, ctx, frame_, data['ghosts'][i], GHOSTS_COLORS[i %GHOSTS_COLORS.length]);
 		}

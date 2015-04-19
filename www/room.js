@@ -137,10 +137,11 @@ var Room = function(io, manager) {
 
 	// Send arrows to the game
 	this.receiveKeyboard = function(sid, arrow) {
-		assert.notEqual(members_.indexOf(sid), -1);
+		var id = members_.indexOf(sid);
+		assert.notEqual(id, -1);
 
 		if (status_ == Room.STATUS_PLAY) {
-			game_.setPacmanDirection(arrow);
+			game_.setPacmanDirection(arrow, id);
 		}
 	};
 };
