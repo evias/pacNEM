@@ -57,6 +57,7 @@ var Room = function(io, manager) {
 	var realRunGame = function() {
 		assert.equal(status_, Room.STATUS_WAIT);
 		assert(members_.length);
+		assert(members_.length <= 4);
 		
 		status_ = Room.STATUS_PLAY;
 		game_ = new Game(io, members_);
@@ -73,6 +74,7 @@ var Room = function(io, manager) {
 	this.runGame = function() {
 		assert.equal(status_, Room.STATUS_JOIN);
 		assert(members_.length);
+		assert(members_.length <= 4);
 		
 		status_ = Room.STATUS_WAIT;
 		timeout_run_ = setTimeout(realRunGame, Room.WAIT_TIME_MS);
