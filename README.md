@@ -40,3 +40,7 @@ Alternatively you can use this command:
 ```
 ./app.js
 ```
+
+## Test it
+
+http://pacman.dubien.me
