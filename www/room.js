@@ -97,11 +97,12 @@ var Room = function(io, manager) {
 	
 	// Transfer the start message directly towards the Game
 	this.startGame = function(sid) {
+		var id = members_.indexOf(sid);
+		assert.notEqual(id, -1);
 		assert.equal(status_, Room.STATUS_PLAY);
-		assert.notEqual(members_.indexOf(sid), -1);
 		assert(game_);
 
-		game_.start();
+		game_.start(id);
 	};
 
 	// Add a player to the Room (if and only if the room is not already full)

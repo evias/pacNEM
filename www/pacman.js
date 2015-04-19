@@ -702,8 +702,18 @@ var Game = function(io, sids) {
 	var bool_map_ = undefined;
 	var num_cheeses_ = -1;
 	var last_timeout_ = undefined;
+	var start_received_from_ = new Array();
 
-	this.start = function() {
+	this.start = function(id) {
+		start_received_from_[id] = true;
+		var everyone_has_sent = true;
+		for (var i=0 ; i!=start_received_from_.length ; i++) {
+			everyone_has_sent &= start_received_from_[i];
+		}
+		if (! everyone_has_sent) {
+			return;
+		}
+
 		var one_is_alive = false;
 		for (var i =0 ; i!=pacmans_.length ; i++) {
 			one_is_alive |= pacmans_[i].isAlive();
@@ -745,6 +755,7 @@ var Game = function(io, sids) {
 			}
 			
 			// Characters
+			start_received_from_ = new Array();
 			for (var i = 0 ; i!=pacmans_.length ; i++) {
 				var pacman_x =  PACMAN_STARTS[pacmans_.length -1][i]['x'];
 				var pacman_y =  PACMAN_STARTS[pacmans_.length -1][i]['y'];
@@ -753,6 +764,7 @@ var Game = function(io, sids) {
 					num_cheeses_--;
 				}	
 				map_[pacman_y][pacman_x] = " ";
+				start_received_from_.push(false);
 			}
 			
 			for (var i=0 ; i!=ghosts_.length ; i++) {
