@@ -503,11 +503,9 @@ var Ghost = function() {
 		if (x_ % FRAMES_PER_CELL == 0 && y_ % FRAMES_PER_CELL == 0) {
 			if (! this.isUnderCheeseEffect() && Math.random() < difficulty_) {
 				this.changeDirectionAStar(map, bool_map, pacman, ghosts);
-				console.log('(a*)     Ghost #' + id_ + ' change his mind and goes to the ' + directionToString(direction_));
 			// Purely random move if big cheese effect
 			} else {
 				this.changeDirectionStupid(map);
-				console.log('(stupid) Ghost #' + id_ + ' change his mind and goes to the ' + directionToString(direction_));
 			}
 		}
 	};
@@ -1062,7 +1060,6 @@ var Game = function(io, sids, room) {
 		for (var i = 0 ; i != sids_.length ; i++) {
 			io.sockets.to(sids_[i]).emit("update", JSON.stringify(state));
 		}
-		console.log(JSON.stringify(state));
 		last_timeout_ = setTimeout(self.iterate, 1000/FPS);
 	};
 
