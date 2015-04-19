@@ -57,7 +57,7 @@
         for (var i = 0 ; i != roomdata['users'].length ; i++) {
           var $member = $("<li/>");
           $member.addClass("member");
-          $member.text(usersdata[roomdata['users']] ? usersdata[roomdata['users']] : roomdata['users']);
+          $member.text(usersdata[roomdata['users'][i]] ? usersdata[roomdata['users'][i]] : roomdata['users'][i]);
           $panel_members.append($member);
         }
 
@@ -147,6 +147,28 @@
         <div id="rooms">
         </div>
         <div id="your_room">
+          <div>
+            <div style="display: inline-block; width: 250px; margin-bottom: 5px;">
+              <div class="input-group">
+                <span class="input-group-addon" id="describe-username"><span class="glyphicon glyphicon-user"></span></span>
+                <input id="username" type="text" class="form-control" placeholder="Username" aria-describedby="describe-username">
+                <span class="input-group-btn"><a id="send_username" class="btn btn-default" role="button" href="#">Send</a></span>
+              </div>
+            </div>
+          </div>
+          <script type="text/javascript">
+            $("#username").keypress(function(e) {
+                if (e.keyCode == 13) {
+                  socket.emit('change_username', $("#username").val());
+                }
+            });
+            $("#send_username").click(function() {
+                socket.emit('change_username', $("#username").val());
+            });
+            if ($("#username").val()) {
+               socket.emit('change_username', $("#username").val());
+            }
+          </script>
           <a id="create_room" class="btn btn-primary" role="button" href="#" onclick="javascript:socket.emit('create_room');">Create room</a>
           <a class="btn btn-link" role="button" href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
         </div>
