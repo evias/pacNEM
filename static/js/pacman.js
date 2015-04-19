@@ -224,6 +224,8 @@ function drawPacMan(canvas, ctx, frame, pacman) {
 
 	ctx.beginPath();
 	ctx.fillStyle = "#777700";
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = "#000000";
 	if (pacman_direction == LEFT) {
 		ctx.arc(pacman_px_x, pacman_px_y, .45*SIZE, Math.PI+Math.PI/pacman_mouth, Math.PI-Math.PI/pacman_mouth,false);
 	} else if (pacman_direction == UP) {
@@ -235,6 +237,9 @@ function drawPacMan(canvas, ctx, frame, pacman) {
 	}
 	ctx.lineTo(pacman_px_x, pacman_px_y);
 	ctx.fill();
+	if (pacman['cheese_power'] != 0 && ! (pacman['cheese_power'] <= CHEESE_EFFECT_FRAMES/5 && (pacman['cheese_power']%4 == 1 || pacman['cheese_power']%4 == 2))) {
+		ctx.stroke();
+	}
 }
 
 /**
