@@ -46,6 +46,11 @@ canvas
 	content: "x";
 }
 
+#rooms
+{
+    margin-top: 10px;
+}
+
 ul.members
 {
     list-style: none;
@@ -66,5 +71,10 @@ ul.members li.member
 ul.members li.member:not(:first-child)
 {
     margin-left: 10px;
+}
+
+#your_room
+{
+    margin-top: 10px;
 }
 

@@ -14,14 +14,22 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="js/pacman.js"></script>
+    <script src="/js/pacman.js"></script>
 
     <script type="text/javascript">
       var socket = io.connect(window.location.protocol + '//' + window.location.host);
       var client_game = new ClientGame(socket);
 
-      socket.on('ready', client_game.serverReady);
-      socket.on('end_of_game', client_game.serverEndOfGame);
+      socket.on('ready', function(rawdata) {
+          $("#game").show();
+          $("#looking_for_game").hide();
+          client_game.serverReady(rawdata);
+      });
+      socket.on('end_of_game', function() {
+          client_game.serverEndOfGame();
+          $("#game").hide();
+          $("#looking_for_game").show();
+      });
       socket.on('update', client_game.serverUpdate);
       
       var buildButton = function(label, extra_class) {
@@ -124,7 +132,7 @@
   </head>
   <body>
     <div class="container">
-      <div class="game">
+      <div id="game" class="game">
         <canvas id="myCanvas" height="0" width="0"></canvas>
         <div>
           <span id="score">0</span>
@@ -132,13 +140,16 @@
           <span id="multiplicator">1</span>
         </div>
       </div>
-      <div class="panel panel-default">
-        <div class="panel-body">
+      <script type="text/javascript">
+        $("#game").hide();
+      </script>
+      <div id="looking_for_game">
+        <div id="rooms">
+        </div>
+        <div id="your_room">
           <a id="create_room" class="btn btn-primary" role="button" href="#" onclick="javascript:socket.emit('create_room');">Create room</a>
           <a class="btn btn-link" role="button" href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
         </div>
-      </div>
-      <div id="rooms">
       </div>
     </div>
   </body>
