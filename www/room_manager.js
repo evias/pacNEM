@@ -104,7 +104,7 @@ var RoomManager = function(io) {
 		var room_id = map_member_roomid_[sid];
 		var room = map_id_rooms_[room_id];
 		room.leave(sid);
-		if (room.empty()) {
+		if (room.isEmpty()) {
 			delete map_id_rooms_[room_id];
 		}
 		map_member_roomid_[sid] = undefined;

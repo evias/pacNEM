@@ -23,8 +23,20 @@
       socket.on('ready', client_game.serverReady);
       socket.on('end_of_game', client_game.serverEndOfGame);
       socket.on('update', client_game.serverUpdate);
+      
+      var buildButton = function(label, extra_class) {
+        var $button = $("<a/>");
+        $button.addClass("btn btn-block");
+        $button.addClass(extra_class ? extra_class : "btn-default");
+        $button.attr("role", "button");
+        $button.attr("href", "#");
+        $button.text(label);
+        return $button;
+      };
 
       var appendRoom = function($rooms, sid, roomdata, usersdata) {
+        var is_member = $.inArray(sid, roomdata['users']) != -1;
+        
         var $panel = $("<div/>");
         $panel.addClass("panel panel-default");
 
@@ -43,26 +55,44 @@
 
         var $panel_buttons = $("<div/>");
         $panel_buttons.addClass("col-md-3");
-        
-        var $join_button = $("<a/>");
-        $join_button.addClass("btn btn-default btn-block");
-        $join_button.attr("role", "button");
-        $join_button.attr("href", "#");
-        $join_button.text("Join room");
-        if (roomdata["is_full"]) {
-          $join_button.attr("disabled", "disabled");
-        } else {
-          $join_button.click(function() {
-              socket.emit('join_room', roomdata['id']);
+
+        if (is_member) {
+          if (roomdata["status"] == "join") {
+            var $play_button = buildButton("Play", "btn-primary");
+            $play_button.click(function() {
+                socket.emit('run_game');
+            });
+            $panel_buttons.append($play_button);
+          } else if (roomdata["status"] == "wait") {
+            var $cancel_button = buildButton("Starting...", "btn-success");
+            $cancel_button.click(function() {
+                socket.emit('cancel_game');
+            });
+            $panel_buttons.append($cancel_button);
+          }
+          var $leave_button = buildButton("Leave room", "btn-danger");
+          $leave_button.click(function() {
+              socket.emit('leave_room');
           });
+          $panel_buttons.append($leave_button);
+        } else {
+          var $join_button = buildButton("Join room");
+          if (roomdata["is_full"]) {
+            $join_button.attr("disabled", "disabled");
+          } else {
+            $join_button.click(function() {
+                socket.emit('join_room', roomdata['id']);
+            });
+          }
+          $panel_buttons.append($join_button);
         }
-        $panel_buttons.append($join_button);
 
         $panel_body.append($panel_members);
         $panel_body.append($panel_buttons);
 
         $panel.append($panel_body);
         $rooms.append($panel);
+        return is_member;
       };
       socket.on('rooms_update', function(rawdata) {
           var data = JSON.parse(rawdata);
@@ -70,8 +100,14 @@
           var sid = data['sid'];
           var $rooms = $("#rooms");
           $rooms.empty();
+          var is_member = false;
           for (var i = 0 ; i != data['rooms'].length ; i++) {
-            appendRoom($rooms, sid, data['rooms'][i], data['users']);
+            is_member |= appendRoom($rooms, sid, data['rooms'][i], data['users']);
+          }
+          if (is_member) {
+            $("#create_room").attr("disabled", "disabled");
+          } else {
+            $("#create_room").removeAttr("disabled");
           }
       });
       
@@ -98,7 +134,7 @@
       </div>
       <div class="panel panel-default">
         <div class="panel-body">
-          <a class="btn btn-primary" role="button" href="#" onclick="javascript:socket.emit('create_room');">Create room</a>
+          <a id="create_room" class="btn btn-primary" role="button" href="#" onclick="javascript:socket.emit('create_room');">Create room</a>
           <a class="btn btn-link" role="button" href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
         </div>
       </div>
