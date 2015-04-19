@@ -14,38 +14,6 @@ canvas
     margin-bottom: 12px;
 }
 
-.game span
-{
-	display: inline-block;
-
-	border-radius: 5px;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	padding-left: 15px;
-	padding-right: 15px;
-
-	text-decoration: none;
-	background-color: #888888;
-	color: #ffffff;
-	line-height: 1.2em;
-}
-
-.game #score::before
-{
-	content: "Score: ";
-}
-
-.game #lifes::after
-{
-	content: "❤";
-	color: #ff0000;
-}
-
-.game #multiplicator::before
-{
-	content: "x";
-}
-
 #rooms
 {
     margin-top: 10px;

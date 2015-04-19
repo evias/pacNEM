@@ -78,11 +78,6 @@ var ClientGame = function(socket) {
 			
 		if (! ongoing_game_) {
 			ongoing_game_ = true;
-			
-			// Score...
-			document.getElementById('score').innerHTML = "0";
-			document.getElementById('lifes').innerHTML = "0";
-			document.getElementById('multiplicator').innerHTML = "1";
 		}
 		
 		// Setup the canvas
