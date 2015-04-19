@@ -285,9 +285,20 @@ function isForbiddenFor(map, target_cell_type, x_old, y_old, direction, pacman) 
 	return isForbiddenForPacMan(target_cell_type);
 }
 
+var distancePx = function(map, x1, y1, x2, y2) {
+	var width = (map[0].length -1) * FRAMES_PER_CELL;
+	var height = (map.length -1) * FRAMES_PER_CELL;
+	
+	// Deltas take into account possible paths from side to side
+	var delta_x = Math.min(Math.abs(x1-x2), Math.abs(x1-x2+width), Math.abs(x2-x1+width));
+	var delta_y = Math.min(Math.abs(y1-y2), Math.abs(y1-y2+height), Math.abs(y2-y1+height));
+
+	return Math.sqrt(delta_x*delta_x+delta_y*delta_y);
+};
+
 var distanceCells = function(map, x1, y1, x2, y2) {
-	var width = map[0].length
-	var height = map.length
+	var width = map[0].length;
+	var height = map.length;
 	
 	// Deltas take into account possible paths from side to side
 	var delta_x = Math.min(Math.abs(x1-x2), Math.abs(x1-x2+width), Math.abs(x2-x1+width));
@@ -579,6 +590,10 @@ var PacMan = function() {
 		next_direction_ = direction;
 	};
 
+	this.goOppositeDirection = function() {
+		next_direction_ = (direction_ +2) %4;
+	};
+
 	this.move = function(map) {
 		var height = map.length;
 		var width = map[0].length;
@@ -827,7 +842,10 @@ var Game = function(io, sids) {
 			// Check for contact between PacMan and a ghost
 			for (var i=0 ; i!=ghosts_.length ; i++) {
 				// Contact detected
-				if (Math.abs(ghosts_[i].getX() - pacman.getX()) + Math.abs(ghosts_[i].getY() - pacman.getY()) <= 1) {
+				if (distancePx(
+						map_,
+						ghosts_[i].getX(), ghosts_[i].getY(),
+						pacman.getX(), pacman.getY()) <= FRAMES_PER_CELL/2) {
 					// Under cheese effect
 					if (pacman.hasCheesePower() && ghosts_[i].isUnderCheeseEffect()) {
 						var increase = pacman.increaseScore(100);
@@ -853,6 +871,60 @@ var Game = function(io, sids) {
 							pacmans_[j].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
 							pacman.setKilledRecently(FPS);
 						}
+					}
+				}
+			}
+			
+			// Check for contact between PacMan and a PacMan
+			for (var i=j+1 ; i<pacmans_.length ; i++) {
+				// Contact detected
+				if (! pacmans_[i].hasBeenKilledRecently()
+						&& pacmans_[i].isAlive()
+						&& distancePx(
+							map_,
+							pacmans_[i].getX(), pacmans_[i].getY(),
+							pacman.getX(), pacman.getY()) <= FRAMES_PER_CELL/2) {
+					if (pacman.getX() == pacmans_[i].getX()) {
+						var diffY = pacmans_[i].getY() - pacman.getY();
+						if (Math.abs(diffY) < FRAMES_PER_CELL) {
+							if (diffY > 0) {
+								pacman.setNextDirection(UP);
+								pacmans_[i].setNextDirection(DOWN);
+							} else {
+								pacman.setNextDirection(DOWN);
+								pacmans_[i].setNextDirection(UP);
+							}
+						} else {
+							if (diffY > 0) {
+								pacman.setNextDirection(DOWN);
+								pacmans_[i].setNextDirection(UP);
+							} else {
+								pacman.setNextDirection(UP);
+								pacmans_[i].setNextDirection(DOWN);
+							}
+						}
+					} else if (pacman.getY() == pacmans_[i].getY()) {
+						var diffX = pacmans_[i].getX() - pacman.getX();
+						if (Math.abs(diffX) < FRAMES_PER_CELL) {
+							if (diffX > 0) {
+								pacman.setNextDirection(LEFT);
+								pacmans_[i].setNextDirection(RIGHT);
+							} else {
+								pacman.setNextDirection(RIGHT);
+								pacmans_[i].setNextDirection(LEFT);
+							}
+						} else {
+							if (diffX > 0) {
+								pacman.setNextDirection(RIGHT);
+								pacmans_[i].setNextDirection(LEFT);
+							} else {
+								pacman.setNextDirection(LEFT);
+								pacmans_[i].setNextDirection(RIGHT);
+							}
+						}
+					} else {
+						pacman.goOppositeDirection();
+						pacmans_[i].goOppositeDirection();
 					}
 				}
 			}
@@ -914,7 +986,10 @@ var Game = function(io, sids) {
 			for (var j=0 ; j!=pacmans_.length ; j++) {
 				var pacman = pacmans_[j];
 				if (pacman.isAlive()) {
-					var distance = distanceCells(map_, ghosts_[i].getX(), ghosts_[i].getY(), pacman.getX(), pacman.getY());
+					var distance = distancePx(
+							map_,
+							ghosts_[i].getX(), ghosts_[i].getY(),
+							pacman.getX(), pacman.getY());
 					if (nearest == -1 || nearest_distance > distance) {
 						nearest = j;
 						nearest_distance = distance;
