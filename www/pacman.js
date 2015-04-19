@@ -562,11 +562,11 @@ var PacMan = function() {
 	var score_ = 0;
 	var killed_recently_ = 0;
 
-	this.restart = function(x, y) {
+	this.restart = function(x, y, direction) {
 		x_ = x;
 		y_ = y;
-		direction_ = LEFT;
-		next_direction_ = LEFT;
+		direction_ = direction;
+		next_direction_ = direction;
 	};
 
 	this.kill = function() {
@@ -774,7 +774,8 @@ var Game = function(io, sids) {
 			for (var i = 0 ; i!=pacmans_.length ; i++) {
 				var pacman_x =  PACMAN_STARTS[pacmans_.length -1][i]['x'];
 				var pacman_y =  PACMAN_STARTS[pacmans_.length -1][i]['y'];
-				pacmans_[i].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL);
+				var pacman_direction =  PACMAN_STARTS[pacmans_.length -1][i]['direction'];
+				pacmans_[i].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
 				if (map_[pacman_y][pacman_x] == "." || map_[pacman_y][pacman_x] == "o") {
 					num_cheeses_--;
 				}
@@ -848,7 +849,8 @@ var Game = function(io, sids) {
 						} else {
 							var pacman_x =  PACMAN_STARTS[pacmans_.length -1][j]['x'];
 							var pacman_y =  PACMAN_STARTS[pacmans_.length -1][j]['y'];
-							pacmans_[j].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL);
+							var pacman_direction =  PACMAN_STARTS[pacmans_.length -1][j]['direction'];
+							pacmans_[j].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
 							pacman.setKilledRecently(FPS);
 						}
 					}
