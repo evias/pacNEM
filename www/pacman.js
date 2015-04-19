@@ -55,7 +55,7 @@ var GRID = [
 	"#............##............#",
 	"#.####.#####.##.#####.####.#",
 	"#o####.#####.##.#####.####o#",
-	"#...##.......s........##...#",
+	"#...##................##...#",
 	"###.##.##.########.##.##.###",
 	"###.##.##.########.##.##.###",
 	"#......##....##....##......#",
@@ -65,10 +65,31 @@ var GRID = [
 	"############################",
 ];
 
+var PACMAN_STARTS = [
+	[
+		{'x': 13, 'y': 23, 'direction': LEFT},
+	],
+	[
+		{'x':  9, 'y': 14, 'direction': LEFT},
+		{'x': 18, 'y': 14, 'direction': RIGHT},
+	],
+	[
+		{'x':  6, 'y': 23, 'direction': RIGHT},
+		{'x': 21, 'y': 23, 'direction': LEFT},
+		{'x': 13, 'y':  5, 'direction': LEFT},
+	],
+	[
+		{'x':  6, 'y': 23, 'direction': RIGHT},
+		{'x': 21, 'y': 23, 'direction': LEFT},
+		{'x':  1, 'y':  5, 'direction': RIGHT},
+		{'x': 26, 'y':  5, 'direction': LEFT},
+	],
+];
+
 // Possible starting points for ghosts and pacman
 // Computed from GRID
-var PACMAN_START_X = -1;
-var PACMAN_START_Y = -1;
+var PACMAN_START_X = PACMAN_STARTS[0][0]['x'] * FRAMES_PER_CELL;
+var PACMAN_START_Y = PACMAN_STARTS[0][0]['y'] * FRAMES_PER_CELL;
 var GHOST_STARTS_X = new Array();
 var GHOST_STARTS_Y = new Array();
 {
@@ -77,10 +98,7 @@ var GHOST_STARTS_Y = new Array();
 	
 	for (var i=0 ; i!=width ; i++) {
 		for (var j=0 ; j!=height ; j++) {
-			if (GRID[j][i] == 's') {
-				PACMAN_START_X = i * FRAMES_PER_CELL;
-				PACMAN_START_Y = j * FRAMES_PER_CELL;
-			} else if (GRID[j][i] == 'g') {
+			if (GRID[j][i] == 'g') {
 				GHOST_STARTS_X.push(i * FRAMES_PER_CELL);
 				GHOST_STARTS_Y.push(j * FRAMES_PER_CELL);
 			}
@@ -658,7 +676,7 @@ var Game = function(io, sid) {
 					var bool_map_line = new Array();
 					for (var i=0 ; i!=width ; i++) {
 						map_line.push(GRID[j][i]);
-						bool_map_line.push(GRID[j][i] == "." || GRID[j][i] == "o" || GRID[j][i] == "s" || GRID[j][i] == " ");
+						bool_map_line.push(GRID[j][i] == "." || GRID[j][i] == "o" || GRID[j][i] == " ");
 						if (GRID[j][i] == "." || GRID[j][i] == "o") {
 							num_cheeses_++;
 						}
@@ -670,6 +688,13 @@ var Game = function(io, sid) {
 			
 			// Characters
 			pacman_.restart();
+			var pacman_x = Math.floor(pacman_.getX() / FRAMES_PER_CELL);
+			var pacman_y = Math.floor(pacman_.getY() / FRAMES_PER_CELL);
+			if (map_[pacman_y][pacman_x] == "." || map_[pacman_y][pacman_x] == "o") {
+				num_cheeses_--;
+			}	
+			map_[pacman_y][pacman_x] = " ";
+			
 			for (var i=0 ; i!=ghosts_.length ; i++) {
 				ghosts_[i].restart();
 				ghosts_[i].setDifficulty(1. * (num_rounds_ * num_rounds_) / (num_rounds_ * num_rounds_ +7));
