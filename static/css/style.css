@@ -6,31 +6,12 @@ body
 canvas
 {
 	display: inline-block;
-}
-
-a
-{
-	display: inline-block;
-
-	border-radius: 5px;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	padding-left: 15px;
-	padding-right: 15px;
-
-	text-decoration: none;
-	background-color: #5555ff;
-	color: #ffffff;
-}
-
-a:hover
-{
-	background-color: #8888ff;
+    margin-bottom: 5px;
 }
 
 .game
 {
-	margin-top: 5px;
+    margin-bottom: 12px;
 }
 
 .game span

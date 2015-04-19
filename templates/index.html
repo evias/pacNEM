@@ -26,16 +26,26 @@
         }
       }, false);
     </script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
     <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
   </head>
   <body>
-    <canvas id="myCanvas" height="0" width="0"></canvas>
-    <div class="game">
-      <span id="score">0</span>
-      <span id="lifes">0</span>
-      <span id="multiplicator">1</span>
+    <div class="container">
+      <div class="game">
+        <canvas id="myCanvas" height="0" width="0"></canvas>
+        <div>
+          <span id="score">0</span>
+          <span id="lifes">0</span>
+          <span id="multiplicator">1</span>
+        </div>
+      </div>
+      <div class="panel panel-default"> 
+        <div class="panel-body">
+          <a class="btn btn-primary" role="button" href="#" onclick="javascript:client_game.start();">Play</a>
+          <a class="btn btn-link" role="button" href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
+        </div>
+      </div>
     </div>
-    <a href="#" onclick="javascript:client_game.start();">Play</a>
-    <a href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
   </body>
 </html>
