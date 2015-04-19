@@ -702,12 +702,13 @@ var Game = function(io, sid) {
 	var map_ = undefined;
 	var bool_map_ = undefined;
 	var num_cheeses_ = -1;
+	var last_timeout_ = undefined;
 
 	this.start = function() {
 		if (! pacman_.isAlive()) {
 			return;
 		}
-		setTimeout(this.iterate, 1000/FPS);
+		last_timeout_ = setTimeout(this.iterate, 1000/FPS);
 	};
 
 	this.refresh = function() {
@@ -769,6 +770,8 @@ var Game = function(io, sid) {
 	};
 
 	this.iterate = function() {
+		last_timeout_ = undefined;
+
 		var state = {};
 		state['points'] = new Array();
 		state['eat'] = new Array();
@@ -841,7 +844,12 @@ var Game = function(io, sid) {
 		}
 		io.sockets.to(sid).emit("update", JSON.stringify(state));
 		console.log(JSON.stringify(state));
-		setTimeout(me_.iterate, 1000/FPS);
+		last_timeout_ = setTimeout(me_.iterate, 1000/FPS);
+	};
+
+	this.quit = function() {
+		clearTimeout(last_timeout_);
+		last_timeout_ = undefined;
 	};
 	
 	{
