@@ -119,10 +119,13 @@ var Room = function(io, manager) {
 
 	// Remove a player from the room
 	this.leave = function(sid) {
-		assert.equal(status_, Room.STATUS_JOIN); //TODO remove and kill the game
+		assert.notEqual(status_, Room.STATUS_PLAY); //TODO remove and kill the game
 		var id = members_.indexOf(sid);
 		assert.notEqual(id, -1);
 
+		if (status_ == Room.STATUS_WAIT) {
+			self.cancelGame();
+		}
 		members_.splice(id, 1);
 	};
 
