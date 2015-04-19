@@ -80,13 +80,6 @@ io.sockets.on('connection', function(socket) {
 		}
 	});
 
-	// Run the game @depreciated
-	socket.on('new', function() {
-		room_manager.createRoom(socket.id);
-		var room = room_manager.getRoom(socket.id);
-		room.runGame();
-	});
-
 	// Start the game
 	socket.on('start', function() {
 		var room = room_manager.getRoom(socket.id);
