@@ -738,7 +738,7 @@ var PacMan = function() {
  * Manage the progress of the current game (several rounds)
  */
 
-var Game = function(io, sids) {
+var Game = function(io, sids, room) {
 	var self = this;
 	var start_time_ = Date.now();
 
@@ -748,7 +748,8 @@ var Game = function(io, sids) {
 	
 	var io = io;
 	var sids_ = sids;
-	
+	var room_ = room;
+
 	var map_ = undefined;
 	var bool_map_ = undefined;
 	var num_cheeses_ = -1;
@@ -840,6 +841,7 @@ var Game = function(io, sids) {
 			for (var i = 0 ; i != sids_.length ; i++) {
 				io.sockets.to(sids_[i]).emit('end_of_game');
 			}
+			room_.notifyEnd();
 		}
 	};
 
@@ -1067,6 +1069,9 @@ var Game = function(io, sids) {
 	this.quit = function() {
 		clearTimeout(last_timeout_);
 		last_timeout_ = undefined;
+		for (var i = 0 ; i != sids_.length ; i++) {
+			io.sockets.to(sids_[i]).emit('end_of_game');
+		}
 	};
 	
 	{

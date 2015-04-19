@@ -60,7 +60,7 @@ var Room = function(io, manager) {
 		assert(members_.length <= 4);
 		
 		status_ = Room.STATUS_PLAY;
-		game_ = new Game(io, members_);
+		game_ = new Game(io, members_, self);
 		game_.refresh();
 
 		manager.notifyChanges();
@@ -132,8 +132,22 @@ var Room = function(io, manager) {
 			game_.quit();
 			delete game_;
 			game_ = undefined;
+			status_ = Room.STATUS_JOIN;
+			manager.notifyChanges();
 		}
 		members_.splice(id, 1);
+	};
+	
+	// Notification to re-open the room in join mode
+	// after the end of the game
+	this.notifyEnd = function() {
+		assert.equal(status_, Room.STATUS_PLAY);
+		assert(game_);
+		
+		delete game_;
+		game_ = undefined;
+		status_ = Room.STATUS_JOIN;
+		manager.notifyChanges();
 	};
 
 	// Send arrows to the game
