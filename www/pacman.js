@@ -564,11 +564,14 @@ var Ghost = function() {
  */
 
 var PacMan = function() {
+	var self = this;
+
 	var x_ = -1, y_ = -1;
 	var direction_ = LEFT;
 	var next_direction_ = LEFT;
 	var lifes_ = 3;
 	var cheese_power_ = 0;
+	var under_cheese_effect_ = 0;
 	var combo_ = 0;
 	var score_ = 0;
 	var killed_recently_ = 0;
@@ -578,6 +581,7 @@ var PacMan = function() {
 		y_ = y;
 		direction_ = direction;
 		next_direction_ = direction;
+		under_cheese_effect_ = 0;
 	};
 
 	this.kill = function() {
@@ -626,10 +630,12 @@ var PacMan = function() {
 				}
 			}
 		}
-		
-		var new_position = moveCharacter(map, x_, y_, direction_, true);
-		x_ = new_position[0];
-		y_ = new_position[1];
+
+		if (under_cheese_effect_ == 0 || under_cheese_effect_ % 2 == 0) {
+			var new_position = moveCharacter(map, x_, y_, direction_, true);
+			x_ = new_position[0];
+			y_ = new_position[1];
+		}
 		
 		// Decrease cheese power
 		if (cheese_power_ > 0) {
@@ -637,6 +643,9 @@ var PacMan = function() {
 			if (cheese_power_ == 0) {
 				combo_ = 0;
 			}
+		}
+		if (under_cheese_effect_ > 0) {
+			under_cheese_effect_--;
 		}
 
 		if (killed_recently_ > 0) {
@@ -682,6 +691,17 @@ var PacMan = function() {
 	
 	this.setCheesePower = function(cheese_power) {
 		cheese_power_ = cheese_power;
+		under_cheese_effect_ = 0;
+	};
+
+	this.setUnderCheeseEffect = function(under_cheese_effect) {
+		if (! self.hasCheesePower()) {
+			under_cheese_effect_ = under_cheese_effect;
+		}
+	};
+
+	this.isUnderCheeseEffect = function() {
+		return under_cheese_effect_ != 0;
 	};
 
 	this.getCombo = function() {
@@ -705,6 +725,7 @@ var PacMan = function() {
 				'direction': direction_,
 				'combo': combo_,
 				'cheese_power': cheese_power_,
+				'cheese_effect': under_cheese_effect_,
 				'score': score_,
 				'killed_recently': killed_recently_,
 				'lifes': lifes_,
@@ -884,7 +905,41 @@ var Game = function(io, sids) {
 							map_,
 							pacmans_[i].getX(), pacmans_[i].getY(),
 							pacman.getX(), pacman.getY()) <= FRAMES_PER_CELL/2) {
-					if (pacman.getX() == pacmans_[i].getX()) {
+					if (pacman.hasCheesePower() && pacmans_[i].isUnderCheeseEffect()) {
+						pacmans_[i].kill();
+						var pacman_x =  PACMAN_STARTS[pacmans_.length -1][i]['x'];
+						var pacman_y =  PACMAN_STARTS[pacmans_.length -1][i]['y'];
+						var pacman_direction =  PACMAN_STARTS[pacmans_.length -1][i]['direction'];
+						pacmans_[i].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
+						pacmans_[i].setKilledRecently(FPS);
+						
+						var increase = pacman.increaseScore(200);
+						state['points'].push({
+								"type": "pacman",
+								"index": i,
+								"x": pacman.getX()/FRAMES_PER_CELL,
+								"y": pacman.getY()/FRAMES_PER_CELL,
+								"amount": increase,
+						});
+						pacman.increaseCombo();
+					} else if (pacmans_[i].hasCheesePower() && pacman.isUnderCheeseEffect()) {
+						pacman.kill();
+						var pacman_x =  PACMAN_STARTS[pacmans_.length -1][j]['x'];
+						var pacman_y =  PACMAN_STARTS[pacmans_.length -1][j]['y'];
+						var pacman_direction =  PACMAN_STARTS[pacmans_.length -1][j]['direction'];
+						pacman.restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
+						pacman.setKilledRecently(FPS);
+						
+						var increase = pacmans_[i].increaseScore(200);
+						state['points'].push({
+								"type": "pacman",
+								"index": j,
+								"x": pacmans_[i].getX()/FRAMES_PER_CELL,
+								"y": pacmans_[i].getY()/FRAMES_PER_CELL,
+								"amount": increase,
+						});
+						pacmans_[i].increaseCombo();
+					} else if (pacman.getX() == pacmans_[i].getX()) {
 						var diffY = pacmans_[i].getY() - pacman.getY();
 						if (Math.abs(diffY) < FRAMES_PER_CELL) {
 							if (diffY > 0) {
@@ -945,6 +1000,9 @@ var Game = function(io, sids) {
 								"amount": increase,
 						});
 						pacman.setCheesePower(CHEESE_EFFECT_FRAMES);
+						for (var i=0 ; i!=pacmans_.length ; i++) {
+							pacmans_[i].setUnderCheeseEffect(CHEESE_EFFECT_FRAMES);
+						}
 						for (var i=0 ; i != ghosts_.length ; i++) {
 							ghosts_[i].setUnderCheeseEffect(CHEESE_EFFECT_FRAMES);
 						}

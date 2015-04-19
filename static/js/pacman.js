@@ -240,7 +240,7 @@ function drawPacMan(canvas, ctx, frame, pacman, color) {
 	ctx.beginPath();
 	ctx.fillStyle = color;
 	ctx.lineWidth = 2;
-	ctx.strokeStyle = "#000000";
+	ctx.strokeStyle = pacman['cheese_effect'] == 0 ? "#000000" : color;
 	if (pacman_direction == LEFT) {
 		ctx.arc(pacman_px_x, pacman_px_y, .45*SIZE, Math.PI+Math.PI/pacman_mouth, Math.PI-Math.PI/pacman_mouth,false);
 	} else if (pacman_direction == UP) {
@@ -251,9 +251,15 @@ function drawPacMan(canvas, ctx, frame, pacman, color) {
 		ctx.arc(pacman_px_x, pacman_px_y, .45*SIZE, Math.PI/2+Math.PI/pacman_mouth, Math.PI/2-Math.PI/pacman_mouth,false);
 	}
 	ctx.lineTo(pacman_px_x, pacman_px_y);
-	ctx.fill();
-	if (pacman['cheese_power'] != 0 && ! (pacman['cheese_power'] <= CHEESE_EFFECT_FRAMES/5 && (pacman['cheese_power']%4 == 1 || pacman['cheese_power']%4 == 2))) {
-		ctx.stroke();
+	if (pacman['cheese_effect'] != 0) {
+		if (! (pacman['cheese_effect'] <= CHEESE_EFFECT_FRAMES/5 && (pacman['cheese_effect']%4 == 1 || pacman['cheese_effect']%4 == 2))) {
+			ctx.stroke();
+		}
+	} else {
+		ctx.fill();
+		if (pacman['cheese_power'] != 0 && ! (pacman['cheese_power'] <= CHEESE_EFFECT_FRAMES/5 && (pacman['cheese_power']%4 == 1 || pacman['cheese_power']%4 == 2))) {
+			ctx.stroke();
+		}
 	}
 }
 
