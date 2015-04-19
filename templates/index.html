@@ -19,10 +19,56 @@
     <script type="text/javascript">
       var socket = io.connect(window.location.protocol + '//' + window.location.host);
       var client_game = new ClientGame(socket);
+      var players = new Array();
 
       socket.on('ready', function(rawdata) {
           $("#game").show();
           $("#looking_for_game").hide();
+          
+          var $game_details = $("#game_details");
+          if (! $game_details[0]) {
+            $game_details = $("<div/>");
+            $game_details.attr("id", "game_details");
+            $game_details.addClass("list-group");
+            $("#game").parent().append($game_details);
+          }
+          $game_details.empty();
+
+          var texts = ["Score", "Lifes", "Combo"];
+          var classes = ["pc-score", "pc-lifes", "pc-combo"];
+          for (var i = 0 ; i != players.length ; i++) {
+            var $a_elt = $("<a/>");
+            $a_elt.addClass("list-group-item");
+
+            var $title_elt = $("<h4/>");
+            $title_elt.addClass("list-group-item-heading");
+            $title_elt.text(players[i] + " ");
+            
+            var $user_elt = $("<span/>");
+            $user_elt.addClass("glyphicon glyphicon-user");
+            $user_elt.css("color", GHOSTS_COLORS[i % GHOSTS_COLORS.length]);
+            $title_elt.append($user_elt);
+            $a_elt.append($title_elt);
+
+            var $content_elt = $("<div/>");
+            $content_elt.addClass("list-group-item-text");
+            for (var j = 0 ; j != texts.length ; j++) {
+              var $subcontent_row = $("<div/>");
+              $subcontent_row.addClass("row");
+              var $subcontent_title = $("<div/>");
+              $subcontent_title.addClass("col-md-6");
+              $subcontent_title.text(texts[j]);
+              $subcontent_row.append($subcontent_title);
+              var $subcontent_content = $("<div/>");
+              $subcontent_content.addClass("col-md-6");
+              $subcontent_content.addClass(classes[j]);
+              $subcontent_row.append($subcontent_content);
+              $content_elt.append($subcontent_row);
+            }
+            $a_elt.append($content_elt);
+            $game_details.append($a_elt);
+          }
+
           client_game.serverReady(rawdata);
       });
       socket.on('end_of_game', function() {
@@ -54,9 +100,11 @@
         var $panel_members = $("<ul/>");
         $panel_members.addClass("col-md-9 members");
         
+        players = new Array();
         for (var i = 0 ; i != roomdata['users'].length ; i++) {
           var $member = $("<li/>");
           $member.addClass("member");
+          players.push(usersdata[roomdata['users'][i]] ? usersdata[roomdata['users'][i]] : roomdata['users'][i]);
           $member.text(usersdata[roomdata['users'][i]] ? usersdata[roomdata['users'][i]] : roomdata['users'][i]);
           $panel_members.append($member);
         }

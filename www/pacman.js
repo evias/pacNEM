@@ -692,6 +692,7 @@ var PacMan = function() {
 				'cheese_power': cheese_power_,
 				'score': score_,
 				'killed_recently': killed_recently_,
+				'lifes': lifes_,
 		};
 	};
 };

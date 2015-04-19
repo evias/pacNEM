@@ -73,7 +73,8 @@ ul.members li.member:not(:first-child)
     margin-left: 10px;
 }
 
-#your_room
+#your_room,
+#game_details
 {
     margin-top: 10px;
 }
