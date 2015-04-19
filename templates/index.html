@@ -8,14 +8,73 @@
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     
-    <script type="text/javascript" src="js/pacman.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="js/pacman.js"></script>
+
     <script type="text/javascript">
       var socket = io.connect(window.location.protocol + '//' + window.location.host);
       var client_game = new ClientGame(socket);
+
       socket.on('ready', client_game.serverReady);
       socket.on('end_of_game', client_game.serverEndOfGame);
       socket.on('update', client_game.serverUpdate);
+
+      var appendRoom = function($rooms, sid, roomdata, usersdata) {
+        var $panel = $("<div/>");
+        $panel.addClass("panel panel-default");
+
+        var $panel_body = $("<div/>");
+        $panel_body.addClass("row panel-body");
+
+        var $panel_members = $("<ul/>");
+        $panel_members.addClass("col-md-9 members");
+        
+        for (var i = 0 ; i != roomdata['users'].length ; i++) {
+          var $member = $("<li/>");
+          $member.addClass("member");
+          $member.text(usersdata[roomdata['users']] ? usersdata[roomdata['users']] : roomdata['users']);
+          $panel_members.append($member);
+        }
+
+        var $panel_buttons = $("<div/>");
+        $panel_buttons.addClass("col-md-3");
+        
+        var $join_button = $("<a/>");
+        $join_button.addClass("btn btn-default btn-block");
+        $join_button.attr("role", "button");
+        $join_button.attr("href", "#");
+        $join_button.text("Join room");
+        if (roomdata["is_full"]) {
+          $join_button.attr("disabled", "disabled");
+        } else {
+          $join_button.click(function() {
+              socket.emit('join_room', roomdata['id']);
+          });
+        }
+        $panel_buttons.append($join_button);
+
+        $panel_body.append($panel_members);
+        $panel_body.append($panel_buttons);
+
+        $panel.append($panel_body);
+        $rooms.append($panel);
+      };
+      socket.on('rooms_update', function(rawdata) {
+          var data = JSON.parse(rawdata);
+          console.log(data);
+          var sid = data['sid'];
+          var $rooms = $("#rooms");
+          $rooms.empty();
+          for (var i = 0 ; i != data['rooms'].length ; i++) {
+            appendRoom($rooms, sid, data['rooms'][i], data['users']);
+          }
+      });
+      
       document.onkeydown = function(e) {
         socket.emit('keydown', e.keyCode);
       };
@@ -26,9 +85,6 @@
         }
       }, false);
     </script>
-
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
-    <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
   </head>
   <body>
     <div class="container">
@@ -40,11 +96,13 @@
           <span id="multiplicator">1</span>
         </div>
       </div>
-      <div class="panel panel-default"> 
+      <div class="panel panel-default">
         <div class="panel-body">
-          <a class="btn btn-primary" role="button" href="#" onclick="javascript:client_game.start();">Play</a>
+          <a class="btn btn-primary" role="button" href="#" onclick="javascript:socket.emit('create_room');">Create room</a>
           <a class="btn btn-link" role="button" href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
         </div>
+      </div>
+      <div id="rooms">
       </div>
     </div>
   </body>

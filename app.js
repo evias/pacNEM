@@ -23,6 +23,9 @@ app
 .get('/favicon.ico', function(req, res) {
 	res.sendfile(__dirname + '/static/favicon.ico');
 })
+.get('/img/user.svg', function(req, res) {
+	res.sendfile(__dirname + '/img/user.svg');
+})
 .get('/css/style.css', function(req, res) {
 	res.sendfile(__dirname + '/static/css/style.css');
 })

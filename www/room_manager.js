@@ -21,7 +21,9 @@ var RoomManager = function(io) {
 	this.notifyChanges = function(sid) {
 		var rooms = new Array();
 		for (var room_id in map_id_rooms_) {
-			rooms.push(map_id_rooms_[room_id].toDictionary());
+			var dict = map_id_rooms_[room_id].toDictionary();
+			dict['id'] = room_id;
+			rooms.push(dict);
 		}
 		var sid_list = sid === undefined ? Object.keys(map_member_roomid_) : [sid];
 		for (var i = 0 ; i!=sid_list.length ; i++) {
@@ -59,6 +61,9 @@ var RoomManager = function(io) {
 	this.getRoom = function(sid) {
 		assert(map_member_roomid_.hasOwnProperty(sid));
 		var room_id = map_member_roomid_[sid];
+		if (room_id === undefined) {
+			return undefined;
+		}
 		assert(map_id_rooms_.hasOwnProperty(room_id));
 
 		return map_id_rooms_[room_id];
