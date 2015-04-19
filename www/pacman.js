@@ -819,7 +819,7 @@ var Game = function(io, sids) {
 		
 		for (var j=0 ; j!=pacmans_.length ; j++) {
 			var pacman = pacmans_[j];
-			if (pacman.hasBeenKilledRecently()) {
+			if (pacman.hasBeenKilledRecently() || ! pacman.isAlive()) {
 				continue;
 			}
 
@@ -911,10 +911,12 @@ var Game = function(io, sids) {
 			var nearest_distance = -1;
 			for (var j=0 ; j!=pacmans_.length ; j++) {
 				var pacman = pacmans_[j];
-				var distance = distanceCells(map_, ghosts_[i].getX(), ghosts_[i].getY(), pacman.getX(), pacman.getY());
-				if (j == 0 || nearest_distance > distance) {
-					nearest = j;
-					nearest_distance = distance;
+				if (pacman.isAlive()) {
+					var distance = distanceCells(map_, ghosts_[i].getX(), ghosts_[i].getY(), pacman.getX(), pacman.getY());
+					if (nearest == -1 || nearest_distance > distance) {
+						nearest = j;
+						nearest_distance = distance;
+					}
 				}
 			}
 			ghosts_[i].move(map_, bool_map_, pacmans_[nearest], ghosts_);

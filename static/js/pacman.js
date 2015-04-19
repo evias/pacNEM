@@ -224,6 +224,10 @@ function drawEmptyGameBoard(canvas, ctx, grid) {
  */
 
 function drawPacMan(canvas, ctx, frame, pacman, color) {
+	if (pacman["lifes"] < 0)
+	{
+		return;
+	}
 	if (pacman["killed_recently"] != 0 && pacman["killed_recently"]%4 < 2) {
 		return;
 	}
