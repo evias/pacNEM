@@ -287,6 +287,17 @@ function isForbiddenFor(map, target_cell_type, x_old, y_old, direction, pacman) 
 	return isForbiddenForPacMan(target_cell_type);
 }
 
+var distanceCells = function(map, x1, y1, x2, y2) {
+	var width = map[0].length
+	var height = map.length
+	
+	// Deltas take into account possible paths from side to side
+	var delta_x = Math.min(Math.abs(x1-x2), Math.abs(x1-x2+width), Math.abs(x2-x1+width));
+	var delta_y = Math.min(Math.abs(y1-y2), Math.abs(y1-y2+height), Math.abs(y2-y1+height));
+
+	return Math.sqrt(delta_x*delta_x+delta_y*delta_y);
+};
+
 /**
  * Ghosts
  */
@@ -382,21 +393,11 @@ var Ghost = function() {
 		direction_ = available_directions[Math.floor(Math.random() * available_directions.length)];
 	};
 	
-	this.distanceCells = function(map, x1, y1, x2, y2) {
-		var width = map[0].length
-		var height = map.length
-		
-		// Deltas take into account possible paths from side to side
-		var delta_x = Math.min(Math.abs(x1-x2), Math.abs(x1-x2+width), Math.abs(x2-x1+width));
-		var delta_y = Math.min(Math.abs(y1-y2), Math.abs(y1-y2+height), Math.abs(y2-y1+height));
-
-		return Math.sqrt(delta_x*delta_x+delta_y*delta_y);
-	};
 	
 	this.createHeapElement = function(x, y, map, truefalse_grid, previous, current_direction, target_x, target_y) {
 		if (truefalse_grid[y][x]) {
 			truefalse_grid[y][x] = false;
-			var dist_to_target = this.distanceCells(map, x, y, target_x, target_y);
+			var dist_to_target = distanceCells(map, x, y, target_x, target_y);
 			var elt = new HeapElement(x, y, previous.initial_direction, previous.dist_from_start +1, dist_to_target);
 			if (elt.initial_direction == -1)
 				elt.initial_direction = current_direction;
@@ -419,7 +420,7 @@ var Ghost = function() {
 		var target_y = Math.floor(pacman.getY() / FRAMES_PER_CELL);
 		
 		var heap = new Heap();
-		heap.push(new HeapElement(cell_x, cell_y, -1, 0, this.distanceCells(map, cell_x, cell_y, target_x, target_y)));
+		heap.push(new HeapElement(cell_x, cell_y, -1, 0, distanceCells(map, cell_x, cell_y, target_x, target_y)));
 		
 		var bmap = new Array();
 		for (var j=0 ; j!=bool_map.length ; j++) {
@@ -688,7 +689,7 @@ var PacMan = function() {
  * Manage the progress of the current game (several rounds)
  */
 
-var Game = function(io, sid) {
+var Game = function(io, sids) {
 	var me_ = this;
 	var start_time_ = Date.now();
 
@@ -697,7 +698,7 @@ var Game = function(io, sid) {
 	var num_rounds_ = 0;
 	
 	var io = io;
-	var sid_ = sid;
+	var sids_ = sids;
 	
 	var map_ = undefined;
 	var bool_map_ = undefined;
@@ -751,17 +752,21 @@ var Game = function(io, sid) {
 				ghosts_[i].setDifficulty(1. * (num_rounds_ * num_rounds_) / (num_rounds_ * num_rounds_ +7));
 			}
 			
-			io.sockets.to(sid).emit('ready', JSON.stringify({
-					'constants':
-					{
-						'FRAMES_PER_CELL': FRAMES_PER_CELL,
-						'FPS': FPS,
-						'CHEESE_EFFECT_FRAMES': CHEESE_EFFECT_FRAMES,
-					},
-					'map': map_,
-			}));
+			for (var i = 0 ; i != sids_.length ; i++) {
+				io.sockets.to(sids_[i]).emit('ready', JSON.stringify({
+						'constants':
+						{
+							'FRAMES_PER_CELL': FRAMES_PER_CELL,
+							'FPS': FPS,
+							'CHEESE_EFFECT_FRAMES': CHEESE_EFFECT_FRAMES,
+						},
+						'map': map_,
+				}));
+			}
 		} else {
-			io.sockets.to(sid).emit('end_of_game');
+			for (var i = 0 ; i != sids_.length ; i++) {
+				io.sockets.to(sids_[i]).emit('end_of_game');
+			}
 		}
 	};
 
@@ -842,7 +847,9 @@ var Game = function(io, sid) {
 			ghosts_[i].move(map_, bool_map_, pacman_, ghosts_);
 			state["ghosts"].push(ghosts_[i].toDictionary());
 		}
-		io.sockets.to(sid).emit("update", JSON.stringify(state));
+		for (var i = 0 ; i != sids_.length ; i++) {
+			io.sockets.to(sids_[i]).emit("update", JSON.stringify(state));
+		}
 		console.log(JSON.stringify(state));
 		last_timeout_ = setTimeout(me_.iterate, 1000/FPS);
 	};

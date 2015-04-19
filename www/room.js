@@ -59,7 +59,7 @@ var Room = function(io, manager) {
 		assert(members_.length);
 		
 		status_ = Room.STATUS_PLAY;
-		game_ = new Game(io, members_[0]);
+		game_ = new Game(io, members_);
 		game_.refresh();
 
 		manager.notifyChanges();
