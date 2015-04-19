@@ -539,6 +539,14 @@ var Ghost = function() {
 	this.setUnderCheeseEffect = function(value) {
 		under_cheese_effect_ = value;
 	};
+	
+	this.toDictionary = function() {
+		return {
+				'x': x_,
+				'y': y_,
+				'cheese_effect': under_cheese_effect_,
+		};
+	};
 };
 
 /*
@@ -622,6 +630,14 @@ var PacMan = function() {
 
 	this.getY = function() {
 		return y_;
+	};
+
+	this.toDictionary = function() {
+		return {
+				'x': x_,
+				'y': y_,
+				'direction': direction_,
+		};
 	};
 };
 
@@ -791,19 +807,11 @@ var Game = function(io, sid) {
 		
 		pacman_.move(map_);
 		state['elapsed'] = Date.now() - start_time_;
-		state["pacman"] = {
-				"x": pacman_.getX(),
-				"y": pacman_.getY(),
-				"direction": pacman_.getDirection(),
-		};
+		state["pacman"] = pacman_.toDictionary();
 		state["ghosts"] = new Array();
 		for (var i=0 ; i != ghosts_.length ; i++) {
 			ghosts_[i].move(map_, bool_map_, pacman_, ghosts_);
-			state["ghosts"].push({
-					"x": ghosts_[i].getX(),
-					"y": ghosts_[i].getY(),
-					"cheese_effect": ghosts_[i].getUnderCheeseEffect(),
-			});
+			state["ghosts"].push(ghosts_[i].toDictionary());
 		}
 		io.sockets.to(sid).emit("update", JSON.stringify(state));
 		console.log(JSON.stringify(state));
