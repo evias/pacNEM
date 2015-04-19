@@ -145,7 +145,7 @@ var ClientGame = function(socket) {
 		// Draw game
 		drawEmptyGameBoard(canvas, ctx, grid_);
 		for (var i = 0 ; i != data['pacmans'].length ; i++) {
-			drawPacMan(canvas, ctx, frame_, data['pacmans'][i]);
+			drawPacMan(canvas, ctx, frame_, data['pacmans'][i], data['pacmans'].length == 1 ? "#777700" : GHOSTS_COLORS[i %GHOSTS_COLORS.length]);
 		}
 		for (var i = 0 ; i != data['ghosts'].length ; i++) {
 			drawGhost(canvas, ctx, frame_, data['ghosts'][i], GHOSTS_COLORS[i %GHOSTS_COLORS.length]);
@@ -218,7 +218,7 @@ function drawEmptyGameBoard(canvas, ctx, grid) {
  * Draw the PacMan
  */
 
-function drawPacMan(canvas, ctx, frame, pacman) {
+function drawPacMan(canvas, ctx, frame, pacman, color) {
 	if (pacman["killed_recently"] != 0 && pacman["killed_recently"]%4 < 2) {
 		return;
 	}
@@ -229,8 +229,8 @@ function drawPacMan(canvas, ctx, frame, pacman) {
 	var pacman_direction = pacman['direction'];
 
 	ctx.beginPath();
-	ctx.fillStyle = "#777700";
-	ctx.lineWidth = 1;
+	ctx.fillStyle = color;
+	ctx.lineWidth = 2;
 	ctx.strokeStyle = "#000000";
 	if (pacman_direction == LEFT) {
 		ctx.arc(pacman_px_x, pacman_px_y, .45*SIZE, Math.PI+Math.PI/pacman_mouth, Math.PI-Math.PI/pacman_mouth,false);
