@@ -25,6 +25,7 @@ var Room = function(io, manager) {
 	var members_ = new Array();
 	var game_ = undefined;
 	var timeout_run_ = undefined;
+	var has_waited_ = 0;
 
 	// Serialize current object for JSON export
 	// @return dictionary representing the room
@@ -35,6 +36,7 @@ var Room = function(io, manager) {
 					: (status_ == Room.STATUS_WAIT
 						? 'wait'
 						: 'play'),
+				'wait': status_ == Room.STATUS_WAIT ? (Room.WAIT_TIME_MS-has_waited_)/1000 : 0,
 				'users': members_,
 				'is_full': self.isFull(),
 		};
@@ -55,6 +57,15 @@ var Room = function(io, manager) {
 	// Instantiate a Game
 	// Launch the game session
 	var realRunGame = function() {
+		has_waited_ += 1000;
+		if (has_waited_ < Room.WAIT_TIME_MS) {
+			for (var i = 0 ; i != members_.length ; i++) {
+				manager.notifyChanges(members_[i]);
+			}
+			timeout_run_ = setTimeout(realRunGame, 1000);
+			return;
+		}
+
 		assert.equal(status_, Room.STATUS_WAIT);
 		assert(members_.length);
 		assert(members_.length <= 4);
@@ -77,7 +88,8 @@ var Room = function(io, manager) {
 		assert(members_.length <= 4);
 		
 		status_ = Room.STATUS_WAIT;
-		timeout_run_ = setTimeout(realRunGame, Room.WAIT_TIME_MS);
+		has_waited_ = 0;
+		timeout_run_ = setTimeout(realRunGame, 1000);
 
 		manager.notifyChanges();
 	};

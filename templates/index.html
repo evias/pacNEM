@@ -120,7 +120,7 @@
             });
             $panel_buttons.append($play_button);
           } else if (roomdata["status"] == "wait") {
-            var $cancel_button = buildButton("Starting... (10s to cancel)", "btn-success");
+            var $cancel_button = buildButton("Starting... (" + Math.round(roomdata["wait"]) + "s to cancel)", "btn-success");
             $cancel_button.click(function() {
                 socket.emit('cancel_game');
             });
