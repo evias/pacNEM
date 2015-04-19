@@ -40,8 +40,8 @@ io.sockets.on('connection', function(socket) {
 	room_manager.register(socket.id);
 	
 	// Unregister the socket from the underlying RoomManager
-	socket.on('close', function () {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] close()');
+	socket.on('disconnect', function () {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] ~()');
 		room_manager.disconnect(socket.id);
 	});
 
