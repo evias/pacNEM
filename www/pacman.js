@@ -688,7 +688,7 @@ var PacMan = function() {
  */
 
 var Game = function(io, sids) {
-	var me_ = this;
+	var self = this;
 	var start_time_ = Date.now();
 
 	var pacmans_ = new Array();
@@ -822,8 +822,10 @@ var Game = function(io, sids) {
 					// No cheese effect
 					} else {
 						pacman.kill();
-						me_.refresh();
-						return;
+						if (pacmans_.length == 1) {
+							self.refresh();
+							return;
+						}
 					}
 				}
 			}
@@ -856,9 +858,19 @@ var Game = function(io, sids) {
 					num_cheeses_--;
 				}
 				if (num_cheeses_ == 0) {
-					me_.refresh();
+					self.refresh();
 					return;
 				}
+			}
+		}
+		if (pacmans_.length >= 2) {
+			var one_is_alive = false;
+			for (var i =0 ; i!=pacmans_.length ; i++) {
+				one_is_alive |= pacmans_[i].isAlive();
+			}
+			if (! one_is_alive) {
+				self.refresh();
+				return;
 			}
 		}
 		
@@ -887,7 +899,7 @@ var Game = function(io, sids) {
 			io.sockets.to(sids_[i]).emit("update", JSON.stringify(state));
 		}
 		console.log(JSON.stringify(state));
-		last_timeout_ = setTimeout(me_.iterate, 1000/FPS);
+		last_timeout_ = setTimeout(self.iterate, 1000/FPS);
 	};
 
 	this.quit = function() {
