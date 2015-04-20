@@ -2,8 +2,8 @@
 
 var assert = require('assert');
 
-var pc = require('./pacman.js'),
-	Game = pc.Game;
+var pc = require('../pacman/configuration.js');
+var Game = require('../pacman/game.js').Game;
 
 var Room = function(io, manager) {
 	assert(io);

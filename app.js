@@ -9,9 +9,9 @@ var app = require('express')(),
 	path = require('path');
 
 var logger = require('./www/logger.js'),
-	_room = require('./www/room.js'),
-	Room = _room.Room,
-	RoomManager = require('./www/room_manager.js').RoomManager;
+	__room = require('./www/room/room.js'),
+	Room = __room.Room,
+	RoomManager = require('./www/room/room_manager.js').RoomManager;
 
 var __smartfilename = path.basename(__filename);
 
@@ -110,13 +110,13 @@ io.sockets.on('connection', function(socket) {
 		}
 
 		if (keycode == 37) {
-			room.receiveKeyboard(socket.id, _room.LEFT);
+			room.receiveKeyboard(socket.id, __room.LEFT);
 		} else if (keycode == 38) {
-			room.receiveKeyboard(socket.id, _room.UP);
+			room.receiveKeyboard(socket.id, __room.UP);
 		} else if (keycode == 39) {
-			room.receiveKeyboard(socket.id, _room.RIGHT);
+			room.receiveKeyboard(socket.id, __room.RIGHT);
 		} else if (keycode == 40) {
-			room.receiveKeyboard(socket.id, _room.DOWN);
+			room.receiveKeyboard(socket.id, __room.DOWN);
 		}
 	});
 });
