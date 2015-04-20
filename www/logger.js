@@ -23,7 +23,7 @@ Object.defineProperty(global, '__line', {
 var log = function(tag, filename, line, description) {
 	var d = new Date();
 	console.log(
-			'[' + String(d).substr(0,15) + ' ' + d.toLocaleTimeString() + '] '
+			'[' + String(d).substr(0,15) + ' ' + d.toLocaleTimeString() + ']\t'
 			+ tag + '\t' + filename + '\t:' + line + '\t' + description);
 };
 
