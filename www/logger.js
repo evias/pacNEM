@@ -21,8 +21,9 @@ Object.defineProperty(global, '__line', {
 (function() {
 
 var log = function(tag, filename, line, description) {
+	var d = new Date();
 	console.log(
-			'[' + new Date().toISOString().replace('T', ' ').substr(0, 19) + '] '
+			'[' + String(d).substr(0,15) + ' ' + d.toLocaleTimeString() + '] '
 			+ tag + '\t' + filename + '\t:' + line + '\t' + description);
 };
 
