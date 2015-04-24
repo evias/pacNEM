@@ -32,6 +32,7 @@ var Heap = function() {
 			return head_heap_elt;
 		
 		this.elements[0] = this.elements[this.num_elements];
+		this.elements.splice(this.num_elements, 1);
 		this.moveDown(0);
 		return head_heap_elt;
 	};
