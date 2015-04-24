@@ -49,9 +49,9 @@ describe('Heap tests', function() {
 	});
 	it('Pop an element reduces the size by 1', function(done) {
 		var h = new Heap();
-		h.push(new Elt(50, 50));
-		h.push(new Elt(50, 50));
-		h.push(new Elt(50, 50));
+		h.push(new Elt(10, 10));
+		h.push(new Elt(20, 20));
+		h.push(new Elt(30, 30));
 		h.size().should.equal(3);
 		h.pop();
 		h.size().should.equal(2);

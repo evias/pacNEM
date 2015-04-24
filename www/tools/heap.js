@@ -5,15 +5,6 @@
  * used to find the "shortest path" to reach the PacMan
  */
 
-var HeapElement = function(x, y, initial_direction, dist_from_start, dist_to_end) {
-	this.x = x;
-	this.y = y;
-	this.initial_direction = initial_direction;
-	this.dist_from_start = dist_from_start; // real distance
-	this.dist_to_end = dist_to_end; // distance measured for a line
-	this.dist = dist_from_start + dist_to_end;
-};
-
 var Heap = function() {
 	this.elements = new Array();
 	this.num_elements = 0;
@@ -92,7 +83,6 @@ var Heap = function() {
  * Module definition
  */
 
-module.exports.HeapElement = HeapElement;
 module.exports.Heap = Heap;
 
 }());

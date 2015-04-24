@@ -11,8 +11,17 @@ var __conf = require('./configuration.js'),
 	distanceCells = __conf.distanceCells;
 
 var __heap = require('../tools/heap.js'),
-	HeapElement = __heap.HeapElement,
 	Heap = __heap.Heap;
+
+var HeapElement = function(x, y, initial_direction, dist_from_start, dist_to_end) {
+	this.x = x;
+	this.y = y;
+	this.initial_direction = initial_direction;
+	this.dist_from_start = dist_from_start; // real distance
+	this.dist_to_end = dist_to_end; // distance measured for a line
+	this.dist = dist_from_start + dist_to_end;
+};
+
 
 /**
  * Ghosts
