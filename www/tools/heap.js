@@ -30,6 +30,10 @@ var Heap = function() {
 	};
 	
 	this.pop = function() {
+		if (this.num_elements == 0) {
+			return undefined;
+		}
+
 		var head_heap_elt = this.elements[0];
 		this.num_elements--;
 
@@ -43,6 +47,7 @@ var Heap = function() {
 	
 	this.free = function() {
 		this.elements = new Array();
+		this.num_elements = 0;
 	};
 	
 	this.size = function() {
