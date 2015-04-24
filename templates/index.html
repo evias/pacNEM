@@ -205,17 +205,29 @@
             $("#username").keypress(function(e) {
                 if (e.keyCode == 13) {
                   socket.emit('change_username', $("#username").val());
+                  $("#rooms").show();
+                  $("#create_my_room").show();
                 }
             });
             $("#send_username").click(function() {
                 socket.emit('change_username', $("#username").val());
+                $("#rooms").show();
+                $("#create_my_room").show();
             });
             if ($("#username").val()) {
                socket.emit('change_username', $("#username").val());
+                $("#rooms").show();
+                $("#create_my_room").show();
             }
           </script>
-          <a id="create_room" class="btn btn-primary" role="button" href="#" onclick="javascript:socket.emit('create_room');">Create room</a>
-          <a class="btn btn-link" role="button" href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
+          <div id="create_my_room">
+            <a id="create_room" class="btn btn-primary" role="button" href="#" onclick="javascript:socket.emit('create_room');">Create room</a>
+            <a class="btn btn-link" role="button" href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
+          </div>
+          <script type="text/javascript">
+            $("#rooms").hide();
+            $("#create_my_room").hide();
+          </script>
         </div>
       </div>
     </div>
