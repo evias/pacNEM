@@ -1,4 +1,5 @@
-# PacMan: single and multiplayers [![Build Status](https://travis-ci.org/dubzzz/js-pacman.svg?branch=master)](https://travis-ci.org/dubzzz/js-pacman)[![Coverage Status](https://coveralls.io/repos/dubzzz/js-pacman/badge.svg?branch=master)](https://coveralls.io/r/dubzzz/js-pacman?branch=master)
+# PacMan: single and multiplayers
+[![Build Status](https://travis-ci.org/dubzzz/js-pacman.svg?branch=master)](https://travis-ci.org/dubzzz/js-pacman)[![Coverage Status](https://coveralls.io/repos/dubzzz/js-pacman/badge.svg?branch=master)](https://coveralls.io/r/dubzzz/js-pacman?branch=master)
 
 An online version of the famous PacMan game. It features the ability to play online with up to 4 players on the same grid.
 
