@@ -103,9 +103,13 @@ describe('Heap tests', function() {
 		h.pop().dist.should.be.equal(10);
 		h.push(new Elt(10, 10));
 		h.push(new Elt(10, 10));
+		h.push(new Elt(70, 70));
+		h.push(new Elt(80, 80));
 		h.pop().dist.should.be.equal(10);
 		h.pop().dist.should.be.equal(10);
 		h.pop().dist.should.be.equal(50);
+		h.pop().dist.should.be.equal(70);
+		h.pop().dist.should.be.equal(80);
 		h.pop().dist.should.be.equal(90);
 		done();
 	});
