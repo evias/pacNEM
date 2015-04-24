@@ -113,5 +113,30 @@ describe('Heap tests', function() {
 		h.pop().dist.should.be.equal(90);
 		done();
 	});
+	it('Distinct Heap have distinct data', function(done) {
+		var h1 = new Heap();
+		var h2 = new Heap();
+		h1.push(new Elt(50, 50));
+		h1.push(new Elt(10, 10));
+		h1.push(new Elt(90, 90));
+		h2.push(new Elt(10, 10));
+		h2.push(new Elt(10, 10));
+		h2.push(new Elt(70, 70));
+		h2.push(new Elt(80, 80));
+		
+		h1.size().should.be.equal(3);
+		h1.pop().dist.should.be.equal(10);
+		h1.pop().dist.should.be.equal(50);
+		h1.pop().dist.should.be.equal(90);
+		h1.size().should.be.equal(0);
+		
+		h2.size().should.be.equal(4);
+		h2.pop().dist.should.be.equal(10);
+		h2.pop().dist.should.be.equal(10);
+		h2.pop().dist.should.be.equal(70);
+		h2.pop().dist.should.be.equal(80);
+		h2.size().should.be.equal(0);
+		done();
+	});
 });
 
