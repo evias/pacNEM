@@ -51,7 +51,7 @@ var RoomManager = function(io) {
 		assert(map_member_roomid_.hasOwnProperty(sid));
 		assert(map_member_username_.hasOwnProperty(sid));
 		
-		map_member_username_[sid] = username;
+		map_member_username_[sid] = username.substr(0, 20);
 		if (map_member_roomid_[sid] !== undefined) {
 			self.notifyChanges();
 		}
