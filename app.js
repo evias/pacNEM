@@ -18,6 +18,7 @@ var __smartfilename = path.basename(__filename);
 // Serve static files: homepage, js, css, favicon...
 app
 .get('/', function(req, res) {
+	logger.info(__smartfilename, __line, 'Welcome to (' + (req.headers ? req.headers['x-forwarded-for'] : '?') + " - " + (req.connection ? req.connection.remoteAddress : '?') + " - " + (req.socket ? req.socket.remoteAddress : '?') + " - " + (req.connection && req.connection.socket ? req.connection.socket.remoteAddress : '?') + ')');
 	res.sendfile(__dirname + '/templates/index.html');
 })
 .get('/favicon.ico', function(req, res) {
