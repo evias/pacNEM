@@ -1,4 +1,4 @@
-#!/usr/bin/node
+#!/usr/bin/nodejs
 /**
  *	Node.JS server for Online-PacMan game
  */
