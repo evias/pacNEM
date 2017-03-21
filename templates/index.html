@@ -1,0 +1,235 @@
+<html>
+  <head>
+    <title>PacMan Online</title>
+    <meta name="description" content="PacMan Online is an arcade game both single and multiplayers developed by Nicolas DUBIEN" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="robots" content="index, follow" />
+      
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/pacman.js"></script>
+
+    <script type="text/javascript">
+      var socket = io.connect(window.location.protocol + '//' + window.location.host);
+      var client_game = new ClientGame(socket);
+      var players = new Array();
+
+      socket.on('ready', function(rawdata) {
+          $("#game").show();
+          $("#looking_for_game").hide();
+          
+          var $game_details = $("#game_details");
+          if (! $game_details[0]) {
+            $game_details = $("<div/>");
+            $game_details.attr("id", "game_details");
+            $game_details.addClass("list-group");
+            $("#game").parent().append($game_details);
+          }
+          $game_details.empty();
+
+          var texts = ["Score", "Lifes", "Combo"];
+          var classes = ["pc-score", "pc-lifes", "pc-combo"];
+          for (var i = 0 ; i != players.length ; i++) {
+            var $a_elt = $("<a/>");
+            $a_elt.addClass("list-group-item");
+
+            var $title_elt = $("<h4/>");
+            $title_elt.addClass("list-group-item-heading");
+            $title_elt.text(players[i] + " ");
+            
+            var $user_elt = $("<span/>");
+            $user_elt.addClass("glyphicon glyphicon-user");
+            $user_elt.css("color", GHOSTS_COLORS[i % GHOSTS_COLORS.length]);
+            $title_elt.append($user_elt);
+            $a_elt.append($title_elt);
+
+            var $content_elt = $("<div/>");
+            $content_elt.addClass("list-group-item-text");
+            for (var j = 0 ; j != texts.length ; j++) {
+              var $subcontent_row = $("<div/>");
+              $subcontent_row.addClass("row");
+              var $subcontent_title = $("<div/>");
+              $subcontent_title.addClass("col-md-6");
+              $subcontent_title.text(texts[j]);
+              $subcontent_row.append($subcontent_title);
+              var $subcontent_content = $("<div/>");
+              $subcontent_content.addClass("col-md-6");
+              $subcontent_content.addClass(classes[j]);
+              $subcontent_row.append($subcontent_content);
+              $content_elt.append($subcontent_row);
+            }
+            $a_elt.append($content_elt);
+            $game_details.append($a_elt);
+          }
+
+          client_game.serverReady(rawdata);
+      });
+      socket.on('end_of_game', function() {
+          client_game.serverEndOfGame();
+          $("#game").hide();
+          $("#looking_for_game").show();
+      });
+      socket.on('update', client_game.serverUpdate);
+      
+      var buildButton = function(label, extra_class) {
+        var $button = $("<a/>");
+        $button.addClass("btn btn-block");
+        $button.addClass(extra_class ? extra_class : "btn-default");
+        $button.attr("role", "button");
+        $button.attr("href", "#");
+        $button.text(label);
+        return $button;
+      };
+
+      var appendRoom = function($rooms, sid, roomdata, usersdata) {
+        var is_member = $.inArray(sid, roomdata['users']) != -1;
+        
+        var $panel = $("<div/>");
+        $panel.addClass("panel panel-default");
+
+        var $panel_body = $("<div/>");
+        $panel_body.addClass("row panel-body");
+
+        var $panel_members = $("<ul/>");
+        $panel_members.addClass("col-md-9 members");
+        
+        players = new Array();
+        for (var i = 0 ; i != roomdata['users'].length ; i++) {
+          var $member = $("<li/>");
+          $member.addClass("member");
+          players.push(usersdata[roomdata['users'][i]] ? usersdata[roomdata['users'][i]] : roomdata['users'][i]);
+          $member.text(usersdata[roomdata['users'][i]] ? usersdata[roomdata['users'][i]] : roomdata['users'][i]);
+          $panel_members.append($member);
+        }
+
+        var $panel_buttons = $("<div/>");
+        $panel_buttons.addClass("col-md-3");
+
+        if (is_member) {
+          if (roomdata["status"] == "join") {
+            var $play_button = buildButton("Play", "btn-primary");
+            $play_button.click(function() {
+                socket.emit('run_game');
+            });
+            $panel_buttons.append($play_button);
+          } else if (roomdata["status"] == "wait") {
+            var $cancel_button = buildButton("Starting... (" + Math.round(roomdata["wait"]) + "s to cancel)", "btn-success");
+            $cancel_button.click(function() {
+                socket.emit('cancel_game');
+            });
+            $panel_buttons.append($cancel_button);
+          }
+          var $leave_button = buildButton("Leave room", "btn-danger");
+          $leave_button.click(function() {
+              socket.emit('leave_room');
+          });
+          $panel_buttons.append($leave_button);
+        } else if (roomdata["status"] == "join") {
+          var $join_button = buildButton("Join room");
+          if (roomdata["is_full"]) {
+            $join_button.attr("disabled", "disabled");
+          } else {
+            $join_button.click(function() {
+                socket.emit('join_room', roomdata['id']);
+            });
+          }
+          $panel_buttons.append($join_button);
+        }
+
+        $panel_body.append($panel_members);
+        $panel_body.append($panel_buttons);
+
+        $panel.append($panel_body);
+        $rooms.append($panel);
+        return is_member;
+      };
+      socket.on('rooms_update', function(rawdata) {
+          var data = JSON.parse(rawdata);
+          console.log(data);
+          var sid = data['sid'];
+          var $rooms = $("#rooms");
+          $rooms.empty();
+          var is_member = false;
+          for (var i = 0 ; i != data['rooms'].length ; i++) {
+            is_member |= appendRoom($rooms, sid, data['rooms'][i], data['users']);
+          }
+          if (is_member) {
+            $("#create_room").attr("disabled", "disabled");
+          } else {
+            $("#create_room").removeAttr("disabled");
+          }
+      });
+      
+      document.onkeydown = function(e) {
+        if([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+          socket.emit('keydown', e.keyCode);
+        }
+      };
+      window.addEventListener("keydown", function(e) {
+        // space and arrow keys
+        if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+          e.preventDefault();
+        }
+      }, false);
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div id="game" class="game">
+        <canvas id="myCanvas" height="0" width="0"></canvas>
+      </div>
+      <script type="text/javascript">
+        $("#game").hide();
+      </script>
+      <div id="looking_for_game">
+        <div id="rooms">
+        </div>
+        <div id="your_room">
+          <div>
+            <div style="display: inline-block; width: 250px; margin-bottom: 5px;">
+              <div class="input-group">
+                <span class="input-group-addon" id="describe-username"><span class="glyphicon glyphicon-user"></span></span>
+                <input id="username" type="text" class="form-control" placeholder="Username" aria-describedby="describe-username" maxlength="20" />
+                <span class="input-group-btn"><a id="send_username" class="btn btn-default" role="button" href="#">Send</a></span>
+              </div>
+            </div>
+          </div>
+          <script type="text/javascript">
+            $("#username").keypress(function(e) {
+                if (e.keyCode == 13) {
+                  socket.emit('change_username', $("#username").val());
+                  $("#rooms").show();
+                  $("#create_my_room").show();
+                }
+            });
+            $("#send_username").click(function() {
+                socket.emit('change_username', $("#username").val());
+                $("#rooms").show();
+                $("#create_my_room").show();
+            });
+            if ($("#username").val()) {
+               socket.emit('change_username', $("#username").val());
+                $("#rooms").show();
+                $("#create_my_room").show();
+            }
+          </script>
+          <div id="create_my_room">
+            <a id="create_room" class="btn btn-primary" role="button" href="#" onclick="javascript:socket.emit('create_room');">Create room</a>
+            <a class="btn btn-link" role="button" href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
+          </div>
+          <script type="text/javascript">
+            $("#rooms").hide();
+            $("#create_my_room").hide();
+          </script>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

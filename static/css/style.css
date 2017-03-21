@@ -1,0 +1,49 @@
+body
+{
+	text-align: center;
+}
+
+canvas
+{
+	display: inline-block;
+    margin-bottom: 5px;
+}
+
+.game
+{
+    margin-bottom: 12px;
+}
+
+#rooms
+{
+    margin-top: 10px;
+}
+
+ul.members
+{
+    list-style: none;
+}
+
+ul.members li.member
+{
+    display: inline-block;
+    width: 48px;
+    height: 64px;
+    background: url(/img/user.svg);
+    background-size: 48px 48px;
+    padding-top: 48px;
+    overflow: hidden;
+    background-repeat: no-repeat;
+}
+
+ul.members li.member:not(:first-child)
+{
+    margin-left: 10px;
+}
+
+#your_room,
+#game_details
+{
+    margin-top: 10px;
+}
+
