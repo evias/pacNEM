@@ -30,10 +30,9 @@ var logger = require('./www/logger.js'),
 
 var __smartfilename = path.basename(__filename);
 
-var logConnection = function(req, archive)
+var serverLog = function(req, msg, type)
 {
-	var archivePrepend = archive ? "[ARCHIVE: " + archive + "]" : "";
-	var logMsg = "[START] " + archivePrepend + " Welcome to (" + (req.headers ? req.headers['x-forwarded-for'] : "?") + " - "
+	var logMsg = "[" + type + "] " + msg + " (" + (req.headers ? req.headers['x-forwarded-for'] : "?") + " - "
 			   + (req.connection ? req.connection.remoteAddress : "?") + " - "
 			   + (req.socket ? req.socket.remoteAddress : "?") + " - "
 			   + (req.connection && req.connection.socket ? req.connection.socket.remoteAddress : "?") + ")";
@@ -46,12 +45,19 @@ app.engine(".hbs", expressHbs({
 	layoutPath: "views/layouts"}));
 app.set("view engine", "hbs");
 
-app
-.get("/", function(req, res) {
-	logConnection(req);
-	res.render("index");
-})
-.get('/favicon.ico', function(req, res) {
+app.get("/", function(req, res)
+{
+	serverLog(req, "Welcome", "START");
+	res.render("play");
+});
+
+/**
+ * Static Files Serving
+ *
+ * Following routes define static files serving routes
+ * such as the CSS, JS and images files.
+ */
+app.get('/favicon.ico', function(req, res) {
 	res.sendfile(__dirname + '/static/favicon.ico');
 })
 .get('/img/:image', function(req, res) {
@@ -60,10 +66,29 @@ app
 .get('/css/style.css', function(req, res) {
 	res.sendfile(__dirname + '/static/css/style.css');
 })
-.get('/js/pacman.js', function(req, res) {
-	res.sendfile(__dirname + '/static/js/pacman.js');
+.get('/js/:source.js', function(req, res) {
+	res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
 });
 
+/**
+ * Socket.IO RoomManager implementation
+ *
+ * The following code block defines Socket.IO room
+ * event listeners.
+ *
+ * Following Socket Events are implemented:
+ * 	- disconnect
+ * 	- change_username
+ * 	- join_room
+ * 	- create_room
+ * 	- leave_room
+ * 	- run_game
+ * 	- cancel_game
+ * 	- start
+ * 	- keydown
+ *
+ * @link https://github.com/dubzzz/js-pacman
+ */
 var room_manager = new RoomManager(io);
 
 io.sockets.on('connection', function(socket) {
@@ -152,6 +177,12 @@ io.sockets.on('connection', function(socket) {
 	});
 });
 
+/**
+ * Now listen for connections on the Web Server.
+ *
+ * This starts the NodeJS server and makes the Game
+ * available from the Browser.
+ */
 var port = process.env['PORT'] = process.env.PORT || 2908;
 server.listen(port, function()
     {
