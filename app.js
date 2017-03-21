@@ -30,13 +30,12 @@ var logger = require('./www/logger.js'),
 
 var __smartfilename = path.basename(__filename);
 
-app.engine("hbs", expressHbs({
-	extname: "hbs",
+app.engine(".hbs", expressHbs({
+	extname: ".hbs",
 	defaultLayout: "default.hbs",
 	layoutPath: "views/layouts"}));
 app.set("view engine", "hbs");
 
-// Serve static files: homepage, js, css, favicon...
 app
 .get("/hbs", function(req, res) {
 	res.render("index");
