@@ -1,0 +1,29 @@
+{
+	"name": "pacNEM",
+	"version": "0.1.1",
+	"author": "Grégory Saive <greg@evias.be>",
+	"description": "A PacMan game with NodeJS using NEM Blockchain",
+	"keywords": "pacman, game, nem, blockchain, rewards",
+	"repository": {
+	    "type": "git",
+		"url": "https://github.com/evias/pacNEM.git"
+	},
+	"license": "MIT",
+	"dependencies":
+	{
+		"express": "~3.3.4",
+		"socket.io": "~1.3.5",
+
+		"grunt": "~0.4.5",
+		"grunt-coveralls": "~1.0.0",
+		"istanbul": "~0.3.13",
+		"mocha": "~2.2.4",
+		"should": "~6.0.1",
+		"grunt-mocha-istanbul": "~2.4.0"
+	},
+	"scripts": {
+		"test": "node node_modules/mocha/bin/mocha",
+		"start": "node app.js"
+	}
+}
+
