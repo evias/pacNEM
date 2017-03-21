@@ -1,6 +1,6 @@
 # pacNEM: single and multiplayers
 
-A PacMan game with NodeJS and StageJS using NEM Blockchain
+A PacMan game with NodeJS using NEM Blockchain
 
 [![Build Status](https://travis-ci.org/evias/pacNEM.svg?branch=master)](https://travis-ci.org/evias/pacNEM)[![Coverage Status](https://coveralls.io/repos/evias/pacNEM/badge.svg?branch=master)](https://coveralls.io/r/evias/pacNEM?branch=master)
 

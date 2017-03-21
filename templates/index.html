@@ -1,14 +1,15 @@
 <html>
   <head>
-    <title>PacMan Online</title>
-    <meta name="description" content="PacMan Online is an arcade game both single and multiplayers developed by Nicolas DUBIEN" />
+    <title>PacNEM</title>
+    <meta name="description" content="A PacMan game with NodeJS using NEM Blockchain adapted and partly developed by Grégory Saive" />
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta name="robots" content="index, follow" />
-      
+
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
-    
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
@@ -24,12 +25,13 @@
       socket.on('ready', function(rawdata) {
           $("#game").show();
           $("#looking_for_game").hide();
-          
+
           var $game_details = $("#game_details");
           if (! $game_details[0]) {
             $game_details = $("<div/>");
             $game_details.attr("id", "game_details");
-            $game_details.addClass("list-group");
+            $game_details.addClass("list-group")
+                         .addClass("col-md-3")
             $("#game").parent().append($game_details);
           }
           $game_details.empty();
@@ -43,7 +45,7 @@
             var $title_elt = $("<h4/>");
             $title_elt.addClass("list-group-item-heading");
             $title_elt.text(players[i] + " ");
-            
+
             var $user_elt = $("<span/>");
             $user_elt.addClass("glyphicon glyphicon-user");
             $user_elt.css("color", GHOSTS_COLORS[i % GHOSTS_COLORS.length]);
@@ -77,7 +79,7 @@
           $("#looking_for_game").show();
       });
       socket.on('update', client_game.serverUpdate);
-      
+
       var buildButton = function(label, extra_class) {
         var $button = $("<a/>");
         $button.addClass("btn btn-block");
@@ -90,7 +92,7 @@
 
       var appendRoom = function($rooms, sid, roomdata, usersdata) {
         var is_member = $.inArray(sid, roomdata['users']) != -1;
-        
+
         var $panel = $("<div/>");
         $panel.addClass("panel panel-default");
 
@@ -99,7 +101,7 @@
 
         var $panel_members = $("<ul/>");
         $panel_members.addClass("col-md-9 members");
-        
+
         players = new Array();
         for (var i = 0 ; i != roomdata['users'].length ; i++) {
           var $member = $("<li/>");
@@ -166,7 +168,7 @@
             $("#create_room").removeAttr("disabled");
           }
       });
-      
+
       document.onkeydown = function(e) {
         if([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
           socket.emit('keydown', e.keyCode);
@@ -179,16 +181,47 @@
         }
       }, false);
     </script>
+    <style type="text/css">
+    .page-header .NEMified img {
+      max-height: 60px;
+    }
+    .page-header .pacNEMTitle {
+      font-size: 30px;
+      font-family: Roboto;
+      font-weight: 900;
+      margin-top: 20px;
+      color: #000;
+    }
+
+    @media (min-width: 768px) {
+      .navbar-nav>li {
+        padding-top: 20px;
+        font-size: 18px;
+      }
+    }
+    </style>
   </head>
   <body>
     <div class="container">
-      <div id="game" class="game">
+      <div class="page-header">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="NEMified pull-left" href="https://nem.io" target="_blank"><img src="/img/NEM_logo_small.png" alt="NEM Blockchain" title="NEM Blockchain" /></a>
+            <a class="navbar-brand pacNEMTitle pull-right" href="#">PacNEM - Pacman with NEM</a>
+          </div>
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#">High Scores</a></li>
+          </ul>
+        </div>
+      </div>
+      <div id="game" class="game row">
         <canvas id="myCanvas" height="0" width="0"></canvas>
       </div>
       <script type="text/javascript">
         $("#game").hide();
       </script>
-      <div id="looking_for_game">
+      <div id="looking_for_game" class="row col-md-8">
         <div id="rooms">
         </div>
         <div id="your_room">
@@ -222,7 +255,7 @@
           </script>
           <div id="create_my_room">
             <a id="create_room" class="btn btn-primary" role="button" href="#" onclick="javascript:socket.emit('create_room');">Create room</a>
-            <a class="btn btn-link" role="button" href="https://github.com/dubzzz/js-pacman" target="_blank">GitHub</a>
+            <a class="btn btn-link" role="button" href="https://github.com/evias/pacNEM" target="_blank">GitHub</a>
           </div>
           <script type="text/javascript">
             $("#rooms").hide();

@@ -1,6 +1,19 @@
 #!/usr/bin/nodejs
 /**
- *	Node.JS server for Online-PacMan game
+ * Part of the evias/pacNEM package.
+ *
+ * NOTICE OF LICENSE
+ *
+ * Licensed under MIT License.
+ *
+ * This source file is subject to the MIT License that is
+ * bundled with this package in the LICENSE file.
+ *
+ * @package    evias/pacNEM
+ * @author     Grégory Saive <greg@evias.be>
+ * @license    MIT License
+ * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
+ * @link       http://github.com/evias/pacNEM
  */
 
 var app = require('express')(),
@@ -24,8 +37,8 @@ app
 .get('/favicon.ico', function(req, res) {
 	res.sendfile(__dirname + '/static/favicon.ico');
 })
-.get('/img/user.svg', function(req, res) {
-	res.sendfile(__dirname + '/img/user.svg');
+.get('/img/:image', function(req, res) {
+	res.sendfile(__dirname + '/img/' + req.params.image);
 })
 .get('/css/style.css', function(req, res) {
 	res.sendfile(__dirname + '/static/css/style.css');
