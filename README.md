@@ -6,7 +6,8 @@ A PacMan game with NodeJS using NEM Blockchain
 
 An online version of the famous PacMan game. It features the ability to play online with up to 4 players on the same grid.
 
-This fork aims to specialize the game for the NEM blockchain.
+This fork aims to specialize the game for the NEM blockchain. A first version of the NEM integration will save High Scores
+in Blockchain Transactions.
 
 ### Installation
 
@@ -38,9 +39,9 @@ If you like the initiative, and for the sake of good mood, I recommend you take 
 
 NB72EM6TTSX72O47T3GQFL345AB5WYKIDODKPPYW
 
-License
+### License
 
-This software is released under the MIT License.
+This software is released under the [MIT](LICENSE) License.
 
 © 2017 Grégory Saive greg@evias.be, All rights reserved.
 © 2014 Nicolas DUBIEN, https://github.com/dubzzz/js-pacman.
