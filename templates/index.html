@@ -180,17 +180,61 @@
           e.preventDefault();
         }
       }, false);
+
+      $(document).ready(function()
+      {
+        var emitUsername = function()
+        {
+          socket.emit('change_username', $("#username").val());
+        };
+
+        $("#username").keypress(function(e) {
+            // enter pressed, send the username form
+            if (e.keyCode == 13) {
+              emitUsername();
+            }
+        });
+        $("#create_room").click(function() {
+          emitUsername();
+          socket.emit('create_room');
+          return false;
+        });
+        if ($("#username").val()) {
+          emitUsername();
+        }
+      });
     </script>
     <style type="text/css">
     .page-header .NEMified img {
       max-height: 60px;
     }
-    .page-header .pacNEMTitle {
-      font-size: 30px;
+    .NEMifiedText {
       font-family: Roboto;
+      color: #000;
+      font-weight: 900;
+      text-shadow: none;
+    }
+    .importantText {
+      font-weight: 900;
+    }
+    .page-header .greaterNEM {
+      font-size: 40px;
+    }
+    .page-header .pacNEMTitle {
+      font-family: Roboto;
+      font-size: 30px;
       font-weight: 900;
       margin-top: 20px;
       color: #000;
+      text-shadow: #dcdcdc 2px 2px;
+    }
+
+    #pacNEMWrapper {
+      min-height: 500px;
+    }
+
+    footer {
+      font-size: 9pt;
     }
 
     @media (min-width: 768px) {
@@ -206,63 +250,78 @@
       <div class="page-header">
         <div class="container-fluid">
           <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#pacNEMNav">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
             <a class="NEMified pull-left" href="https://nem.io" target="_blank"><img src="/img/NEM_logo_small.png" alt="NEM Blockchain" title="NEM Blockchain" /></a>
-            <a class="navbar-brand pacNEMTitle pull-right" href="#">PacNEM - Pacman with NEM</a>
+            <a class="navbar-brand pacNEMTitle pull-right" href="#">Pac<span class="NEMifiedText greaterNEM">nem</span> - Pacman with <span class="NEMifiedText greaterNEM">nem</span></a>
           </div>
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#">High Scores</a></li>
-          </ul>
+          <div class="collapse navbar-collapse" id="pacNEMNav">
+            <ul class="nav navbar-nav">
+              <li class="active"><a href="#">Play</a></li>
+              <li><a href="#">High Scores</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li><a href="https://github.com/evias/pacNEM" target="_blank"><span class="glyphicon glyphicon-inbox"></span> Source</a></li>
+            </ul>
+          </div>
         </div>
       </div>
-      <div id="game" class="game row">
-        <canvas id="myCanvas" height="0" width="0"></canvas>
-      </div>
-      <script type="text/javascript">
-        $("#game").hide();
-      </script>
-      <div id="looking_for_game" class="row col-md-8">
-        <div id="rooms">
+      <div id="pacNEMWrapper" class="container-fluid text-center">
+        <div id="game" class="game row">
+          <canvas id="myCanvas" height="0" width="0"></canvas>
         </div>
-        <div id="your_room">
-          <div>
-            <div style="display: inline-block; width: 250px; margin-bottom: 5px;">
-              <div class="input-group">
-                <span class="input-group-addon" id="describe-username"><span class="glyphicon glyphicon-user"></span></span>
-                <input id="username" type="text" class="form-control" placeholder="Username" aria-describedby="describe-username" maxlength="20" />
-                <span class="input-group-btn"><a id="send_username" class="btn btn-default" role="button" href="#">Send</a></span>
+        <script type="text/javascript">
+          $("#game").hide();
+        </script>
+        <div id="looking_for_game" class="row col-md-8 col-md-offset-2">
+          <div id="rooms">
+          </div>
+          <div id="your_room">
+            <div class="panel panel-info">
+              <div class="panel-heading" style="text-align: left;">
+                <span class="glyphicon glyphicon-user"></span>&nbsp;
+                <div style="display: inline;"><span>Pac</span><span class="NEMifiedText">nem</span><span>&nbsp; Multiplayer Pacman Game</span></div>
+              </div>
+              <div class="panel-body">
+                <p class="text-justify">
+                  <span>Welcome to the </span><span>Pac</span><span class="NEMifiedText">nem</span><span> Game. This game is a Free &amp; Open Source NodeJS web application
+                  which you may download for installation or Play online.</span>
+                  <span>This project will use the <span class="NEMifiedText">nem</span><span> Blockchain to save and retrieve High Scores.</span><br />
+                  <span>Because the <span class="NEMifiedText">nem</span><span> Blockchain requires a Fee of 6 XEM to be sent with
+                  each transaction on the Blockchain, saving High Scores will only be available for Users who link their XEM address
+                  to their game session.</span><br /><br />
+                  <span class="importantText">It is important to understand that Saving your High Score on the Blockchain will cost you 6 XEM. You can also Play without Saving your Score.</span>
+                </p>
+                <p class="text-justify">
+                  <span>Please enter a username below and hit the 'Send' button when you are ready to join Multiplayer Rooms for </span>
+                  <span>Pac</span><span class="NEMifiedText">nem</span><span>. Your Username will be stored in your Browser and you can change
+                  it anytime in the Game.</span>
+                </p>
+                <div style="display: inline-block; width: 250px; margin-bottom: 5px; margin-top: 5px;">
+                  <div class="input-group">
+                    <span class="input-group-addon" id="describe-username"><span class="glyphicon glyphicon-user"></span></span>
+                    <input id="username" type="text" class="form-control" placeholder="Username" aria-describedby="describe-username" maxlength="20" />
+                  </div>
+                </div>
+                <div id="create_my_room">
+                  <a id="create_room" class="btn btn-primary" role="button" href="#">Display Rooms</a>
+                </div>
               </div>
             </div>
           </div>
-          <script type="text/javascript">
-            $("#username").keypress(function(e) {
-                if (e.keyCode == 13) {
-                  socket.emit('change_username', $("#username").val());
-                  $("#rooms").show();
-                  $("#create_my_room").show();
-                }
-            });
-            $("#send_username").click(function() {
-                socket.emit('change_username', $("#username").val());
-                $("#rooms").show();
-                $("#create_my_room").show();
-            });
-            if ($("#username").val()) {
-               socket.emit('change_username', $("#username").val());
-                $("#rooms").show();
-                $("#create_my_room").show();
-            }
-          </script>
-          <div id="create_my_room">
-            <a id="create_room" class="btn btn-primary" role="button" href="#" onclick="javascript:socket.emit('create_room');">Create room</a>
-            <a class="btn btn-link" role="button" href="https://github.com/evias/pacNEM" target="_blank">GitHub</a>
-          </div>
-          <script type="text/javascript">
-            $("#rooms").hide();
-            $("#create_my_room").hide();
-          </script>
         </div>
       </div>
     </div>
+
+    <footer class="container-fluid text-center">
+      <p>
+        Made with &hearts; for the <a href="https://nem.io" target="_blank"><span class="NEMifiedText">nem</span> Project</a>.<br />
+        Copyright &copy; 2017 <a href="https://github.com/evias" target="_blank">Grégory Saive &lt;greg@evias.be&gt;</a>. Source code for the PacNEM project can be found <a href="https://github.com/evias/pacNEM" target="_blank">here</a>.<br />
+        Special Thanks to Nicolas Dubien for the original open source js-pacman project (<a href="https://github.com/dubzzz/js-pacman" target="_blank">dubzzz/js-pacman</a>).<br />
+      </p>
+    </footer>
   </body>
 </html>
