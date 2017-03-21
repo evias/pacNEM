@@ -39,7 +39,7 @@ var room_manager = new RoomManager(io);
 io.sockets.on('connection', function(socket) {
 	logger.info(__smartfilename, __line, '[' + socket.id + '] ()');
 	room_manager.register(socket.id);
-	
+
 	// Unregister the socket from the underlying RoomManager
 	socket.on('disconnect', function () {
 		logger.info(__smartfilename, __line, '[' + socket.id + '] ~()');
@@ -79,7 +79,7 @@ io.sockets.on('connection', function(socket) {
 			room.runGame();
 		}
 	});
-	
+
 	// Cancel game
 	socket.on('cancel_game', function() {
 		logger.info(__smartfilename, __line, '[' + socket.id + '] cancel_game()');
@@ -101,7 +101,7 @@ io.sockets.on('connection', function(socket) {
 		}
 		room.startGame(socket.id);
 	});
-	
+
 	// Update the direction of the player
 	socket.on('keydown', function(keycode) {
 		logger.info(__smartfilename, __line, '[' + socket.id + '] keydown(' + keycode + ')');
@@ -122,5 +122,8 @@ io.sockets.on('connection', function(socket) {
 	});
 });
 
-server.listen(8080);
-
+var port = process.env['PORT'] = process.env.PORT || 2908;
+server.listen(port, function()
+    {
+        console.log("PacNEM Game Server listening on Port %d in %s mode", this.address().port, app.settings.env);
+    });
