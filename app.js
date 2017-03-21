@@ -30,6 +30,16 @@ var logger = require('./www/logger.js'),
 
 var __smartfilename = path.basename(__filename);
 
+var logConnection = function(req, archive)
+{
+	var archivePrepend = archive ? "[ARCHIVE: " + archive + "]" : "";
+	var logMsg = "[START] " + archivePrepend + " Welcome to (" + (req.headers ? req.headers['x-forwarded-for'] : "?") + " - "
+			   + (req.connection ? req.connection.remoteAddress : "?") + " - "
+			   + (req.socket ? req.socket.remoteAddress : "?") + " - "
+			   + (req.connection && req.connection.socket ? req.connection.socket.remoteAddress : "?") + ")";
+	logger.info(__smartfilename, __line, logMsg);
+};
+
 app.engine(".hbs", expressHbs({
 	extname: ".hbs",
 	defaultLayout: "default.hbs",
@@ -37,12 +47,9 @@ app.engine(".hbs", expressHbs({
 app.set("view engine", "hbs");
 
 app
-.get("/hbs", function(req, res) {
+.get("/", function(req, res) {
+	logConnection(req);
 	res.render("index");
-})
-.get('/', function(req, res) {
-	logger.info(__smartfilename, __line, 'Welcome to (' + (req.headers ? req.headers['x-forwarded-for'] : '?') + " - " + (req.connection ? req.connection.remoteAddress : '?') + " - " + (req.socket ? req.socket.remoteAddress : '?') + " - " + (req.connection && req.connection.socket ? req.connection.socket.remoteAddress : '?') + ')');
-	res.sendfile(__dirname + '/views/index.html');
 })
 .get('/favicon.ico', function(req, res) {
 	res.sendfile(__dirname + '/static/favicon.ico');
