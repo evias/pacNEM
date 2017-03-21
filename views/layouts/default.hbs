@@ -1,0 +1,302 @@
+<html>
+    <head>
+        <title>PacNEM</title>
+        <meta name="description" content="A PacMan game with NodeJS using NEM Blockchain adapted and partly developed by Grégory Saive" />
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <meta name="robots" content="index, follow" />
+
+        <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+        <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+        <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/pacman.js"></script>
+
+        <script type="text/javascript">
+          var initSocketIO = function (socket, client_game, players)
+          {
+            socket.on('ready', function(rawdata) {
+              $("#game").show();
+              $("#looking_for_game").hide();
+
+              buildGameUI(rawdata);
+              client_game.serverReady(rawdata);
+            });
+            socket.on('end_of_game', function() {
+                client_game.serverEndOfGame();
+                $("#game").hide();
+                $("#looking_for_game").show();
+            });
+            socket.on('update', client_game.serverUpdate);
+
+            socket.on('rooms_update', function(rawdata) {
+              var data = JSON.parse(rawdata);
+              console.log(data);
+              var sid = data['sid'];
+              var $rooms = $("#rooms");
+              $rooms.empty();
+              var is_member = false;
+              for (var i = 0 ; i != data['rooms'].length ; i++) {
+                is_member |= appendRoom($rooms, sid, data['rooms'][i], data['users']);
+              }
+              if (is_member) {
+                $("#create_room").attr("disabled", "disabled");
+              } else {
+                $("#create_room").removeAttr("disabled");
+              }
+            });
+
+            document.onkeydown = function(e) {
+              if([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+                socket.emit('keydown', e.keyCode);
+              }
+            };
+            window.addEventListener("keydown", function(e) {
+              // space and arrow keys
+              if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+                e.preventDefault();
+              }
+            }, false);
+          };
+
+          var buildButton = function(label, extra_class) {
+            var $button = $("<a/>");
+            $button.addClass("btn btn-block");
+            $button.addClass(extra_class ? extra_class : "btn-default");
+            $button.attr("role", "button");
+            $button.attr("href", "#");
+            $button.text(label);
+            return $button;
+          };
+
+          var buildGameUI = function(rawdata)
+          {
+            var $game_details = $("#game_details");
+            if (! $game_details[0]) {
+              $game_details = $("<div/>");
+              $game_details.attr("id", "game_details");
+              $game_details.addClass("list-group")
+                           .addClass("col-md-3")
+              $("#game").parent().append($game_details);
+            }
+            $game_details.empty();
+
+            var texts = ["Score", "Lifes", "Combo"];
+            var classes = ["pc-score", "pc-lifes", "pc-combo"];
+            for (var i = 0 ; i != players.length ; i++) {
+              var $a_elt = $("<a/>");
+              $a_elt.addClass("list-group-item");
+
+              var $title_elt = $("<h4/>");
+              $title_elt.addClass("list-group-item-heading");
+              $title_elt.text(players[i] + " ");
+
+              var $user_elt = $("<span/>");
+              $user_elt.addClass("glyphicon glyphicon-user");
+              $user_elt.css("color", GHOSTS_COLORS[i % GHOSTS_COLORS.length]);
+              $title_elt.append($user_elt);
+              $a_elt.append($title_elt);
+
+              var $content_elt = $("<div/>");
+              $content_elt.addClass("list-group-item-text");
+              for (var j = 0 ; j != texts.length ; j++) {
+                var $subcontent_row = $("<div/>");
+                $subcontent_row.addClass("row");
+                var $subcontent_title = $("<div/>");
+                $subcontent_title.addClass("col-md-6");
+                $subcontent_title.text(texts[j]);
+                $subcontent_row.append($subcontent_title);
+                var $subcontent_content = $("<div/>");
+                $subcontent_content.addClass("col-md-6");
+                $subcontent_content.addClass(classes[j]);
+                $subcontent_row.append($subcontent_content);
+                $content_elt.append($subcontent_row);
+              }
+              $a_elt.append($content_elt);
+              $game_details.append($a_elt);
+            }
+          };
+
+          var appendRoom = function($rooms, sid, roomdata, usersdata) {
+            var is_member = $.inArray(sid, roomdata['users']) != -1;
+
+            var $panel = $("<div/>");
+            $panel.addClass("panel panel-default");
+
+            var $panel_body = $("<div/>");
+            $panel_body.addClass("row panel-body");
+
+            var $panel_members = $("<ul/>");
+            $panel_members.addClass("col-md-9 members");
+
+            players = new Array();
+            for (var i = 0 ; i != roomdata['users'].length ; i++) {
+              var $member = $("<li/>");
+              $member.addClass("member");
+              players.push(usersdata[roomdata['users'][i]] ? usersdata[roomdata['users'][i]] : roomdata['users'][i]);
+              $member.text(usersdata[roomdata['users'][i]] ? usersdata[roomdata['users'][i]] : roomdata['users'][i]);
+              $panel_members.append($member);
+            }
+
+            var $panel_buttons = $("<div/>");
+            $panel_buttons.addClass("col-md-3");
+
+            if (is_member) {
+              if (roomdata["status"] == "join") {
+                var $play_button = buildButton("Play", "btn-primary");
+                $play_button.click(function() {
+                    socket.emit('run_game');
+                });
+                $panel_buttons.append($play_button);
+              } else if (roomdata["status"] == "wait") {
+                var $cancel_button = buildButton("Starting... (" + Math.round(roomdata["wait"]) + "s to cancel)", "btn-success");
+                $cancel_button.click(function() {
+                    socket.emit('cancel_game');
+                });
+                $panel_buttons.append($cancel_button);
+              }
+              var $leave_button = buildButton("Leave room", "btn-danger");
+              $leave_button.click(function() {
+                  socket.emit('leave_room');
+              });
+              $panel_buttons.append($leave_button);
+            } else if (roomdata["status"] == "join") {
+              var $join_button = buildButton("Join room");
+              if (roomdata["is_full"]) {
+                $join_button.attr("disabled", "disabled");
+              } else {
+                $join_button.click(function() {
+                    socket.emit('join_room', roomdata['id']);
+                });
+              }
+              $panel_buttons.append($join_button);
+            }
+
+            $panel_body.append($panel_members);
+            $panel_body.append($panel_buttons);
+
+            $panel.append($panel_body);
+            $rooms.append($panel);
+            return is_member;
+          };
+        </script>
+
+        <script type="text/javascript">
+          var socket = io.connect(window.location.protocol + '//' + window.location.host);
+          var client_game = new ClientGame(socket);
+          var players = new Array();
+
+          initSocketIO(socket, client_game, players);
+
+          $(document).ready(function()
+          {
+            var emitUsername = function()
+            {
+              $("#currentUser-username").html("&nbsp;" + $("#username").val());
+              $("#currentUser").fadeIn("slow");
+              $(".user-form").fadeOut("slow");
+              socket.emit('change_username', $("#username").val());
+            };
+
+            $("#username").keypress(function(e) {
+                // enter pressed, send the username form
+                if (e.keyCode == 13) {
+                  emitUsername();
+                }
+            });
+            $("#create_room").click(function() {
+              emitUsername();
+              socket.emit('create_room');
+              return false;
+            });
+            if ($("#username").val()) {
+              emitUsername();
+            }
+          });
+        </script>
+        <style type="text/css">
+        .page-header .NEMified img {
+          max-height: 60px;
+        }
+        .NEMifiedText {
+          font-family: Roboto;
+          color: #000;
+          font-weight: 900;
+          text-shadow: none;
+        }
+        .importantText {
+          font-weight: 900;
+        }
+        .page-header .greaterNEM {
+          font-size: 40px;
+        }
+        .page-header .pacNEMTitle {
+          font-family: Roboto;
+          font-size: 30px;
+          font-weight: 900;
+          margin-top: 20px;
+          color: #000;
+          text-shadow: #dcdcdc 2px 2px;
+        }
+
+        #pacNEMWrapper {
+          min-height: 500px;
+        }
+
+        footer {
+          font-size: 9pt;
+        }
+
+        @media (min-width: 768px) {
+          .navbar-nav>li {
+            padding-top: 20px;
+            font-size: 18px;
+          }
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="page-header">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#pacNEMNav">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="NEMified pull-left" href="https://nem.io" target="_blank"><img src="/img/NEM_logo_small.png" alt="NEM Blockchain" title="NEM Blockchain" /></a>
+                        <a class="navbar-brand pacNEMTitle pull-right" href="#">Pac<span class="NEMifiedText greaterNEM">nem</span> - Pacman with <span class="NEMifiedText greaterNEM">nem</span></a>
+                    </div>
+                    <div class="collapse navbar-collapse" id="pacNEMNav">
+                        <ul class="nav navbar-nav">
+                            <li class="active"><a href="#">Play</a></li>
+                            <li><a href="#">High Scores</a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li id="currentUser" style="display: none;"><a href="#"><span class="glyphicon glyphicon-user"></span>&nbsp;<span id="currentUser-username"></span></a></li>
+                            <li><a href="https://github.com/evias/pacNEM" target="_blank"><span class="glyphicon glyphicon-inbox"></span> Source</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pacNEMWrapper" class="container-fluid text-center">
+            {{{content}}}
+            </div>
+        </div>
+
+        <footer class="container-fluid text-center">
+          <p>
+            Made with &hearts; for the <a href="https://nem.io" target="_blank"><span class="NEMifiedText">nem</span> Project</a>.<br />
+            Copyright &copy; 2017 <a href="https://github.com/evias" target="_blank">Grégory Saive &lt;greg@evias.be&gt;</a>. Source code for the PacNEM project can be found <a href="https://github.com/evias/pacNEM" target="_blank">here</a>.<br />
+            Special Thanks to Nicolas Dubien for the original open source js-pacman project (<a href="https://github.com/dubzzz/js-pacman" target="_blank">dubzzz/js-pacman</a>).<br />
+          </p>
+        </footer>
+    </body>
+</html>

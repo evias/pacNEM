@@ -1,0 +1,41 @@
+{{!< layouts/default}}
+
+<div id="looking_for_game" class="row col-md-8 col-md-offset-2">
+    <div id="your_room">
+        <div class="panel panel-info">
+            <div class="panel-heading" style="text-align: left;">
+                <span class="glyphicon glyphicon-user"></span>&nbsp;
+                <div style="display: inline;"><span>Pac</span><span class="NEMifiedText">nem</span><span>&nbsp; Multiplayer Pacman Game</span></div>
+            </div>
+            <div class="panel-body">
+                <p class="text-justify">
+                    <span>Welcome to the </span><span>Pac</span><span class="NEMifiedText">nem</span><span> Game. This game is a Free &amp; Open Source NodeJS web application
+                    which you may download for installation or Play online.</span>
+                    <span>This project will use the </span><span class="NEMifiedText">nem</span><span> Blockchain to save and retrieve High Scores.</span><br />
+                    <span>Because the </span><span class="NEMifiedText">nem</span><span> Blockchain requires a Fee of 6 XEM to be sent with
+                    each transaction on the Blockchain, saving High Scores will only be available for Users who link their XEM address
+                    to their game session.</span><br /><br />
+                    <span class="importantText">It is important to understand that Saving your High Score on the Blockchain will cost you 6 XEM. You can also Play without Saving your Score.</span>
+                </p>
+                <p class="text-justify">
+                    <span>Please enter a username below and hit the 'Send' button when you are ready to join Multiplayer Rooms for </span>
+                    <span>Pac</span><span class="NEMifiedText">nem</span><span>. Your Username will be stored in your Browser and you can change
+                    it anytime in the Game.</span>
+                </p>
+                <div class="user-form">
+                    <div style="display: inline-block; width: 250px; margin-bottom: 5px; margin-top: 5px;">
+                        <div class="input-group">
+                            <span class="input-group-addon" id="describe-username"><span class="glyphicon glyphicon-user"></span></span>
+                            <input id="username" type="text" class="form-control" placeholder="Username" aria-describedby="describe-username" maxlength="20" />
+                        </div>
+                    </div>
+                    <div id="create_my_room">
+                        <a id="create_room" class="btn btn-primary" role="button" href="#">Display Rooms</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="rooms"></div>
+</div>

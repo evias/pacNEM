@@ -19,7 +19,9 @@
 var app = require('express')(),
 	server = require('http').createServer(app),
 	io = require('socket.io').listen(server),
-	path = require('path');
+	path = require('path'),
+	handlebars = require("handlebars"),
+	expressHbs = require("express-handlebars");
 
 var logger = require('./www/logger.js'),
 	__room = require('./www/room/room.js'),
@@ -28,11 +30,20 @@ var logger = require('./www/logger.js'),
 
 var __smartfilename = path.basename(__filename);
 
+app.engine("hbs", expressHbs({
+	extname: "hbs",
+	defaultLayout: "default.hbs",
+	layoutPath: "views/layouts"}));
+app.set("view engine", "hbs");
+
 // Serve static files: homepage, js, css, favicon...
 app
+.get("/hbs", function(req, res) {
+	res.render("index");
+})
 .get('/', function(req, res) {
 	logger.info(__smartfilename, __line, 'Welcome to (' + (req.headers ? req.headers['x-forwarded-for'] : '?') + " - " + (req.connection ? req.connection.remoteAddress : '?') + " - " + (req.socket ? req.socket.remoteAddress : '?') + " - " + (req.connection && req.connection.socket ? req.connection.socket.remoteAddress : '?') + ')');
-	res.sendfile(__dirname + '/templates/index.html');
+	res.sendfile(__dirname + '/views/index.html');
 })
 .get('/favicon.ico', function(req, res) {
 	res.sendfile(__dirname + '/static/favicon.ico');
