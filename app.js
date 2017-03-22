@@ -51,6 +51,11 @@ app.get("/", function(req, res)
 	res.render("play");
 });
 
+app.get("/scores", function(req, res)
+{
+	res.render("scores");
+});
+
 /**
  * Static Files Serving
  *
