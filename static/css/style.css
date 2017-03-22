@@ -47,3 +47,49 @@ ul.members li.member:not(:first-child)
     margin-top: 10px;
 }
 
+/**
+ * PacNEM overwrite by Grégory Saive. Following
+ * styles are used in the fork to provide with
+ * explanation about the Game, and rebrand the
+ * Game to make it more user friendly.
+ *
+ * @link https://github.com/evias/pacNEM
+ */
+.page-header .NEMified img {
+    max-height: 60px;
+}
+.NEMifiedText {
+    font-family: Roboto;
+    color: #000;
+    font-weight: 900;
+    text-shadow: none;
+}
+.importantText {
+    font-weight: 900;
+}
+.page-header .greaterNEM {
+    font-size: 40px;
+}
+.page-header .pacNEMTitle {
+    font-family: Roboto;
+    font-size: 30px;
+    font-weight: 900;
+    margin-top: 20px;
+    color: #000;
+    text-shadow: #dcdcdc 2px 2px;
+}
+
+#pacNEMWrapper {
+    min-height: 500px;
+}
+
+footer {
+    font-size: 9pt;
+}
+
+@media (min-width: 768px) {
+    .navbar-nav>li {
+        padding-top: 20px;
+        font-size: 18px;
+    }
+}
