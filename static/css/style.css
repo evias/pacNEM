@@ -19,26 +19,22 @@ canvas
     margin-top: 10px;
 }
 
+.pacnem-lounge {
+    border-bottom: 1px solid #dcdcdc;
+    height: 100px;
+}
+
 ul.members
 {
     list-style: none;
+
+    margin: 0;
+    padding: 0;
 }
 
 ul.members li.member
 {
-    display: inline-block;
-    width: 48px;
-    height: 64px;
-    background: url(/img/user.svg);
-    background-size: 48px 48px;
-    padding-top: 48px;
-    overflow: hidden;
-    background-repeat: no-repeat;
-}
-
-ul.members li.member:not(:first-child)
-{
-    margin-left: 10px;
+    height: 20px;
 }
 
 #your_room,
@@ -97,4 +93,8 @@ footer {
     .navbar-nav>li {
         font-size: 18px;
     }
+}
+
+.xem-address {
+    text-transform: uppercase;
 }
