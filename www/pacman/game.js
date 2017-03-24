@@ -98,7 +98,7 @@ var GHOST_STARTS_Y = new Array();
 {
 	var height = GRID.length;
 	var width = GRID[0].length;
-	
+
 	for (var i=0 ; i!=width ; i++) {
 		for (var j=0 ; j!=height ; j++) {
 			if (GRID[j][i] == 'g') {
@@ -121,7 +121,7 @@ var Game = function(io, sids, room) {
 	var pacmans_ = new Array();
 	var ghosts_ = new Array();
 	var num_rounds_ = 0;
-	
+
 	var io = io;
 	var sids_ = sids;
 	var room_ = room;
@@ -181,7 +181,7 @@ var Game = function(io, sids, room) {
 					bool_map_.push(bool_map_line);
 				}
 			}
-			
+
 			// Characters
 			start_received_from_ = new Array();
 			for (var i = 0 ; i!=pacmans_.length ; i++) {
@@ -196,12 +196,12 @@ var Game = function(io, sids, room) {
 				map_[pacman_y][pacman_x] = " ";
 				start_received_from_.push(false);
 			}
-			
+
 			for (var i=0 ; i!=ghosts_.length ; i++) {
 				ghosts_[i].restart(GHOST_STARTS_X, GHOST_STARTS_Y);
 				ghosts_[i].setDifficulty(1. * (num_rounds_ * num_rounds_) / (num_rounds_ * num_rounds_ +7));
 			}
-			
+
 			for (var i = 0 ; i != sids_.length ; i++) {
 				io.sockets.to(sids_[i]).emit('ready', JSON.stringify({
 						'constants':
@@ -231,7 +231,7 @@ var Game = function(io, sids, room) {
 		var state = {};
 		state['points'] = new Array();
 		state['eat'] = new Array();
-		
+
 		for (var j=0 ; j!=pacmans_.length ; j++) {
 			var pacman = pacmans_[j];
 			if (pacman.hasBeenKilledRecently() || ! pacman.isAlive()) {
@@ -270,10 +270,12 @@ var Game = function(io, sids, room) {
 							pacmans_[j].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
 							pacman.setKilledRecently(FPS);
 						}
+
+						//XXX io.sockets.to(sids_[i]).emit("lost_life", JSON.stringify(pacman));
 					}
 				}
 			}
-			
+
 			// Check for contact between PacMan and a PacMan
 			for (var i=j+1 ; i<pacmans_.length ; i++) {
 				// Contact detected
@@ -290,7 +292,7 @@ var Game = function(io, sids, room) {
 						var pacman_direction =  PACMAN_STARTS[pacmans_.length -1][i]['direction'];
 						pacmans_[i].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
 						pacmans_[i].setKilledRecently(FPS);
-						
+
 						var increase = pacman.increaseScore(200);
 						state['points'].push({
 								"type": "pacman",
@@ -307,7 +309,7 @@ var Game = function(io, sids, room) {
 						var pacman_direction =  PACMAN_STARTS[pacmans_.length -1][j]['direction'];
 						pacman.restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
 						pacman.setKilledRecently(FPS);
-						
+
 						var increase = pacmans_[i].increaseScore(200);
 						state['points'].push({
 								"type": "pacman",
@@ -408,7 +410,7 @@ var Game = function(io, sids, room) {
 				return;
 			}
 		}
-		
+
 		state['elapsed'] = Date.now() - start_time_;
 		state["pacmans"] = new Array();
 		for (var i=0 ; i!=pacmans_.length ; i++) {
@@ -448,7 +450,7 @@ var Game = function(io, sids, room) {
 			io.sockets.to(sids_[i]).emit('end_of_game');
 		}
 	};
-	
+
 	{
 		for (var i=0 ; i!=sids_.length ; i++) {
 			pacmans_.push(new PacMan());
