@@ -1,3 +1,3 @@
-[submodule "node_modules/nodejs2nem"]
-	path = node_modules/nodejs2nem
-	url = git@github.com:NemProject/nodejs2nem.git
+[submodule "node_modules/NEM-Library"]
+	path = node_modules/NEM-Library
+	url = git@github.com:QuantumMechanics/NEM-sdk.git
