@@ -1,3 +1,20 @@
+/**
+ * Part of the evias/pacNEM package.
+ *
+ * NOTICE OF LICENSE
+ *
+ * Licensed under MIT License.
+ *
+ * This source file is subject to the MIT License that is
+ * bundled with this package in the LICENSE file.
+ *
+ * @package    evias/pacNEM
+ * @author     Grégory Saive <greg@evias.be>
+ * @license    MIT License
+ * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
+ * @link       http://github.com/evias/pacNEM
+ */
+
 /*
  * Requires socket.io to work correctly
  */
@@ -62,24 +79,22 @@ var ClientGame = function(socket) {
 	this.start = function() {
 		if (! ongoing_game_) {
 			// Ask the server to start a new game session
-			console.log('Sent: new');
 			socket_.emit('new');
 			last_elapsed_ = 0;
 		}
 	};
-	
+
 	this.serverReady = function(rawdata) {
-		console.log('Received: ready with rawdata');
 		var data = JSON.parse(rawdata);
 		grid_ = data['map'];
 		FPS = data['constants']['FPS'];
 		CHEESE_FRAMES = data['constants']['CHEESE_FRAMES'];
 		FRAMES_PER_CELL = data['constants']['FRAMES_PER_CELL'];
-			
+
 		if (! ongoing_game_) {
 			ongoing_game_ = true;
 		}
-		
+
 		// Setup the canvas
 		var canvas = document.getElementById('myCanvas');
 		if (! canvas.getContext) {
@@ -90,10 +105,10 @@ var ClientGame = function(socket) {
 		var width = grid_[0].length;
 		canvas.width = width * SIZE +10;
 		canvas.height = height * SIZE +10;
-		
+
 		// Draw board
 		drawEmptyGameBoard(canvas, ctx, grid_);
-		
+
 		// Screen transition for a new game
 		TransitionHelper(function() {
 				console.log('Sent: start');
@@ -102,12 +117,10 @@ var ClientGame = function(socket) {
 	};
 
 	this.serverEndOfGame = function() {
-		console.log('Received: end_of_game');
 		ongoing_game_ = false;
 	};
-	
+
 	this.serverUpdate = function(rawdata) {
-		console.log('Received: update with ' + rawdata);
 		var data = JSON.parse(rawdata);
 
 		for (var i = 0 ; i != data['eat'].length ; i++) {
@@ -129,14 +142,12 @@ var ClientGame = function(socket) {
 		ongoing_refresh_ = true;
 		last_elapsed_ = data['elapsed'];
 
-		console.debug("Last frame received: " + last_elapsed_);
-
 		var canvas = document.getElementById('myCanvas');
 		if (! canvas.getContext) {
 			return;
 		}
 		var ctx = canvas.getContext('2d');
-		
+
 		// Draw game
 		drawEmptyGameBoard(canvas, ctx, grid_);
 		var $items = $("#game_details .list-group-item-text");
@@ -159,17 +170,237 @@ var ClientGame = function(socket) {
 				i--;
 			}
 		}
-		
+
 		frame_++;
 		ongoing_refresh_ = false;
 	};
 };
 
 /**
- * Draw an empty game board
+ * Class GameUI
+ *
+ * Handling frontend User Interface for open
+ * HTTP sessions.
+ *
+ * This class registers a few Socket Event Listener
+ * for updating the general Game User Interface.
+ *
+ * @package    evias/pacNEM
+ * @author     Grégory Saive <greg@evias.be>
+ * @license    MIT License
+ * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
+ * @link       http://github.com/evias/pacNEM
  */
+var GameUI = function(socket, game, $)
+{
+	var socket_ = socket;
+	var game_ = game;
+	var jquery_ = $;
 
-function drawEmptyGameBoard(canvas, ctx, grid) {
+	this.init = function()
+	{
+		var self = this;
+
+		socket_.on('ready', function(rawdata) {
+            $("#game").show();
+            self.displayUserDetails(rawdata);
+            game_.serverReady(rawdata);
+            self.registerKeyListeners();
+        });
+
+        socket_.on('end_of_game', function() {
+            game_.serverEndOfGame();
+        });
+
+        socket_.on('update', game_.serverUpdate);
+
+        socket_.on('rooms_update', function(rawdata)
+        {
+            var data = JSON.parse(rawdata);
+            var sid  = data['sid'];
+            var $rooms = $("#rooms");
+            var rooms  = data["rooms"];
+            var isAuth = $("#username").val().length > 0 && $("#address").val().length > 0;
+
+            // clear UI
+            $rooms.empty();
+
+            if (isAuth)
+                $("#save_auth").attr("disabled", "disabled");
+            else
+                $("#save_auth").removeAttr("disabled");
+
+            self.displayRooms($rooms, sid, data);
+
+            if (! rooms.length)
+                // create a new room, no one else online
+                socket_.emit("create_room");
+        });
+
+        return this;
+	};
+
+	this.displayUserDetails = function(rawdata)
+	{
+		var self = this;
+	    var $details = $("#game_details").first();
+	    var $userRow = $details.find(".players-list li.hidden").first();
+
+	    // interpret data, prepare display
+	    var data = JSON.parse(rawdata);
+
+	    if (players.length)
+	        // clear players list first
+	        $details.empty();
+
+	    for (var i = 0 ; i < players.length ; i++) {
+	        var $row  = $userRow.clone().removeClass("hidden");
+	        var color = GHOSTS_COLORS[i % GHOSTS_COLORS.length];
+
+	        // set player name and add to DOM
+	        $row.find(".player").first().text(players[i]);
+	        $row.find(".glyphicon").first().css("color", color);
+	        $row.appendTo($details);
+	    }
+
+	    $details.show();
+	    return this;
+	};
+
+	this.displayRooms = function($rooms, sid, data)
+	{
+		var self = this;
+
+	    if (! data["rooms"].length) {
+	        //XXX currently no room => button "Create"
+	        return 0;
+	    }
+
+	    for (var i = 0; i < data["rooms"].length; i++)
+	        self.displayRoom($rooms, sid, data["rooms"][i], data["users"]);
+
+	    return data["rooms"].length;
+	};
+
+	this.displayRoomAction = function(rooms, $button, callback)
+	{
+	    $button.click(function() {
+	        callback(rooms);
+	        return false;
+	    });
+
+	    $button.removeClass("hidden");
+	    return this;
+	};
+
+	this.displayRoom = function($rooms, sid, roomdata, usersdata)
+	{
+		var self = this;
+
+	    var is_member = $.inArray(sid, roomdata['users']) != -1;
+	    var template  = $("#room-template").html();
+	    var $rooms    = $("#rooms");
+	    var $thisRoom = $("<div/>").html(template);
+
+	    $thisRoom.addClass("hidden").appendTo($rooms);
+
+	    // now `thisRoom` will contain the actual "lounge"
+	    $thisRoom = $rooms.find(".pacnem-lounge").last();
+
+	    var $members  = $thisRoom.find(".room-members-wrapper ul");
+	    var $memberRow= $thisRoom.find(".room-members-wrapper ul li.hidden").first();
+
+	    // players array will now be filled with current room's users
+	    players = [];
+
+	    // now create the members entries for this room
+	    for (var i = 0 ; i < roomdata['users'].length ; i++) {
+	        var user = usersdata[roomdata['users'][i]] ? usersdata[roomdata['users'][i]] : roomdata['users'][i];
+
+	        $currentRow = $memberRow.clone()
+	                              .removeClass("hidden")
+	                              .appendTo($members);
+
+	        $currentRow.find(".member-name").first().text(user);
+
+	        players.push(user);
+	    }
+
+	    // define which buttons must be active
+	    if (is_member) {
+	        if (roomdata["status"] == "join") {
+	            var $button = $thisRoom.find(".roomActionJoin").first();
+	            self.displayRoomAction(roomdata, $button, function(roomdata) { socket_.emit("run_game"); });
+	        }
+	        else if (roomdata["status"] == "wait") {
+	            var $button = $thisRoom.find(".roomActionCancel").first();
+	            self.displayRoomAction(roomdata, $button, function(roomdata) { socket_.emit("cancel_game"); });
+	        }
+
+	        // leave button always if member of room
+	        var $button = $thisRoom.find(".roomActionLeave").first();
+	        self.displayRoomAction(roomdata, $button, function(roomdata) { socket_.emit("leave_room"); });
+	    }
+	    else if (roomdata["status"] == "join") {
+	        var $button = $thisRoom.find(".roomActionJoin").first();
+
+	        if (roomdata["is_full"])
+	            $button.prop("disabled", true);
+	        else
+	            self.displayRoomAction(roomdata, $button, function(roomdata) { socket_.emit("join_room", roomdata["id"]); });
+	    }
+
+	    $thisRoom.parent().removeClass("hidden");
+	    return is_member;
+	};
+
+	this.emitUsername = function()
+	{
+	    $("#currentUser-username").html("&nbsp;" + $("#username").val());
+	    $("#currentUser").fadeIn("slow");
+	    $(".hide-on-auth").fadeOut("slow");
+	    $(".show-on-auth").fadeIn("slow");
+	    socket_.emit('change_username', $("#username").val());
+	    return this;
+	};
+
+    this.registerKeyListeners = function()
+    {
+        document.onkeydown = function(e) {
+            if([37, 38, 39, 40].indexOf(e.keyCode) > -1)
+                socket_.emit('keydown', e.keyCode);
+        };
+
+        window.addEventListener("keydown", function(e) {
+            // space and arrow keys
+            if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1)
+                e.preventDefault();
+        }, false);
+	    return this;
+    };
+
+    this.initDOMListeners = function()
+    {
+    	var self = this;
+		$("#save_auth").click(function() {
+            self.emitUsername();
+            return false;
+        });
+
+        // document read behaviour
+        if ($("#username").val())
+            self.emitUsername();
+
+        return this;
+    };
+};
+
+/**
+ * Draw an empty game board
+ * @author Nicolas Dubien (https://github.com/dubzzz)
+ */
+function drawEmptyGameBoard(canvas, ctx, grid)
+{
 	/**
 	 * Draw the Game Board
 	 */
@@ -177,13 +408,13 @@ function drawEmptyGameBoard(canvas, ctx, grid) {
 	// Retrieve grid dimensions
 	var height = grid.length;
 	var width = grid[0].length;
-	
+
 	// Draw Game Board
 	ctx.beginPath();
 	ctx.fillStyle = "white";
 	ctx.fillRect(0, 0, width * SIZE +10, height * SIZE +10);
 	ctx.fill();
-	
+
 	ctx.beginPath();
 	ctx.lineWidth = 3;
 	ctx.strokeStyle = "black";
@@ -193,7 +424,7 @@ function drawEmptyGameBoard(canvas, ctx, grid) {
 	ctx.lineTo(width * SIZE +8, 2);
 	ctx.closePath();
 	ctx.stroke();
-	
+
 	for (var i = 0 ; i != width ; i++) {
 		for (var j = 0 ; j != height ; j++) {
 			if (grid[j][i] == '#') {
@@ -216,9 +447,10 @@ function drawEmptyGameBoard(canvas, ctx, grid) {
 
 /**
  * Draw the PacMan
+ * @author Nicolas Dubien (https://github.com/dubzzz)
  */
-
-function drawPacMan(canvas, ctx, frame, pacman, color) {
+function drawPacMan(canvas, ctx, frame, pacman, color)
+{
 	if (pacman["lifes"] < 0)
 	{
 		return;
@@ -226,7 +458,7 @@ function drawPacMan(canvas, ctx, frame, pacman, color) {
 	if (pacman["killed_recently"] != 0 && pacman["killed_recently"]%4 < 2) {
 		return;
 	}
-	
+
 	var pacman_px_x = (1. * pacman['x'] / FRAMES_PER_CELL +.5) * SIZE +5;
 	var pacman_px_y = (1. * pacman['y'] / FRAMES_PER_CELL +.5) * SIZE +5;
 	var pacman_mouth = frame % FRAMES_PER_CELL +3;
@@ -260,9 +492,10 @@ function drawPacMan(canvas, ctx, frame, pacman, color) {
 
 /**
  * Draw a ghost
+ * @author Nicolas Dubien (https://github.com/dubzzz)
  */
-
-function drawGhost(canvas, ctx, frame, ghost, color) {
+function drawGhost(canvas, ctx, frame, ghost, color)
+{
 	if (ghost['cheese_effect'] != 0 && ghost['cheese_effect'] <= CHEESE_EFFECT_FRAMES/5 && (ghost['cheese_effect']%4 == 1 || ghost['cheese_effect']%4 == 2)) {
 		return;
 	}
@@ -318,7 +551,7 @@ function drawGhost(canvas, ctx, frame, ghost, color) {
 	ctx.arc(ghost_px_x -.12*SIZE, ghost_px_y -.17*SIZE, .1*SIZE, 0, Math.PI, false);
 	ctx.arc(ghost_px_x -.12*SIZE, ghost_px_y -.21*SIZE, .1*SIZE, Math.PI, 2*Math.PI, false);
 	ctx.fill();
-	
+
 	ctx.beginPath();
 	ctx.arc(ghost_px_x +.12*SIZE, ghost_px_y -.17*SIZE, .1*SIZE, 0, Math.PI, false);
 	ctx.arc(ghost_px_x +.12*SIZE, ghost_px_y -.21*SIZE, .1*SIZE, Math.PI, 2*Math.PI, false);
@@ -326,10 +559,10 @@ function drawGhost(canvas, ctx, frame, ghost, color) {
 }
 
 /**
- *  * Draw points
- *   */
-
-function drawPoints(canvas, ctx, pts) {
+ * Draw points
+ * @author Nicolas Dubien (https://github.com/dubzzz) */
+function drawPoints(canvas, ctx, pts)
+{
 		ctx.fillStyle = pts.color;
 		ctx.font = "bold " + Math.ceil(5 + 4*pts.iter*SIZE/3/FPS) + "px Arial";
 		ctx.fillText("+" + pts.value, pts.x*SIZE +5, pts.y*SIZE +5);

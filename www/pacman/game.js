@@ -270,8 +270,6 @@ var Game = function(io, sids, room) {
 							pacmans_[j].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
 							pacman.setKilledRecently(FPS);
 						}
-
-						//XXX io.sockets.to(sids_[i]).emit("lost_life", JSON.stringify(pacman));
 					}
 				}
 			}
