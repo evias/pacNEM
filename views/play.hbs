@@ -1,8 +1,8 @@
 
 <script type="text/javascript">
-    var socket = io.connect(window.location.protocol + '//' + window.location.host);
-    var client_game = new ClientGame(socket);
-    var game_ui = new GameUI(socket, client_game, $);
+    var socket    = io.connect(window.location.protocol + '//' + window.location.host);
+    var game_ctrl = new GameController(socket);
+    var game_ui   = new GameUI(socket, game_ctrl, $);
 
     $(document).ready(function()
     {

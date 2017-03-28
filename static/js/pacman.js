@@ -9,16 +9,18 @@
  * bundled with this package in the LICENSE file.
  *
  * @package    evias/pacNEM
- * @author     Grégory Saive <greg@evias.be>
+ * @author     Grégory Saive <greg@evias.be> (https://github.com/evias)
  * @license    MIT License
  * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
- * @link       http://github.com/evias/pacNEM
+ * @link       https://github.com/evias/pacNEM
  */
 
-/*
- * Requires socket.io to work correctly
+/**
+ * Constants for the Client Side implementation of
+ * the Pacman JS game.
+ *
+ * @author 	Nicolas Dubien (https://github.com/dubzzz)
  */
-
 var LEFT = 0,
 	UP = 1,
 	RIGHT = 2,
@@ -32,6 +34,12 @@ var FPS = 20;
 var CHEESE_EFFECT_FRAMES = 200;
 var FRAMES_PER_CELL = 5;
 
+/**
+ * class TransitionHelper is used for Screen Transitions
+ * using a Canvas.
+ *
+ * @author 	Nicolas Dubien (https://github.com/dubzzz)
+ */
 var TransitionHelper = function(callback) {
 	var callback_ = callback;
 	var frame_ = 0;
@@ -59,6 +67,12 @@ var TransitionHelper = function(callback) {
 	}
 };
 
+/**
+ * class DisplayPoints is a type structure containing
+ * a Canvas Point configuration.
+ *
+ * @author 	Nicolas Dubien (https://github.com/dubzzz)
+ */
 var DisplayPoints = function(x, y, color, value) {
 	this.x = x;
 	this.y = y;
@@ -67,7 +81,18 @@ var DisplayPoints = function(x, y, color, value) {
 	this.color = color;
 };
 
-var ClientGame = function(socket) {
+/**
+ * class GameController is defines several actions
+ * in MVC style using Socket.IO for data transmission
+ * on streams.
+ *
+ * This implementation allows using the Pacman Game in
+ * Rooms of up to 4 Persons.
+ *
+ * @author 	Nicolas Dubien (https://github.com/dubzzz)
+ * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
+ */
+var GameController = function(socket) {
 	var socket_ = socket;
 	var frame_ = 0;
 	var ongoing_game_ = false;
@@ -182,14 +207,11 @@ var ClientGame = function(socket) {
  * Handling frontend User Interface for open
  * HTTP sessions.
  *
- * This class registers a few Socket Event Listener
- * for updating the general Game User Interface.
+ * This class registers a few Socket Event Listeners
+ * which need to trigger updates to the general Game
+ * User Interface.
  *
- * @package    evias/pacNEM
- * @author     Grégory Saive <greg@evias.be>
- * @license    MIT License
- * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
- * @link       http://github.com/evias/pacNEM
+ * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
 var GameUI = function(socket, game, $)
 {
@@ -393,6 +415,10 @@ var GameUI = function(socket, game, $)
 
         return this;
     };
+
+    {
+    	this.init();
+    }
 };
 
 /**
@@ -563,9 +589,9 @@ function drawGhost(canvas, ctx, frame, ghost, color)
  * @author Nicolas Dubien (https://github.com/dubzzz) */
 function drawPoints(canvas, ctx, pts)
 {
-		ctx.fillStyle = pts.color;
-		ctx.font = "bold " + Math.ceil(5 + 4*pts.iter*SIZE/3/FPS) + "px Arial";
-		ctx.fillText("+" + pts.value, pts.x*SIZE +5, pts.y*SIZE +5);
-		pts.iter++;
+	ctx.fillStyle = pts.color;
+	ctx.font = "bold " + Math.ceil(5 + 4*pts.iter*SIZE/3/FPS) + "px Arial";
+	ctx.fillText("+" + pts.value, pts.x*SIZE +5, pts.y*SIZE +5);
+	pts.iter++;
 }
 

@@ -34,7 +34,12 @@ ul.members
 
 ul.members li.member
 {
-    height: 20px;
+    min-height: 20px;
+    max-height: 40px;
+}
+
+ul.members li.member .member-name {
+    word-break: break-all;
 }
 
 #your_room,
