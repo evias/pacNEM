@@ -269,6 +269,7 @@ var GameUI = function(socket, controller, $)
 		var self = this;
 
 		socket_.on('ready', function(rawdata) {
+			$(".msgSelectRoom").hide();
             $("#game").show();
             self.displayUserDetails(rawdata);
             ctrl_.serverReady(rawdata);
