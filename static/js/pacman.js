@@ -249,6 +249,7 @@ var GameUI = function(socket, controller, $)
 	var socket_ = socket;
 	var ctrl_ = controller;
 	var jquery_ = $;
+	var rooms_ctr_ = undefined;
 
 	/**
 	 * /!\
@@ -303,13 +304,15 @@ var GameUI = function(socket, controller, $)
                 socket_.emit("create_room");
         });
 
+        rooms_ctr_ = $("#rooms");
+
         return this;
 	};
 
 	/**
 	 * Display current Game's Player List (up to 4)
 	 *
-	 * @param  {[type]} rawdata [description]
+	 * @param  {[type]} rawdata
 	 * @return GameUI
 	 */
 	this.displayUserDetails = function(rawdata)
@@ -340,27 +343,70 @@ var GameUI = function(socket, controller, $)
 	};
 
 	/**
+	 * helper for displaying Create Room button
+	 *
+	 * @return {[type]} [description]
+	 */
+	this.enableCreateRoom = function()
+	{
+		var $button = rooms_ctr_.find(".roomCreateNew").first();
+
+		if (!$button)
+			$(".roomCreateNew").appendTo($rooms);
+
+		$button.removeClass("hidden");
+		$button.off("click");
+		$button.on("click", function() { socket_.emit("create_room"); });
+
+		return this;
+	};
+
+	/**
+	 * helper for hiding Create Room button
+	 *
+	 * @return {[type]} [description]
+	 */
+	this.disableCreateRoom = function()
+	{
+		var $button = rooms_ctr_.find(".roomCreateNew").first();
+
+		if (!$button)
+			return this;
+
+		$button.addClass("hidden");
+		return this;
+	};
+
+	/**
 	 * Display all available Game Rooms
 	 *
-	 * @param  {[type]} $rooms [description]
-	 * @param  {[type]} sid    [description]
-	 * @param  {[type]} data   [description]
+	 * @param  {[type]} $rooms
+	 * @param  {[type]} sid
+	 * @param  {[type]} data
 	 * @return integer 	Count of available rooms
 	 */
 	this.displayRooms = function($rooms, sid, data)
 	{
 		var self = this;
 
-		console.log("hasSession: " + ctrl_.hasSession());
-		console.log("Players: " + ctrl_.getPlayers());
+		if (! data["rooms"].length) {
+			self.enableCreateRoom();
+			return 0;
+		}
 
-	    if (! data["rooms"].length || !ctrl_.hasSession()) {
-	        //XXX currently no room => button "Create"
-	        return 0;
-	    }
+		if (!ctrl_.hasSession()) {
+			$rooms.parent().hide();
+			return 0;
+		}
 
+		$rooms.parent().show();
+
+	    var playerInRoom = false;
 	    for (var i = 0; i < data["rooms"].length; i++)
-	        self.displayRoom($rooms, sid, data["rooms"][i], data["users"]);
+	        playerInRoom |= self.displayRoom(i+1, $rooms, sid, data["rooms"][i], data["users"]);
+
+		if (! playerInRoom)
+			self.enableCreateRoom();
 
 	    return data["rooms"].length;
 	};
@@ -394,14 +440,15 @@ var GameUI = function(socket, controller, $)
 	 * According to the Room's data Status field, the action
 	 * buttons will be enabled.
 	 *
-	 * @param  jQuery $rooms    [description]
-	 * @param  string sid       [description]
-	 * @param  object roomdata  [description]
-	 * @param  object usersdata [description]
+	 * @param  integer roomIndex
+	 * @param  jQuery $rooms
+	 * @param  string sid
+	 * @param  object roomdata
+	 * @param  object usersdata
 	 * @return boolean 	Whether current Player is Member of the
 	 *                  displayed room or not
 	 */
-	this.displayRoom = function($rooms, sid, roomdata, usersdata)
+	this.displayRoom = function(roomIndex, $rooms, sid, roomdata, usersdata)
 	{
 		var self = this;
 
@@ -414,6 +461,9 @@ var GameUI = function(socket, controller, $)
 
 	    // now `thisRoom` will contain the actual "lounge"
 	    $thisRoom = $rooms.find(".pacnem-lounge").last();
+
+	    var $title = $thisRoom.find(".lounge-title");
+	    $title.find(".room-enum").first().text(roomIndex);
 
 	    var $members  = $thisRoom.find(".room-members-wrapper ul");
 	    var $memberRow= $thisRoom.find(".room-members-wrapper ul li.hidden").first();
@@ -437,26 +487,48 @@ var GameUI = function(socket, controller, $)
 		if (players.length)
 			ctrl_.setPlayers(players);
 
+		self.configureRoomActions($thisRoom, roomdata);
+
+	    $thisRoom.parent().removeClass("hidden");
+	    return is_member;
+	};
+
+	/**
+	 * Configure Action Buttons for the given `room` object.
+	 *
+	 * Mandatory fields for the room object are "status"
+	 * and "is_full".
+	 *
+	 * @param  jQuery $domRoom
+	 * @param  object room
+	 * @return GameUI
+	 */
+	this.configureRoomActions = function($domRoom, room)
+	{
+		var self      = this;
+		var is_member = $.inArray(socket_.id, room['users']) != -1;
+
 	    // define which buttons must be active
 		if (is_member) {
-			if (roomdata["status"] == "join") {
-				var $button = $thisRoom.find(".roomActionPlay").first();
-				self.displayRoomAction(roomdata, $button, function($btn, roomdata) {
+			if (room["status"] == "join") {
+				var $button = $domRoom.find(".roomActionPlay").first();
+				self.displayRoomAction(room, $button, function($btn, room) {
 					socket_.emit("run_game");
 				});
 	        }
-	        else if (roomdata["status"] == "wait") {
-				var $button = $thisRoom.find(".roomActionCancel").first();
+	        else if (room["status"] == "wait") {
+				var $button = $domRoom.find(".roomActionCancel").first();
 
-				self.displayRoomAction(roomdata, $button, function($btn, roomdata) {
+				self.displayRoomAction(room, $button, function($btn, room) {
 					socket_.emit("cancel_game");
-				}, Math.round(roomdata["wait"]));
+				}, Math.round(room["wait"]));
 	        }
 
 	        // leave button always if member of room
-			var $button = $thisRoom.find(".roomActionLeave").first();
-			self.displayRoomAction(roomdata, $button, function($btn, roomdata) {
+			var $button = $domRoom.find(".roomActionLeave").first();
+			self.displayRoomAction(room, $button, function($btn, room) {
 				socket_.emit("leave_room");
+				socket_.emit("notify");
 				$(".roomActionJoin").removeAttr("disabled")
 									.removeClass("btn-default")
 									.addClass("btn-primary");
@@ -468,21 +540,20 @@ var GameUI = function(socket, controller, $)
 								.removeClass("btn-primary")
 								.addClass("btn-default");
 	    }
-	    else if (roomdata["status"] == "join") {
-	        var $button = $thisRoom.find(".roomActionJoin").first();
+	    else if (room["status"] == "join") {
+	        var $button = $domRoom.find(".roomActionJoin").first();
 
-	        if (roomdata["is_full"])
+	        if (room["is_full"])
 	            $button.prop("disabled", true);
 	        else {
-				self.displayRoomAction(roomdata, $button, function($btn, roomdata) {
-					socket_.emit("join_room", roomdata["id"]);
+				self.displayRoomAction(room, $button, function($btn, room) {
+					socket_.emit("join_room", room["id"]);
 				});
 			}
 	    }
 
-	    $thisRoom.parent().removeClass("hidden");
-	    return is_member;
-	};
+	    return this;
+	}
 
 	/**
 	 * Send the entered username to the Socket IO room manager.
@@ -493,8 +564,8 @@ var GameUI = function(socket, controller, $)
 	{
 	    $("#currentUser-username").html("&nbsp;" + $("#username").val());
 	    $("#currentUser").fadeIn("slow");
-	    $(".hide-on-auth").fadeOut("slow");
-	    $(".show-on-auth").fadeIn("slow");
+	    $(".hide-on-auth").hide();
+	    $(".show-on-auth").show();
 	    socket_.emit('change_username', $("#username").val());
 	    socket_.emit("notify");
 	    return this;

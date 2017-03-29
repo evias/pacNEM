@@ -10,7 +10,7 @@
     });
 </script>
 
-<div id="pacnem-main-wrapper" class="row col-md-10 col-md-offset-1">
+<div id="pacnem-main-wrapper" class="col-md-7 col-md-offset-1">
     <div id="your_room">
         <div class="panel panel-info">
             <div class="panel-heading hide-on-auth" style="text-align: left;">
@@ -49,10 +49,13 @@
         </div>
     </div>
 
+    <div class="panel panel-success text-success msgSelectRoom show-on-auth successMessage" style="display: none;">
+        <i class="glyphicon glyphicon-ok"></i>&nbsp;
+        <strong>Thank you, Now please select a Room to Join in the list.</strong>
+    </div>
+
     <div class="container-fluid">
         <div class="container-fluid col-md-4">
-            <div id="rooms" class="row"></div>
-
             <div id="game_details" class="row">
                 <ul class="list-group players-list">
                     <li class="list-group-item hidden">
@@ -86,8 +89,14 @@
 
 </div>
 
+<div class="col-md-3">
+    <h4 class="text-left">Pac<span class="NEMifiedText">nem</span> rooms</h4>
+    <div id="rooms" class="row"></div>
+</div>
+
 <div id="room-template" class="hidden">
     <div class="row pacnem-lounge">
+        <h5 class="lounge-title text-left bbNEMGreen colNEMGreen">Pac<span class="NEMifiedText">nem</span> #<span class="room-enum">1</span></h5>
         <div class="col-md-7 room-members-wrapper text-left">
             <ul class="members">
                 <li class="member hidden"><span class="glyphicon glyphicon-user"></span>&nbsp;<span class="member-name"></span></li>
@@ -101,3 +110,5 @@
         </div>
     </div>
 </div>
+
+<a href="#" class="btn btn-block btn-success roomCreateNew hidden">Create Room</a>
