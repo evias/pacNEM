@@ -54,10 +54,7 @@
         </div>
     </div>
 
-    <div class="panel panel-success text-success text-left msgSelectRoom show-on-auth successMessage" style="display: none;">
-        <i class="glyphicon glyphicon-ok"></i>&nbsp;
-        <strong>Thank you, Now please select a Room to Join in the list.</strong>
-    </div>
+    <pre class="text-left msgSelectRoom show-on-auth" style="display: none;"><i class="glyphicon glyphicon-ok"></i>&nbsp;<strong>Thank you, Now please select a Room to Join in the list.</strong></pre>
 
     <div class="container-fluid">
         <div class="container-fluid col-md-4">
@@ -94,34 +91,35 @@
 
 </div>
 
+<div class="col-md-3">
+    <div class="row" style="display: none;">
+        <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-tasks"></i>&nbsp;Pac<span class="NEMifiedText">nem</span> rooms</h4>
+        <div id="rooms"></div>
 
-<div class="col-md-3 hide-on-auth">
-    <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-heart"></i>&nbsp;Spread the Word / Donate / Links</h4>
-    <p class="text-justify">
-    This game was developed with NodeJS, Socket.io, Handlebars and <a target="_blank" href="https://nem.io" class="NEMifiedText">nem</a> and
-    started as a fork of <a href="https://github.com/dubzzz/js-pacman" target="_blank">this project</a>. Mainly what I did is User -Interface
-    &amp; -Experience Optimization and Refactoring &amp; Optimization of the JS source code.
-    </p>
-    <p class="text-left">
-    I recommend following Links:
-    <ul class="text-left">
-        <li><a href="https://github.com/evias/pacNEM" target="_blank">Source Code</a></li>
-        <li><a href="https://nem.io" target="_blank" class="NEMifiedText">nem Official Website</a></li>
-        <li><a href="https://blog.nem.io" target="_blank" class="NEMifiedText">nem Official Blog</a></li>
-        <li><a href="https://forum.nem.io" target="_blank" class="NEMifiedText">nem Official Forum</a></li>
-    </ul>
-    </p>
-    <p class="text-left">
-        If you feel like Donating, send XEM Donations to:
-        <pre>NB72EM6TTSX72O47T3GQFL345AB5WYKIDODKPPYW</pre>
-    </p>
-</div>
+        <a href="#" class="btn btn-block btn-success roomCreateNew hidden">Create Room</a>
+    </div>
 
-<div class="col-md-3" style="display: none;">
-    <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-tasks"></i>&nbsp;Pac<span class="NEMifiedText">nem</span> rooms</h4>
-    <div id="rooms"></div>
-
-    <a href="#" class="btn btn-block btn-success roomCreateNew hidden">Create Room</a>
+    <div id="spread-the-word" class="row">
+        <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-heart"></i>&nbsp;Spread the Word / Donate / Links</h4>
+        <p class="text-justify">
+        This game was developed with NodeJS, Socket.io, Handlebars and <a target="_blank" href="https://nem.io" class="NEMifiedText">nem</a> and
+        started as a fork of <a href="https://github.com/dubzzz/js-pacman" target="_blank">this project</a>. Mainly what I did is User -Interface
+        &amp; -Experience Optimization and Refactoring &amp; Optimization of the JS source code.
+        </p>
+        <p class="text-left">
+        I recommend following Links:
+        <ul class="text-left">
+            <li><a href="https://github.com/evias/pacNEM" target="_blank">Source Code</a></li>
+            <li><a href="https://nem.io" target="_blank" class="NEMifiedText">nem Official Website</a></li>
+            <li><a href="https://blog.nem.io" target="_blank" class="NEMifiedText">nem Official Blog</a></li>
+            <li><a href="https://forum.nem.io" target="_blank" class="NEMifiedText">nem Official Forum</a></li>
+        </ul>
+        </p>
+        <p class="text-left">
+            If you feel like Donating, send XEM Donations to:
+            <pre>NB72EM6TTSX72O47T3GQFL345AB5WYKIDODKPPYW</pre>
+        </p>
+    </div>
 </div>
 
 <div id="room-template" class="hidden">

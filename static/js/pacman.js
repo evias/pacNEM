@@ -141,13 +141,24 @@ var GameSession = function(userName, xemAddress)
 		storage.clear();
 	};
 
+	this.identified = function()
+	{
+		return this.getPlayer().length > 0 && this.getAddress().length > 0;
+	};
+
 	this.getPlayer = function()
 	{
+		if (typeof details_.user == 'undefined' || !details_.user)
+			return "";
+
 		return details_.user;
 	};
 
 	this.getAddress = function()
 	{
+		if (typeof details_.xem == 'undefined' || !details_.xem)
+			return "";
+
 		return details_.xem;
 	};
 
@@ -160,8 +171,6 @@ var GameSession = function(userName, xemAddress)
 			// userName and Address available, store to localStorage
 			// upon object instantiation.
 			self.store();
-
-		console.log("Hello " + self.getPlayer() + " with " + self.getAddress());
 	};
 };
 
@@ -665,26 +674,44 @@ var GameUI = function(socket, controller, $)
 	 *
 	 * @return GameUI
 	 */
-	this.emitUsername = function()
+	this.emitUsername = function(session)
 	{
+		var username = $("#username").val();
+		var address  = $("#address").val();
+
+		if (!username.length || !address.length)
+			if (typeof session == 'undefined' || !session.identified())
+				// emitUsername not possible, either user name or XEM
+				// address could not be retrieved.
+				return this;
+
+		if (! username.length) {
+			$("#username").val(session.getPlayer());
+			username = session.getPlayer();
+		}
+
+		if (! address.length) {
+			$("#address").val(session.getAddress());
+			address = session.getAddress();
+		}
+
 		// view effects & modifications
-	    $("#currentUser-username").html("&nbsp;" + $("#username").val());
-	    $("#currentUser").fadeIn("slow");
-	    $("#purge_auth").parent().show();
-	    $(".hide-on-auth").hide();
-	    $(".show-on-auth").show();
-	    $("#my-details .panel").first().removeClass("panel-info");
-	    $("#username").parents(".input-group").first().parent().addClass("col-md-offset-1");
+		$("#currentUser-username").html("&nbsp;" + $("#username").val());
+		$("#currentUser").fadeIn("slow");
+		$("#purge_auth").parent().show();
+		$(".hide-on-auth").hide();
+		$(".show-on-auth").show();
+		$("#my-details .panel").first().removeClass("panel-info");
+		$("#spread-the-word").addClass("mt10");
+		$("#username").parents(".input-group").first().parent().addClass("col-md-offset-1");
 
-	    var username = $("#username").val();
-	    var address  = $("#address").val();
+		// Socket IO emit username change and notify others.
+		socket_.emit('change_username', username);
+		socket_.emit("notify");
 
-	    socket_.emit('change_username', username);
-	    socket_.emit("notify");
-
-	    // save the game session details
-	    session_ = new GameSession(username, address);
-	    return this;
+		// save the game session details
+		session_ = new GameSession(username, address);
+		return this;
 	};
 
 	/**
@@ -781,6 +808,9 @@ var GameUI = function(socket, controller, $)
 		});
 
 		var sync = new GameSession();
+		if (sync.identified())
+			self.emitUsername(sync);
+
 		return this;
 	};
 
