@@ -349,10 +349,7 @@ var GameUI = function(socket, controller, $)
 	 */
 	this.enableCreateRoom = function()
 	{
-		var $button = rooms_ctr_.find(".roomCreateNew").first();
-
-		if (!$button)
-			$(".roomCreateNew").appendTo($rooms);
+		var $button = $(".roomCreateNew").first();
 
 		$button.removeClass("hidden");
 		$button.off("click");
@@ -462,8 +459,21 @@ var GameUI = function(socket, controller, $)
 	    // now `thisRoom` will contain the actual "lounge"
 	    $thisRoom = $rooms.find(".pacnem-lounge").last();
 
+	    // set the title index (Pacnem #1, Pacnem #2..)
+	    // and randomly select a color from the NEM colors
 	    var $title = $thisRoom.find(".lounge-title");
 	    $title.find(".room-enum").first().text(roomIndex);
+
+		var randIdx  = Math.floor(Math.random()*(99-1+1)+1);
+		var titleCol = "colNEMGreen";
+		if (randIdx % 3 == 0)
+			titleCol = "colNEMOrange";
+		else if (randIdx % 5 == 0)
+			titleCol = "colNEMBlue";
+
+		if (titleCol != "colNEMGreen")
+			$title.removeClass("colNEMGreen")
+				  .addClass(titleCol);
 
 	    var $members  = $thisRoom.find(".room-members-wrapper ul");
 	    var $memberRow= $thisRoom.find(".room-members-wrapper ul li.hidden").first();
@@ -566,6 +576,7 @@ var GameUI = function(socket, controller, $)
 	    $("#currentUser").fadeIn("slow");
 	    $(".hide-on-auth").hide();
 	    $(".show-on-auth").show();
+	    $("#my-details .panel").first().removeClass("panel-info");
 	    socket_.emit('change_username', $("#username").val());
 	    socket_.emit("notify");
 	    return this;

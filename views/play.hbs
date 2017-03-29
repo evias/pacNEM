@@ -11,7 +11,9 @@
 </script>
 
 <div id="pacnem-main-wrapper" class="col-md-7 col-md-offset-1">
-    <div id="your_room">
+    <h4 class="wrapper-title text-left show-on-auth" style="display: none;"><i class="glyphicon glyphicon-cog"></i>&nbsp;Your Details</h4>
+
+    <div id="my-details">
         <div class="panel panel-info">
             <div class="panel-heading hide-on-auth" style="text-align: left;">
                 <span class="glyphicon glyphicon-user"></span>&nbsp;
@@ -49,7 +51,7 @@
         </div>
     </div>
 
-    <div class="panel panel-success text-success msgSelectRoom show-on-auth successMessage" style="display: none;">
+    <div class="panel panel-success text-success text-left msgSelectRoom show-on-auth successMessage" style="display: none;">
         <i class="glyphicon glyphicon-ok"></i>&nbsp;
         <strong>Thank you, Now please select a Room to Join in the list.</strong>
     </div>
@@ -89,14 +91,39 @@
 
 </div>
 
-<div class="col-md-3">
-    <h4 class="text-left">Pac<span class="NEMifiedText">nem</span> rooms</h4>
-    <div id="rooms" class="row"></div>
+
+<div class="col-md-3 hide-on-auth">
+    <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-heart"></i>&nbsp;Spread the Word / Donate / Links</h4>
+    <p class="text-justify">
+    This game was developed with NodeJS, Socket.io, Handlebars and <a target="_blank" href="https://nem.io" class="NEMifiedText">nem</a> and
+    started as a fork of <a href="https://github.com/dubzzz/js-pacman" target="_blank">this project</a>. Mainly what I did is User -Interface
+    &amp; -Experience Optimization and Refactoring &amp; Optimization of the JS source code.
+    </p>
+    <p class="text-left">
+    I recommend following Links:
+    <ul class="text-left">
+        <li><a href="https://github.com/evias/pacNEM" target="_blank">Source Code</a></li>
+        <li><a href="https://nem.io" target="_blank" class="NEMifiedText">nem Official Website</a></li>
+        <li><a href="https://blog.nem.io" target="_blank" class="NEMifiedText">nem Official Blog</a></li>
+        <li><a href="https://forum.nem.io" target="_blank" class="NEMifiedText">nem Official Forum</a></li>
+    </ul>
+    </p>
+    <p class="text-left">
+        If you feel like Donating, send XEM Donations to:
+        <pre>NB72EM6TTSX72O47T3GQFL345AB5WYKIDODKPPYW</pre>
+    </p>
+</div>
+
+<div class="col-md-3" style="display: none;">
+    <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-tasks"></i>&nbsp;Pac<span class="NEMifiedText">nem</span> rooms</h4>
+    <div id="rooms"></div>
+
+    <a href="#" class="btn btn-block btn-success roomCreateNew hidden">Create Room</a>
 </div>
 
 <div id="room-template" class="hidden">
-    <div class="row pacnem-lounge">
-        <h5 class="lounge-title text-left bbNEMGreen colNEMGreen">Pac<span class="NEMifiedText">nem</span> #<span class="room-enum">1</span></h5>
+    <div class="pacnem-lounge">
+        <h5 class="lounge-title text-left colNEMGreen">Pac<span class="NEMifiedText">nem</span> #<span class="room-enum">1</span></h5>
         <div class="col-md-7 room-members-wrapper text-left">
             <ul class="members">
                 <li class="member hidden"><span class="glyphicon glyphicon-user"></span>&nbsp;<span class="member-name"></span></li>
@@ -110,5 +137,3 @@
         </div>
     </div>
 </div>
-
-<a href="#" class="btn btn-block btn-success roomCreateNew hidden">Create Room</a>

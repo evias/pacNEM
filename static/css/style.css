@@ -37,7 +37,7 @@ ul.members li.member .member-name {
     word-break: break-all;
 }
 
-#your_room,
+#my-details,
 #game_details
 {
     margin-top: 10px;
@@ -79,7 +79,7 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
     border: 1px solid #dcdcdc;
     border-radius: 10px;
     background-color: #e7edf2;
-    margin-left: 10px;
+    display: block;
 }
 
 .pacnem-lounge .lounge-title {
@@ -89,6 +89,10 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
 
 #pacNEMWrapper {
     min-height: 500px;
+}
+
+.wrapper-title {
+    border-bottom: 1px solid #dcdcdc;
 }
 
 footer {
@@ -107,7 +111,7 @@ footer {
 
 .successMessage {
     background-color: #def6de;
-    min-height: 30px;
+    min-height: 40px;
     width: auto;
     padding-top: 10px;
     padding-left: 10px;
