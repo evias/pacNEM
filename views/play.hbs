@@ -1,196 +1,16 @@
 
 <script type="text/javascript">
-
-  var socket = io.connect(window.location.protocol + '//' + window.location.host);
-  var client_game = new ClientGame(socket);
-  var players = new Array();
-
-    var registerKeyListeners = function()
-    {
-        document.onkeydown = function(e) {
-            if([37, 38, 39, 40].indexOf(e.keyCode) > -1)
-                socket.emit('keydown', e.keyCode);
-        };
-
-        window.addEventListener("keydown", function(e) {
-            // space and arrow keys
-            if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1)
-                e.preventDefault();
-        }, false);
-    }
-
-    var initSocketIO = function (socket, client_game, players)
-    {
-        socket.on('ready', function(rawdata) {
-            client_game.serverReady(rawdata);
-        });
-
-        socket.on('new', function(rawdata) {
-           $("#game").show();
-            displayUserDetails(rawdata);
-            client_game.serverReady(rawdata);
-            registerKeyListeners();
-        });
-
-        socket.on('end_of_game', function() {
-            client_game.serverEndOfGame();
-        });
-
-        socket.on('update', client_game.serverUpdate);
-
-        socket.on('rooms_update', function(rawdata)
-        {
-            var data = JSON.parse(rawdata);
-            var sid  = data['sid'];
-            var $rooms = $("#rooms");
-            var rooms  = data["rooms"];
-            var isAuth = $("#username").val().length > 0 && $("#address").val().length > 0;
-
-            // clear UI
-            $rooms.empty();
-
-            if (isAuth)
-                $("#save_auth").attr("disabled", "disabled");
-            else
-                $("#save_auth").removeAttr("disabled");
-
-            displayRooms($rooms, sid, data);
-
-            if (! rooms.length)
-                // create a new room, no one else online
-                socket.emit("create_room");
-        });
-    };
-
-    var displayUserDetails = function(rawdata)
-    {
-        var $details = $("#game_details").first();
-        // clear players list first
-        $details.empty();
-
-        var $userRow = $details.find(".players-list li.hidden").first();
-
-        // interpret data, prepare display
-        var data = JSON.parse(rawdata);
-
-        for (var i = 0 ; i < players.length ; i++) {
-            var $row  = $userRow.clone().removeClass("hidden");
-            var color = GHOSTS_COLORS[i % GHOSTS_COLORS.length];
-
-            // set player name and add to DOM
-            $row.find(".player").first().text(players[i]);
-            $row.find(".glyphicon").first().css("color", color);
-            $row.appendTo($details);
-        }
-    };
-
-    var displayRooms = function($rooms, sid, data)
-    {
-        if (! data["rooms"].length) {
-            //XXX currently no room => button "Create"
-            return 0;
-        }
-
-        for (var i = 0; i < data["rooms"].length; i++)
-            displayRoom($rooms, sid, data["rooms"][i], data["users"]);
-
-        return data["rooms"].length;
-    };
-
-    var displayRoomAction = function(rooms, $button, callback)
-    {
-        $button.click(function() {
-            callback(rooms);
-            return false;
-        });
-
-        $button.removeClass("hidden");
-    };
-
-    var displayRoom = function($rooms, sid, roomdata, usersdata)
-    {
-        var is_member = $.inArray(sid, roomdata['users']) != -1;
-        var template  = $("#room-template").html();
-        var $rooms    = $("#rooms");
-        var $thisRoom = $("<div/>").html(template);
-
-        $thisRoom.addClass("hidden").appendTo($rooms);
-
-        // now `thisRoom` will contain the actual "lounge"
-        $thisRoom = $rooms.find(".pacnem-lounge").last();
-
-        var $members  = $thisRoom.find(".room-members-wrapper ul");
-        var $memberRow= $thisRoom.find(".room-members-wrapper ul li.hidden").first();
-
-        // players array will now be filled with current room's users
-        players = [];
-
-        // now create the members entries for this room
-        for (var i = 0 ; i < roomdata['users'].length ; i++) {
-            var user = usersdata[roomdata['users'][i]] ? usersdata[roomdata['users'][i]] : roomdata['users'][i];
-
-            $currentRow = $memberRow.clone()
-                                  .removeClass("hidden")
-                                  .appendTo($members);
-
-            $currentRow.find(".member-name").first().text(user);
-
-            players.push(user);
-        }
-
-        // define which buttons must be active
-        if (is_member) {
-            if (roomdata["status"] == "join") {
-                var $button = $thisRoom.find(".roomActionJoin").first();
-                displayRoomAction(roomdata, $button, function(roomdata) { socket.emit("run_game"); });
-            }
-            else if (roomdata["status"] == "wait") {
-                var $button = $thisRoom.find(".roomActionCancel").first();
-                displayRoomAction(roomdata, $button, function(roomdata) { socket.emit("cancel_game"); });
-            }
-
-            // leave button always if member of room
-            var $button = $thisRoom.find(".roomActionLeave").first();
-            displayRoomAction(roomdata, $button, function(roomdata) { socket.emit("leave_room"); });
-        }
-        else if (roomdata["status"] == "join") {
-            var $button = $thisRoom.find(".roomActionJoin").first();
-
-            if (roomdata["is_full"])
-                $button.prop("disabled", true);
-            else
-                displayRoomAction(roomdata, $button, function(roomdata) { socket.emit("join_room", roomdata["id"]); });
-        }
-
-        $thisRoom.parent().removeClass("hidden");
-        return is_member;
-    };
-
-    initSocketIO(socket, client_game, players);
-
-    var emitUsername = function()
-    {
-        $("#currentUser-username").html("&nbsp;" + $("#username").val());
-        $("#currentUser").fadeIn("slow");
-        $(".hide-on-auth").fadeOut("slow");
-        $(".show-on-auth").fadeIn("slow");
-        socket.emit('change_username', $("#username").val());
-    };
+    var socket    = io.connect(window.location.protocol + '//' + window.location.host);
+    var game_ctrl = new GameController(socket);
+    var game_ui   = new GameUI(socket, game_ctrl, $);
 
     $(document).ready(function()
     {
-        $("#save_auth").click(function() {
-            emitUsername();
-            return false;
-        });
-
-        // document read behaviour
-        if ($("#username").val())
-            emitUsername();
+        game_ui.initDOMListeners();
     });
 </script>
 
-<div id="pacnem-main-wrapper" class="row col-md-10 col-md-offset-1">
+<div id="pacnem-main-wrapper" class="col-md-7 col-md-offset-1">
     <div id="your_room">
         <div class="panel panel-info">
             <div class="panel-heading hide-on-auth" style="text-align: left;">
@@ -229,10 +49,13 @@
         </div>
     </div>
 
+    <div class="panel panel-success text-success msgSelectRoom show-on-auth successMessage" style="display: none;">
+        <i class="glyphicon glyphicon-ok"></i>&nbsp;
+        <strong>Thank you, Now please select a Room to Join in the list.</strong>
+    </div>
+
     <div class="container-fluid">
         <div class="container-fluid col-md-4">
-            <div id="rooms" class="row"></div>
-
             <div id="game_details" class="row">
                 <ul class="list-group players-list">
                     <li class="list-group-item hidden">
@@ -266,8 +89,14 @@
 
 </div>
 
+<div class="col-md-3">
+    <h4 class="text-left">Pac<span class="NEMifiedText">nem</span> rooms</h4>
+    <div id="rooms" class="row"></div>
+</div>
+
 <div id="room-template" class="hidden">
     <div class="row pacnem-lounge">
+        <h5 class="lounge-title text-left bbNEMGreen colNEMGreen">Pac<span class="NEMifiedText">nem</span> #<span class="room-enum">1</span></h5>
         <div class="col-md-7 room-members-wrapper text-left">
             <ul class="members">
                 <li class="member hidden"><span class="glyphicon glyphicon-user"></span>&nbsp;<span class="member-name"></span></li>
@@ -275,9 +104,11 @@
         </div>
         <div class="col-md-5 room-actions-wrapper">
             <a href="#" class="btn btn-block btn-primary roomActionJoin hidden">Join Room</a>
-            <a href="#" class="btn btn-block btn-default roomActionPlay hidden">Play</a>
-            <a href="#" class="btn btn-block btn-success roomActionCancel hidden">Starting in 10 sec...</a>
+            <a href="#" class="btn btn-block btn-primary roomActionPlay hidden">Play</a>
+            <a href="#" class="btn btn-block btn-success roomActionCancel hidden">Starting.. (<span class="seconds-counter">10</span> sec to cancel)</a>
             <a href="#" class="btn btn-block btn-danger roomActionLeave hidden">Leave Room</a>
         </div>
     </div>
 </div>
+
+<a href="#" class="btn btn-block btn-success roomCreateNew hidden">Create Room</a>

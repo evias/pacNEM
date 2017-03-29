@@ -180,6 +180,12 @@ io.sockets.on('connection', function(socket) {
 			room.receiveKeyboard(socket.id, __room.DOWN);
 		}
 	});
+
+	socket.on("notify", function()
+	{
+		logger.info(__smartfilename, __line, '[' + socket.id + '] notify()');
+		room_manager.notifyChanges(socket.id);
+	});
 });
 
 /**
