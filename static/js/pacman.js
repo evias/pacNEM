@@ -574,6 +574,7 @@ var GameUI = function(socket, controller, $)
 	{
 	    $("#currentUser-username").html("&nbsp;" + $("#username").val());
 	    $("#currentUser").fadeIn("slow");
+	    $("#purge_auth").parent().show();
 	    $(".hide-on-auth").hide();
 	    $(".show-on-auth").show();
 	    $("#my-details .panel").first().removeClass("panel-info");
