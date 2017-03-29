@@ -1,8 +1,10 @@
 <html>
     <head>
         <title>PacNEM</title>
-        <meta name="description" content="A PacMan game with NodeJS using NEM Blockchain adapted and partly developed by Grégory Saive" />
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <meta name="description" content="A PacMan game with NodeJS using the NEM Blockchain" />
+        <meta name="keywords" content="pacman, pacnem, multiplayer pacman, multiplayer game, blockchain, nem, nemblockchain, pacman nem" />
+        <meta name="author" content="Grégory Saive (https://github.com/evias)" />
         <meta name="robots" content="index, follow" />
 
         <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
@@ -18,31 +20,32 @@
         <script src="/js/pacman.js"></script>
     </head>
     <body>
-        <div class="container">
-            <div class="page-header">
-                <div class="container-fluid">
-                    <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#pacNEMNav">
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        </button>
-                        <a class="NEMified pull-left" href="https://nem.io" target="_blank"><img src="/img/NEM_100x100.png" alt="NEM Blockchain" title="NEM Blockchain" /></a>
-                        <a class="navbar-brand pacNEMTitle pull-right" href="/">Pac<span class="NEMifiedText greaterNEM">nem</span><span class="smallerTitle">(pacman)</span></a>
-                    </div>
-                    <div class="collapse navbar-collapse" id="pacNEMNav">
-                        <ul class="nav navbar-nav">
-                            <li class="active"><a href="/">Play</a></li>
-                            <li><a href="/scores">High Scores</a></li>
-                        </ul>
-                        <ul class="nav navbar-nav navbar-right">
-                            <li id="currentUser" style="display: none;"><a href="#"><span class="glyphicon glyphicon-user"></span>&nbsp;<span id="currentUser-username"></span></a></li>
-                            <li><a href="https://github.com/evias/pacNEM" target="_blank"><span class="glyphicon glyphicon-inbox"></span> Source</a></li>
-                        </ul>
-                    </div>
+        <div class="container page-header">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#pacNEMNav">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="NEMified pull-left" href="https://nem.io" target="_blank"><img src="/img/NEM_100x100.png" alt="NEM Blockchain" title="NEM Blockchain" /></a>
+                    <a class="navbar-brand pacNEMTitle pull-right" href="/">Pac<span class="NEMifiedText greaterNEM">nem</span><span class="smallerTitle">(pacman)</span></a>
+                </div>
+                <div class="collapse navbar-collapse" id="pacNEMNav">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a href="/">Play</a></li>
+                        <li><a href="/scores">High Scores</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li id="currentUser" style="display: none;"><a href="#"><span class="glyphicon glyphicon-user"></span>&nbsp;<span id="currentUser-username"></span></a></li>
+                        <li style="display: none;"><a href="#" id="purge_auth" class="text-danger"><span class="glyphicon glyphicon-trash"></span> Purge</a></li>
+                        <li><a href="https://github.com/evias/pacNEM" target="_blank"><span class="glyphicon glyphicon-inbox"></span> Source</a></li>
+                    </ul>
                 </div>
             </div>
+        </div>
 
+        <div class="row">
             <div id="pacNEMWrapper" class="container-fluid text-center">
             {{{body}}}
             </div>

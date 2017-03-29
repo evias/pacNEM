@@ -19,11 +19,6 @@ canvas
     margin-top: 10px;
 }
 
-.pacnem-lounge {
-    border-bottom: 1px solid #dcdcdc;
-    height: 100px;
-}
-
 ul.members
 {
     list-style: none;
@@ -34,10 +29,15 @@ ul.members
 
 ul.members li.member
 {
-    height: 20px;
+    min-height: 20px;
+    max-height: 40px;
 }
 
-#your_room,
+ul.members li.member .member-name {
+    word-break: break-all;
+}
+
+#my-details,
 #game_details
 {
     margin-top: 10px;
@@ -58,15 +58,6 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
 .page-header .NEMified img {
     max-height: 40px;
 }
-.NEMifiedText {
-    font-family: Roboto;
-    color: #000;
-    font-weight: 900;
-    text-shadow: none;
-}
-.importantText {
-    font-weight: 900;
-}
 .page-header .greaterNEM {
     font-size: 40px;
 }
@@ -81,8 +72,27 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
     font-size: 15px;
 }
 
+.pacnem-lounge {
+    min-height: 120px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #dcdcdc;
+    border: 1px solid #dcdcdc;
+    border-radius: 10px;
+    background-color: #e7edf2;
+    display: block;
+}
+
+.pacnem-lounge .lounge-title {
+    margin-left: 15px;
+    border-bottom: 1px solid ;
+}
+
 #pacNEMWrapper {
     min-height: 500px;
+}
+
+.wrapper-title {
+    border-bottom: 1px solid #dcdcdc;
 }
 
 footer {
@@ -98,3 +108,49 @@ footer {
 .xem-address {
     text-transform: uppercase;
 }
+
+.successMessage {
+    background-color: #def6de;
+    min-height: 40px;
+    width: auto;
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+.importantText {
+    font-weight: 900;
+}
+
+/**
+ * NEM specific colors and font
+ */
+.NEMifiedText {
+    font-family: Roboto;
+    color: #000;
+    font-weight: 900;
+    text-shadow: none;
+}
+
+.bgNEMOrange { background-color: #f7a800; }
+.bgNEMBlue { background-color: #67b2e8; }
+.bgNEMGreen { background-color: #00c4b3; }
+
+.bbNEMOrange { border-bottom: 1px solid #f7a800; }
+.bbNEMBlue { border-bottom: 1px solid #67b2e8; }
+.bbNEMGreen { border-bottom: 1px solid #00c4b3; }
+
+.btNEMOrange { border-top: 1px solid #f7a800; }
+.btNEMBlue { border-top: 1px solid #67b2e8; }
+.btNEMGreen { border-top: 1px solid #00c4b3; }
+
+.blNEMOrange { border-left: 1px solid #f7a800; }
+.blNEMBlue { border-left: 1px solid #67b2e8; }
+.blNEMGreen { border-left: 1px solid #00c4b3; }
+
+.brNEMOrange { border-right: 1px solid #f7a800; }
+.brNEMBlue { border-right: 1px solid #67b2e8; }
+.brNEMGreen { border-right: 1px solid #00c4b3; }
+
+.colNEMOrange { color: #f7a800; }
+.colNEMBlue { color: #67b2e8; }
+.colNEMGreen { color: #00c4b3; }
