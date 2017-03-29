@@ -101,7 +101,8 @@ var GameController = function(socket) {
 	var last_elapsed_ = 0;
 	var points_ = new Array();
 
-	this.start = function() {
+	this.start = function()
+	{
 		if (! ongoing_game_) {
 			// Ask the server to start a new game session
 			socket_.emit('new');
@@ -109,7 +110,8 @@ var GameController = function(socket) {
 		}
 	};
 
-	this.serverReady = function(rawdata) {
+	this.serverReady = function(rawdata)
+	{
 		var data = JSON.parse(rawdata);
 		grid_ = data['map'];
 		FPS = data['constants']['FPS'];
@@ -141,11 +143,8 @@ var GameController = function(socket) {
 		});
 	};
 
-	this.serverEndOfGame = function() {
-		ongoing_game_ = false;
-	};
-
-	this.serverUpdate = function(rawdata) {
+	this.serverUpdate = function(rawdata)
+	{
 		var data = JSON.parse(rawdata);
 
 		for (var i = 0 ; i != data['eat'].length ; i++) {
@@ -199,6 +198,11 @@ var GameController = function(socket) {
 		frame_++;
 		ongoing_refresh_ = false;
 	};
+
+	this.serverEndOfGame = function()
+	{
+		ongoing_game_ = false;
+	};
 };
 
 /**
@@ -213,10 +217,10 @@ var GameController = function(socket) {
  *
  * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameUI = function(socket, game, $)
+var GameUI = function(socket, controller, $)
 {
 	var socket_ = socket;
-	var game_ = game;
+	var ctrl_ = controller;
 	var jquery_ = $;
 
 	this.init = function()
@@ -226,15 +230,15 @@ var GameUI = function(socket, game, $)
 		socket_.on('ready', function(rawdata) {
             $("#game").show();
             self.displayUserDetails(rawdata);
-            game_.serverReady(rawdata);
+            ctrl_.serverReady(rawdata);
             self.registerKeyListeners();
         });
 
         socket_.on('end_of_game', function() {
-            game_.serverEndOfGame();
+            ctrl_.serverEndOfGame();
         });
 
-        socket_.on('update', game_.serverUpdate);
+        socket_.on('update', ctrl_.serverUpdate);
 
         socket_.on('rooms_update', function(rawdata)
         {
@@ -304,10 +308,13 @@ var GameUI = function(socket, game, $)
 	    return data["rooms"].length;
 	};
 
-	this.displayRoomAction = function(rooms, $button, callback)
+	this.displayRoomAction = function(rooms, $button, callback, delay)
 	{
+		if (typeof delay != 'undefined' && !isNaN(parseInt(delay)))
+			$button.find(".seconds-counter").text(delay);
+
 	    $button.click(function() {
-	        callback(rooms);
+	        callback($(this), rooms);
 	        return false;
 	    });
 
@@ -349,27 +356,37 @@ var GameUI = function(socket, game, $)
 	    }
 
 	    // define which buttons must be active
-	    if (is_member) {
-	        if (roomdata["status"] == "join") {
-	            var $button = $thisRoom.find(".roomActionJoin").first();
-	            self.displayRoomAction(roomdata, $button, function(roomdata) { socket_.emit("run_game"); });
+		if (is_member) {
+			if (roomdata["status"] == "join") {
+				var $button = $thisRoom.find(".roomActionPlay").first();
+				self.displayRoomAction(roomdata, $button, function($btn, roomdata) {
+					socket_.emit("run_game");
+				});
 	        }
 	        else if (roomdata["status"] == "wait") {
-	            var $button = $thisRoom.find(".roomActionCancel").first();
-	            self.displayRoomAction(roomdata, $button, function(roomdata) { socket_.emit("cancel_game"); });
+				var $button = $thisRoom.find(".roomActionCancel").first();
+
+				self.displayRoomAction(roomdata, $button, function($btn, roomdata) {
+					socket_.emit("cancel_game");
+				}, Math.round(roomdata["wait"]));
 	        }
 
 	        // leave button always if member of room
-	        var $button = $thisRoom.find(".roomActionLeave").first();
-	        self.displayRoomAction(roomdata, $button, function(roomdata) { socket_.emit("leave_room"); });
+			var $button = $thisRoom.find(".roomActionLeave").first();
+			self.displayRoomAction(roomdata, $button, function($btn, roomdata) {
+				socket_.emit("leave_room");
+			});
 	    }
 	    else if (roomdata["status"] == "join") {
 	        var $button = $thisRoom.find(".roomActionJoin").first();
 
 	        if (roomdata["is_full"])
 	            $button.prop("disabled", true);
-	        else
-	            self.displayRoomAction(roomdata, $button, function(roomdata) { socket_.emit("join_room", roomdata["id"]); });
+	        else {
+				self.displayRoomAction(roomdata, $button, function($btn, roomdata) {
+					socket_.emit("join_room", roomdata["id"]);
+				});
+			}
 	    }
 
 	    $thisRoom.parent().removeClass("hidden");
@@ -401,24 +418,26 @@ var GameUI = function(socket, game, $)
 	    return this;
     };
 
-    this.initDOMListeners = function()
-    {
-    	var self = this;
+	this.initDOMListeners = function()
+	{
+		var self = this;
 		$("#save_auth").click(function() {
-            self.emitUsername();
-            return false;
-        });
+			self.emitUsername();
+			return false;
+		});
 
-        // document read behaviour
-        if ($("#username").val())
-            self.emitUsername();
+		// document read behaviour
+		if ($("#username").val())
+			self.emitUsername();
 
-        return this;
-    };
+		return this;
+	};
 
-    {
-    	this.init();
-    }
+	// new GameUI instances should initialize Socket IO connection
+	// triggers for general Game User Interface updates
+	{
+		this.init();
+	}
 };
 
 /**
