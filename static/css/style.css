@@ -121,6 +121,11 @@ footer {
     font-weight: 900;
 }
 
+.error-input {
+    background-color: #f3aeae;
+    border: 1px solid #550101;
+}
+
 /**
  * NEM specific colors and font
  */

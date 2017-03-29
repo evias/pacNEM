@@ -573,14 +573,20 @@ var GameUI = function(socket, controller, $)
 	 */
 	this.emitUsername = function()
 	{
+		// view effects & modifications
 	    $("#currentUser-username").html("&nbsp;" + $("#username").val());
 	    $("#currentUser").fadeIn("slow");
 	    $("#purge_auth").parent().show();
 	    $(".hide-on-auth").hide();
 	    $(".show-on-auth").show();
 	    $("#my-details .panel").first().removeClass("panel-info");
+	    $("#username").parents(".input-group").first().parent().addClass("col-md-offset-1");
+
 	    socket_.emit('change_username', $("#username").val());
 	    socket_.emit("notify");
+
+	    //XXX save to localStorage
+
 	    return this;
 	};
 
@@ -608,6 +614,48 @@ var GameUI = function(socket, controller, $)
 	    return this;
     };
 
+	/**
+	 * Form Validation implementation to make fields required.
+	 *
+	 * @param  {[type]} fields [description]
+	 * @return {[type]}        [description]
+	 */
+	this.formValidate = function(fields)
+	{
+		var valid = true;
+		for (i in fields) {
+			var selector = fields[i].selector;
+			var required = fields[i].required;
+			var reg_exp  = fields[i].reg_exp;
+
+			if (typeof selector == 'undefined')
+				continue;
+
+			var $dom_element = $(selector);
+			if (! $dom_element.length)
+				// DOM Element does not exist
+				continue;
+
+			var value = undefined;
+			switch ($dom_element[0].tagName) {
+				default:
+				case 'input':
+				case 'select':
+				case 'textarea':
+					value = $dom_element.val();
+					break;
+			}
+
+			if ((required && !value.length)
+			|| (reg_exp && !value.match(reg_exp))) {
+				$dom_element.addClass("error-input");
+				valid = false;
+			}
+		}
+
+		return valid;
+	};
+
     /**
      * Utility method called on DOM Ready from the view template.
      *
@@ -616,14 +664,27 @@ var GameUI = function(socket, controller, $)
 	this.initDOMListeners = function()
 	{
 		var self = this;
+		var validators = [
+			{
+				"selector": "#username",
+				"required": true,
+				"reg_exp": /[A-Za-z0-9\-\_\.]+/
+			},
+			{
+				"selector": "#address",
+				"required": true,
+				"reg_exp": /[A-Z0-9]{37,43}/
+			}
+		];
+
 		$("#save_auth").click(function() {
-			self.emitUsername();
+			$(".error-input").removeClass("error-input");
+
+			if (self.formValidate(validators))
+				self.emitUsername();
+
 			return false;
 		});
-
-		// document read behaviour
-		if ($("#username").val())
-			self.emitUsername();
 
 		return this;
 	};
