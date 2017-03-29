@@ -84,7 +84,89 @@ var DisplayPoints = function(x, y, color, value)
 };
 
 /**
- * class GameController is defines several actions
+ * class GameSessions defines a Storage capability
+ * for the PacNEM game.
+ *
+ * Storage is done in window.localStorage (IE >= 10)
+ *
+ * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
+ */
+var GameSession = function(userName, xemAddress)
+{
+	var details_ = {
+		"user": userName,
+		"xem": xemAddress,
+		"score": 0,
+	};
+
+	var xem_account_ = {};
+
+	this.sync = function()
+	{
+		var storage = window.localStorage;
+
+		if (! storage)
+			//XXX display error message
+			return false;
+
+		var json = storage.getItem("evias.pacnem:player");
+		if (json && json.length)
+			details_ = JSON.parse(json);
+
+		var acct = storage.getItem("evias.pacnem:account");
+		if (acct && acct.length)
+			xem_account_ = JSON.parse(acct);
+
+		return this;
+	};
+
+	this.store = function()
+	{
+		var storage = window.localStorage;
+
+		if (! storage)
+			//XXX display error message
+			return false;
+
+		storage.setItem("evias.pacnem:player", JSON.stringify(details_));
+	};
+
+	this.clear = function()
+	{
+		var storage = window.localStorage;
+		if (! storage)
+			//XXX display error message
+			return false;
+
+		storage.clear();
+	};
+
+	this.getPlayer = function()
+	{
+		return details_.user;
+	};
+
+	this.getAddress = function()
+	{
+		return details_.xem;
+	};
+
+	var self = this;
+	{
+		if (! self.getPlayer() || ! self.getAddress())
+			// try to sync from localStorage
+			self.sync();
+		else
+			// userName and Address available, store to localStorage
+			// upon object instantiation.
+			self.store();
+
+		console.log("Hello " + self.getPlayer() + " with " + self.getAddress());
+	};
+};
+
+/**
+ * class GameController defines several actions
  * in MVC style using Socket.IO for data transmission
  * on streams.
  *
@@ -94,9 +176,10 @@ var DisplayPoints = function(x, y, color, value)
  * @author 	Nicolas Dubien (https://github.com/dubzzz)
  * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameController = function(socket)
+var GameController = function(socket, nem)
 {
 	var socket_ = socket;
+	var nem_    = nem;
 	var frame_ = 0;
 	var ongoing_game_ = false;
 	var ongoing_refresh_ = false;
@@ -229,7 +312,18 @@ var GameController = function(socket)
 	{
 		var u = $("#username").val();
 		return u.length > 0;
-	}
+	};
+
+	/**
+	 * Return the nem SDK instance used for
+	 * working with NEM blockchain features.
+	 *
+	 * @return NEM-Library/nem
+	 */
+	this.nem = function()
+	{
+		return nem_;
+	};
 };
 
 /**
@@ -582,51 +676,35 @@ var GameUI = function(socket, controller, $)
 	    $("#my-details .panel").first().removeClass("panel-info");
 	    $("#username").parents(".input-group").first().parent().addClass("col-md-offset-1");
 
-	    socket_.emit('change_username', $("#username").val());
+	    var username = $("#username").val();
+	    var address  = $("#address").val();
+
+	    socket_.emit('change_username', username);
 	    socket_.emit("notify");
 
-	    //XXX save to localStorage
-
+	    // save the game session details
+	    session_ = new GameSession(username, address);
 	    return this;
 	};
 
 	/**
-	 * Register Gameplay Keyboard Listeners
-	 *
-	 * This method should be called when the Canvas is activated
-	 * and the game started only.
-	 *
-	 * @return GameUI
-	 */
-    this.registerKeyListeners = function()
-    {
-        document.onkeydown = function(e) {
-            if([37, 38, 39, 40].indexOf(e.keyCode) > -1)
-                socket_.emit('keydown', e.keyCode);
-        };
-
-        window.addEventListener("keydown", function(e) {
-            // space and arrow keys
-            if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1)
-                e.preventDefault();
-        }, false);
-
-	    return this;
-    };
-
-	/**
 	 * Form Validation implementation to make fields required.
+	 *
+	 * Fields definition *must* contain `selector` and
+	 * *can* contain `required`, `reg_exp`, `callback`.
 	 *
 	 * @param  {[type]} fields [description]
 	 * @return {[type]}        [description]
 	 */
 	this.formValidate = function(fields)
 	{
+		var self  = this;
 		var valid = true;
 		for (i in fields) {
 			var selector = fields[i].selector;
 			var required = fields[i].required;
 			var reg_exp  = fields[i].reg_exp;
+			var callback = fields[i].callback;
 
 			if (typeof selector == 'undefined')
 				continue;
@@ -648,6 +726,11 @@ var GameUI = function(socket, controller, $)
 
 			if ((required && !value.length)
 			|| (reg_exp && !value.match(reg_exp))) {
+				$dom_element.addClass("error-input");
+				valid = false;
+			}
+
+			if (valid && callback && !callback(value)) {
 				$dom_element.addClass("error-input");
 				valid = false;
 			}
@@ -673,7 +756,11 @@ var GameUI = function(socket, controller, $)
 			{
 				"selector": "#address",
 				"required": true,
-				"reg_exp": /[A-Z0-9]{37,43}/
+				"reg_exp": /[A-Z0-9]{37,43}/,
+				"callback": function(val) {
+					// Verify the XEM address with the NEM SDK
+					return ctrl_.nem().model.address.isValid(val);
+				}
 			}
 		];
 
@@ -686,8 +773,40 @@ var GameUI = function(socket, controller, $)
 			return false;
 		});
 
+		$("#purge_auth").click(function()
+		{
+			session_.clear();
+			window.location.href = "/";
+			return false;
+		});
+
+		var sync = new GameSession();
 		return this;
 	};
+
+	/**
+	 * Register Gameplay Keyboard Listeners
+	 *
+	 * This method should be called when the Canvas is activated
+	 * and the game started only.
+	 *
+	 * @return GameUI
+	 */
+    this.registerKeyListeners = function()
+    {
+        document.onkeydown = function(e) {
+            if([37, 38, 39, 40].indexOf(e.keyCode) > -1)
+                socket_.emit('keydown', e.keyCode);
+        };
+
+        window.addEventListener("keydown", function(e) {
+            // space and arrow keys
+            if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1)
+                e.preventDefault();
+        }, false);
+
+	    return this;
+    };
 
 	// new GameUI instances should initialize Socket IO connection
 	// triggers for general Game User Interface updates

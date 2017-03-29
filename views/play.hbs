@@ -1,7 +1,8 @@
 
 <script type="text/javascript">
     var socket    = io.connect(window.location.protocol + '//' + window.location.host);
-    var game_ctrl = new GameController(socket);
+    var nem       = require("nem").default;
+    var game_ctrl = new GameController(socket, nem);
     var game_ui   = new GameUI(socket, game_ctrl, $);
 
     $(document).ready(function()
