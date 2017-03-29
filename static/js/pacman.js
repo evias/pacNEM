@@ -40,7 +40,8 @@ var FRAMES_PER_CELL = 5;
  *
  * @author 	Nicolas Dubien (https://github.com/dubzzz)
  */
-var TransitionHelper = function(callback) {
+var TransitionHelper = function(callback)
+{
 	var callback_ = callback;
 	var frame_ = 0;
 
@@ -73,7 +74,8 @@ var TransitionHelper = function(callback) {
  *
  * @author 	Nicolas Dubien (https://github.com/dubzzz)
  */
-var DisplayPoints = function(x, y, color, value) {
+var DisplayPoints = function(x, y, color, value)
+{
 	this.x = x;
 	this.y = y;
 	this.value = value;
@@ -92,7 +94,8 @@ var DisplayPoints = function(x, y, color, value) {
  * @author 	Nicolas Dubien (https://github.com/dubzzz)
  * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameController = function(socket) {
+var GameController = function(socket)
+{
 	var socket_ = socket;
 	var frame_ = 0;
 	var ongoing_game_ = false;
@@ -100,6 +103,7 @@ var GameController = function(socket) {
 	var grid_ = undefined;
 	var last_elapsed_ = 0;
 	var points_ = new Array();
+	var players_ = new Array();
 
 	this.start = function()
 	{
@@ -108,6 +112,8 @@ var GameController = function(socket) {
 			socket_.emit('new');
 			last_elapsed_ = 0;
 		}
+
+		return this;
 	};
 
 	this.serverReady = function(rawdata)
@@ -141,6 +147,8 @@ var GameController = function(socket) {
 				console.log('Sent: start');
 				socket_.emit('start');
 		});
+
+		return this;
 	};
 
 	this.serverUpdate = function(rawdata)
@@ -197,12 +205,31 @@ var GameController = function(socket) {
 
 		frame_++;
 		ongoing_refresh_ = false;
+		return this;
 	};
 
 	this.serverEndOfGame = function()
 	{
 		ongoing_game_ = false;
+		return this;
 	};
+
+	this.setPlayers = function(players)
+	{
+		players_ = players;
+		return this;
+	};
+
+	this.getPlayers = function()
+	{
+		return players_;
+	};
+
+	this.hasSession = function()
+	{
+		var u = $("#username").val();
+		return u.length > 0;
+	}
 };
 
 /**
@@ -223,6 +250,19 @@ var GameUI = function(socket, controller, $)
 	var ctrl_ = controller;
 	var jquery_ = $;
 
+	/**
+	 * /!\
+	 * /!\ This function is called automatically upon instance creation. /!\
+	 * /!\
+	 *
+	 * This method registers Socket Event Listeners on the provided Socket IO
+	 * connection. Mainly this function will register UI event listeners.
+	 *
+	 * Server logic Socket Event Listeners are implement in the NodeJS Server.
+	 * @see  app.js
+	 *
+	 * @return GameUI
+	 */
 	this.init = function()
 	{
 		var self = this;
@@ -266,6 +306,12 @@ var GameUI = function(socket, controller, $)
         return this;
 	};
 
+	/**
+	 * Display current Game's Player List (up to 4)
+	 *
+	 * @param  {[type]} rawdata [description]
+	 * @return GameUI
+	 */
 	this.displayUserDetails = function(rawdata)
 	{
 		var self = this;
@@ -293,11 +339,22 @@ var GameUI = function(socket, controller, $)
 	    return this;
 	};
 
+	/**
+	 * Display all available Game Rooms
+	 *
+	 * @param  {[type]} $rooms [description]
+	 * @param  {[type]} sid    [description]
+	 * @param  {[type]} data   [description]
+	 * @return integer 	Count of available rooms
+	 */
 	this.displayRooms = function($rooms, sid, data)
 	{
 		var self = this;
 
-	    if (! data["rooms"].length) {
+		console.log("hasSession: " + ctrl_.hasSession());
+		console.log("Players: " + ctrl_.getPlayers());
+
+	    if (! data["rooms"].length || !ctrl_.hasSession()) {
 	        //XXX currently no room => button "Create"
 	        return 0;
 	    }
@@ -308,6 +365,15 @@ var GameUI = function(socket, controller, $)
 	    return data["rooms"].length;
 	};
 
+	/**
+	 * Utility method to enable a Room Action Button.
+	 *
+	 * @param  object  rooms
+	 * @param  jQuery   $button
+	 * @param  function callback
+	 * @param  integer   delay
+	 * @return GameUI
+	 */
 	this.displayRoomAction = function(rooms, $button, callback, delay)
 	{
 		if (typeof delay != 'undefined' && !isNaN(parseInt(delay)))
@@ -322,6 +388,19 @@ var GameUI = function(socket, controller, $)
 	    return this;
 	};
 
+	/**
+	 * Display a single room and its Players.
+	 *
+	 * According to the Room's data Status field, the action
+	 * buttons will be enabled.
+	 *
+	 * @param  jQuery $rooms    [description]
+	 * @param  string sid       [description]
+	 * @param  object roomdata  [description]
+	 * @param  object usersdata [description]
+	 * @return boolean 	Whether current Player is Member of the
+	 *                  displayed room or not
+	 */
 	this.displayRoom = function($rooms, sid, roomdata, usersdata)
 	{
 		var self = this;
@@ -355,6 +434,9 @@ var GameUI = function(socket, controller, $)
 	        players.push(user);
 	    }
 
+		if (players.length)
+			ctrl_.setPlayers(players);
+
 	    // define which buttons must be active
 		if (is_member) {
 			if (roomdata["status"] == "join") {
@@ -375,7 +457,16 @@ var GameUI = function(socket, controller, $)
 			var $button = $thisRoom.find(".roomActionLeave").first();
 			self.displayRoomAction(roomdata, $button, function($btn, roomdata) {
 				socket_.emit("leave_room");
+				$(".roomActionJoin").removeAttr("disabled")
+									.removeClass("btn-default")
+									.addClass("btn-primary");
 			});
+
+			// Members of Room must first Leave a Room before they can
+			// Join another Room.
+			$(".roomActionJoin").attr("disabled", "disabled")
+								.removeClass("btn-primary")
+								.addClass("btn-default");
 	    }
 	    else if (roomdata["status"] == "join") {
 	        var $button = $thisRoom.find(".roomActionJoin").first();
@@ -393,6 +484,11 @@ var GameUI = function(socket, controller, $)
 	    return is_member;
 	};
 
+	/**
+	 * Send the entered username to the Socket IO room manager.
+	 *
+	 * @return GameUI
+	 */
 	this.emitUsername = function()
 	{
 	    $("#currentUser-username").html("&nbsp;" + $("#username").val());
@@ -400,9 +496,18 @@ var GameUI = function(socket, controller, $)
 	    $(".hide-on-auth").fadeOut("slow");
 	    $(".show-on-auth").fadeIn("slow");
 	    socket_.emit('change_username', $("#username").val());
+	    socket_.emit("notify");
 	    return this;
 	};
 
+	/**
+	 * Register Gameplay Keyboard Listeners
+	 *
+	 * This method should be called when the Canvas is activated
+	 * and the game started only.
+	 *
+	 * @return GameUI
+	 */
     this.registerKeyListeners = function()
     {
         document.onkeydown = function(e) {
@@ -415,9 +520,15 @@ var GameUI = function(socket, controller, $)
             if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1)
                 e.preventDefault();
         }, false);
+
 	    return this;
     };
 
+    /**
+     * Utility method called on DOM Ready from the view template.
+     *
+     * @return Game UI
+     */
 	this.initDOMListeners = function()
 	{
 		var self = this;
