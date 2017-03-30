@@ -84,7 +84,98 @@ var DisplayPoints = function(x, y, color, value)
 };
 
 /**
- * class GameController is defines several actions
+ * class GameSessions defines a Storage capability
+ * for the PacNEM game.
+ *
+ * Storage is done in window.localStorage (IE >= 10)
+ *
+ * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
+ */
+var GameSession = function(userName, xemAddress)
+{
+	var details_ = {
+		"user": userName,
+		"xem": xemAddress,
+		"score": 0,
+	};
+
+	var xem_account_ = {};
+
+	this.sync = function()
+	{
+		var storage = window.localStorage;
+
+		if (! storage)
+			//XXX display error message
+			return false;
+
+		var json = storage.getItem("evias.pacnem:player");
+		if (json && json.length)
+			details_ = JSON.parse(json);
+
+		var acct = storage.getItem("evias.pacnem:account");
+		if (acct && acct.length)
+			xem_account_ = JSON.parse(acct);
+
+		return this;
+	};
+
+	this.store = function()
+	{
+		var storage = window.localStorage;
+
+		if (! storage)
+			//XXX display error message
+			return false;
+
+		storage.setItem("evias.pacnem:player", JSON.stringify(details_));
+	};
+
+	this.clear = function()
+	{
+		var storage = window.localStorage;
+		if (! storage)
+			//XXX display error message
+			return false;
+
+		storage.clear();
+	};
+
+	this.identified = function()
+	{
+		return this.getPlayer().length > 0 && this.getAddress().length > 0;
+	};
+
+	this.getPlayer = function()
+	{
+		if (typeof details_.user == 'undefined' || !details_.user)
+			return "";
+
+		return details_.user;
+	};
+
+	this.getAddress = function()
+	{
+		if (typeof details_.xem == 'undefined' || !details_.xem)
+			return "";
+
+		return details_.xem;
+	};
+
+	var self = this;
+	{
+		if (! self.getPlayer() || ! self.getAddress())
+			// try to sync from localStorage
+			self.sync();
+		else
+			// userName and Address available, store to localStorage
+			// upon object instantiation.
+			self.store();
+	};
+};
+
+/**
+ * class GameController defines several actions
  * in MVC style using Socket.IO for data transmission
  * on streams.
  *
@@ -94,9 +185,10 @@ var DisplayPoints = function(x, y, color, value)
  * @author 	Nicolas Dubien (https://github.com/dubzzz)
  * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameController = function(socket)
+var GameController = function(socket, nem)
 {
 	var socket_ = socket;
+	var nem_    = nem;
 	var frame_ = 0;
 	var ongoing_game_ = false;
 	var ongoing_refresh_ = false;
@@ -182,7 +274,7 @@ var GameController = function(socket)
 
 		// Draw game
 		drawEmptyGameBoard(canvas, ctx, grid_);
-		var $items = $("#game_details .list-group-item-text");
+		var $items = $("#game_details .player-row");
 		for (var i = 0 ; i != data['pacmans'].length ; i++) {
 			var pacman = data['pacmans'][i];
 			drawPacMan(canvas, ctx, frame_, pacman, data['pacmans'].length == 1 ? "#777700" : GHOSTS_COLORS[i %GHOSTS_COLORS.length]);
@@ -228,8 +320,20 @@ var GameController = function(socket)
 	this.hasSession = function()
 	{
 		var u = $("#username").val();
-		return u.length > 0;
-	}
+		var a = $("#address").val();
+		return u.length > 0 && a.length > 0;
+	};
+
+	/**
+	 * Return the nem SDK instance used for
+	 * working with NEM blockchain features.
+	 *
+	 * @return NEM-Library/nem
+	 */
+	this.nem = function()
+	{
+		return nem_;
+	};
 };
 
 /**
@@ -250,6 +354,7 @@ var GameUI = function(socket, controller, $)
 	var ctrl_ = controller;
 	var jquery_ = $;
 	var rooms_ctr_ = undefined;
+	var session = undefined;
 
 	/**
 	 * /!\
@@ -269,6 +374,7 @@ var GameUI = function(socket, controller, $)
 		var self = this;
 
 		socket_.on('ready', function(rawdata) {
+			$(".msgSelectRoom").hide();
             $("#game").show();
             self.displayUserDetails(rawdata);
             ctrl_.serverReady(rawdata);
@@ -318,18 +424,19 @@ var GameUI = function(socket, controller, $)
 	this.displayUserDetails = function(rawdata)
 	{
 		var self = this;
-	    var $details = $("#game_details").first();
-	    var $userRow = $details.find(".players-list li.hidden").first();
+	    var $details = $("#game_details ul.list-group").first();
+	    var $userRow = $details.find("li.hidden").first();
+	    var players  = ctrl_.getPlayers();
 
 	    // interpret data, prepare display
 	    var data = JSON.parse(rawdata);
 
 	    if (players.length)
 	        // clear players list first
-	        $details.empty();
+	        $details.find(".player-row").remove();
 
 	    for (var i = 0 ; i < players.length ; i++) {
-	        var $row  = $userRow.clone().removeClass("hidden");
+	        var $row  = $userRow.clone().removeClass("hidden").addClass("player-row");
 	        var color = GHOSTS_COLORS[i % GHOSTS_COLORS.length];
 
 	        // set player name and add to DOM
@@ -570,17 +677,144 @@ var GameUI = function(socket, controller, $)
 	 *
 	 * @return GameUI
 	 */
-	this.emitUsername = function()
+	this.emitUsername = function(session)
 	{
-	    $("#currentUser-username").html("&nbsp;" + $("#username").val());
-	    $("#currentUser").fadeIn("slow");
-	    $("#purge_auth").parent().show();
-	    $(".hide-on-auth").hide();
-	    $(".show-on-auth").show();
-	    $("#my-details .panel").first().removeClass("panel-info");
-	    socket_.emit('change_username', $("#username").val());
-	    socket_.emit("notify");
-	    return this;
+		var username = $("#username").val();
+		var address  = $("#address").val();
+
+		if (!username.length || !address.length)
+			if (typeof session == 'undefined' || !session.identified())
+				// emitUsername not possible, either user name or XEM
+				// address could not be retrieved.
+				return this;
+
+		if (! username.length) {
+			$("#username").val(session.getPlayer());
+			username = session.getPlayer();
+		}
+
+		if (! address.length) {
+			$("#address").val(session.getAddress());
+			address = session.getAddress();
+		}
+
+		// view effects & modifications
+		$("#currentUser-username").html("&nbsp;" + $("#username").val());
+		$("#currentUser").fadeIn("slow");
+		$("#purge_auth").parent().show();
+		$(".hide-on-auth").hide();
+		$(".show-on-auth").show();
+		$("#my-details .panel").first().removeClass("panel-info");
+		$("#spread-the-word").addClass("mt10");
+		$("#username").parents(".input-group").first().parent().addClass("col-md-offset-1");
+
+		// Socket IO emit username change and notify others.
+		socket_.emit('change_username', username);
+		socket_.emit("notify");
+
+		// save the game session details
+		session_ = new GameSession(username, address);
+		return this;
+	};
+
+	/**
+	 * Form Validation implementation to make fields required.
+	 *
+	 * Fields definition *must* contain `selector` and
+	 * *can* contain `required`, `reg_exp`, `callback`.
+	 *
+	 * @param  {[type]} fields [description]
+	 * @return {[type]}        [description]
+	 */
+	this.formValidate = function(fields)
+	{
+		var self  = this;
+		var valid = true;
+		for (i in fields) {
+			var selector = fields[i].selector;
+			var required = fields[i].required;
+			var reg_exp  = fields[i].reg_exp;
+			var callback = fields[i].callback;
+
+			if (typeof selector == 'undefined')
+				continue;
+
+			var $dom_element = $(selector);
+			if (! $dom_element.length)
+				// DOM Element does not exist
+				continue;
+
+			var value = undefined;
+			switch ($dom_element[0].tagName) {
+				default:
+				case 'input':
+				case 'select':
+				case 'textarea':
+					value = $dom_element.val();
+					break;
+			}
+
+			if ((required && !value.length)
+			|| (reg_exp && !value.match(reg_exp))) {
+				$dom_element.addClass("error-input");
+				valid = false;
+			}
+
+			if (valid && callback && !callback(value)) {
+				$dom_element.addClass("error-input");
+				valid = false;
+			}
+		}
+
+		return valid;
+	};
+
+    /**
+     * Utility method called on DOM Ready from the view template.
+     *
+     * @return Game UI
+     */
+	this.initDOMListeners = function()
+	{
+		var self = this;
+		var validators = [
+			{
+				"selector": "#username",
+				"required": true,
+				"reg_exp": /[A-Za-z0-9\-\_\.]+/
+			},
+			{
+				"selector": "#address",
+				"required": true,
+				"reg_exp": /[A-Z0-9]{37,43}/,
+				"callback": function(val) {
+					// Verify the XEM address with the NEM SDK
+					return ctrl_.nem().model.address.isValid(val);
+				}
+			}
+		];
+
+		$("#save_auth").click(function() {
+			$(".error-input").removeClass("error-input");
+
+			if (self.formValidate(validators))
+				self.emitUsername();
+
+			return false;
+		});
+
+		$("#purge_auth").click(function()
+		{
+			session_.clear();
+			window.location.href = "/";
+			return false;
+		});
+
+		var sync = new GameSession();
+		if (sync.identified())
+			self.emitUsername(sync);
+
+		return this;
 	};
 
 	/**
@@ -606,26 +840,6 @@ var GameUI = function(socket, controller, $)
 
 	    return this;
     };
-
-    /**
-     * Utility method called on DOM Ready from the view template.
-     *
-     * @return Game UI
-     */
-	this.initDOMListeners = function()
-	{
-		var self = this;
-		$("#save_auth").click(function() {
-			self.emitUsername();
-			return false;
-		});
-
-		// document read behaviour
-		if ($("#username").val())
-			self.emitUsername();
-
-		return this;
-	};
 
 	// new GameUI instances should initialize Socket IO connection
 	// triggers for general Game User Interface updates

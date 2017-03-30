@@ -117,8 +117,34 @@ footer {
     padding-left: 10px;
 }
 
+.msgSelectRoom {
+    width: 45%;
+    margin: auto;
+    font-family: Roboto;
+    padding: 0px;
+    height: 80px;
+    padding-left: 20px;
+    padding-top: 30px;
+    overflow: hidden;
+    margin-top: 125px;
+}
+
+.mt5 { margin-top: 5px; }
+.mt10 { margin-top: 10px; }
+.mb5 { margin-bottom: 5px; }
+.mb10 { margin-bottom: 10px; }
+.ml5 { margin-left: 5px; }
+.ml10 { margin-left: 10px; }
+.mr5 { margin-right: 5px; }
+.mr10 { margin-right: 10px; }
+
 .importantText {
     font-weight: 900;
+}
+
+.error-input {
+    background-color: #f3aeae;
+    border: 1px solid #550101;
 }
 
 /**
