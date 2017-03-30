@@ -23,7 +23,7 @@
 		"should": "~6.0.1",
 		"grunt-mocha-istanbul": "~2.4.0",
 
-        "nem-nodejs-sdk": "~1.0.0"
+        "nem-sdk": "~1.0.0"
 	},
 	"scripts": {
 		"test": "node node_modules/mocha/bin/mocha",

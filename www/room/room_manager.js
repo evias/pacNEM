@@ -115,13 +115,15 @@ var RoomManager = function(io) {
 	this.ackRoomMember = function(sid, rid)
 	{
 		assert(map_member_roomid_.hasOwnProperty(sid));
-		assert.strictEqual(map_member_roomid_[sid], undefined);
 
 		var room_id = rid;
 		var room = new Room(io, self);
+		var hasJoined = room.join(sid);
+		assert(hasJoined);
 
 		map_member_roomid_[sid] = rid;
 		map_id_rooms_[room_id] = room;
+		self.notifyChanges();
 	};
 
 	// User has left the manager

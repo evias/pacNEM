@@ -1,1 +1,1 @@
-../../node_modules/nem-nodejs-sdk/dist/nem-sdk.js
+../../node_modules/nem-sdk/dist/nem-sdk.js

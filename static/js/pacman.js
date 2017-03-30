@@ -196,6 +196,7 @@ var GameController = function(socket, nem)
 	var last_elapsed_ = 0;
 	var points_ = new Array();
 	var players_ = new Array();
+	var last_room_ack_ = null;
 
 	this.start = function()
 	{
@@ -338,7 +339,25 @@ var GameController = function(socket, nem)
 	 */
 	this.ackRoomMember = function(room_id)
 	{
-		socket_emit("ack_room", room_id);
+		socket_.emit("ack_room", room_id);
+	};
+
+	/**
+	 * Get the latest acknowledged room membership
+	 * room id. this limits the count of
+	 * ack_room signal emission.
+	 *
+	 * @param  {[type]}  room_id [description]
+	 * @return {Boolean}         [description]
+	 */
+	this.isRoomMembershipAcknowledged = function(room_id)
+	{
+		if (room_id && last_room_ack_ != room_id) {
+			last_room_ack_ = room_id;
+			return false;
+		}
+
+		return true;
 	};
 
 	/**
@@ -468,6 +487,30 @@ var GameUI = function(socket, controller, $)
 
 	/**
 	 * helper for displaying Create Room button
+	 * @return GameUI
+	 */
+	this.displayCreateRoom = function()
+	{
+		var $button = $(".roomCreateNew").first();
+		$button.removeClass("hidden");
+
+		return this;
+	};
+
+	/**
+	 * helper for hiding Create Room button
+	 * @return GameUI
+	 */
+	this.hideCreateRoom = function()
+	{
+		var $button = $(".roomCreateNew").first();
+		$button.addClass("hidden");
+
+		return this;
+	};
+
+	/**
+	 * helper for displaying Create Room button
 	 *
 	 * @return {[type]} [description]
 	 */
@@ -475,7 +518,7 @@ var GameUI = function(socket, controller, $)
 	{
 		var $button = $(".roomCreateNew").first();
 
-		$button.removeClass("hidden");
+		$button.removeAttr("disabled").removeClass("disabled");
 		$button.off("click");
 		$button.on("click", function() { socket_.emit("create_room"); });
 
@@ -494,7 +537,7 @@ var GameUI = function(socket, controller, $)
 		if (!$button)
 			return this;
 
-		$button.addClass("hidden");
+		$button.attr("disabled", "disabled").addClass("disabled");
 		return this;
 	};
 
@@ -511,6 +554,7 @@ var GameUI = function(socket, controller, $)
 		var self = this;
 
 		if (! data["rooms"].length) {
+			self.displayCreateRoom();
 			self.enableCreateRoom();
 			return 0;
 		}
@@ -526,13 +570,15 @@ var GameUI = function(socket, controller, $)
 		for (var i = 0; i < data["rooms"].length; i++) {
 			var inThisRoom = self.displayRoom(i+1, $rooms, sid, data["rooms"][i], data["users"]);
 
-			if (inThisRoom)
+			if (inThisRoom && !ctrl_.isRoomMembershipAcknowledged(data["rooms"][i]["id"]))
 				ctrl_.ackRoomMember(data["rooms"][i]["id"]);
 
 			playerInRoom |= inThisRoom;
 		}
 
-		if (! playerInRoom)
+		self.displayCreateRoom();
+
+		if (!playerInRoom)
 			self.enableCreateRoom();
 
 	    return data["rooms"].length;
@@ -695,12 +741,7 @@ var GameUI = function(socket, controller, $)
 	    return this;
 	}
 
-	/**
-	 * Send the entered username to the Socket IO room manager.
-	 *
-	 * @return GameUI
-	 */
-	this.emitUsername = function(session)
+	this.getPlayerDetails = function(session)
 	{
 		var username = $("#username").val();
 		var address  = $("#address").val();
@@ -709,8 +750,13 @@ var GameUI = function(socket, controller, $)
 			if (typeof session == 'undefined' || !session.identified())
 				// emitUsername not possible, either user name or XEM
 				// address could not be retrieved.
-				return this;
+				return {"username": "", "address": ""};
 
+		return {"username": username, "address": address};
+	};
+
+	this.updateUserFormWithSession = function(session)
+	{
 		if (! username.length) {
 			$("#username").val(session.getPlayer());
 			username = session.getPlayer();
@@ -720,7 +766,30 @@ var GameUI = function(socket, controller, $)
 			$("#address").val(session.getAddress());
 			address = session.getAddress();
 		}
+	};
 
+	/**
+	 * Send the entered username to the Socket IO room manager.
+	 *
+	 * @return GameUI
+	 */
+	this.emitUsername = function(session)
+	{
+		var details = this.getPlayerDetails();
+
+		// Socket IO emit username change and notify others.
+		socket_.emit('change_username', details.username);
+		socket_.emit("notify");
+
+		// save the game session details
+		session_ = new GameSession(details.username, details.address);
+
+		this.displayPlayerUI();
+		return this;
+	};
+
+	this.displayPlayerUI = function()
+	{
 		// view effects & modifications
 		$("#currentUser-username").html("&nbsp;" + $("#username").val());
 		$("#currentUser").fadeIn("slow");
@@ -730,14 +799,6 @@ var GameUI = function(socket, controller, $)
 		$("#my-details .panel").first().removeClass("panel-info");
 		$("#spread-the-word").addClass("mt10");
 		$("#username").parents(".input-group").first().parent().addClass("col-md-offset-1");
-
-		// Socket IO emit username change and notify others.
-		socket_.emit('change_username', username);
-		socket_.emit("notify");
-
-		// save the game session details
-		session_ = new GameSession(username, address);
-		return this;
 	};
 
 	/**
@@ -820,8 +881,9 @@ var GameUI = function(socket, controller, $)
 		$("#save_auth").click(function() {
 			$(".error-input").removeClass("error-input");
 
-			if (self.formValidate(validators))
+			if (self.formValidate(validators)) {
 				self.emitUsername();
+			}
 
 			return false;
 		});
@@ -833,9 +895,11 @@ var GameUI = function(socket, controller, $)
 			return false;
 		});
 
-		var sync = new GameSession();
-		if (sync.identified())
-			self.emitUsername(sync);
+		var session_ = new GameSession();
+		if (session_.identified()) {
+			self.updateUserFormWithSession(session_);
+			self.displayPlayerUI();
+		}
 
 		return this;
 	};
