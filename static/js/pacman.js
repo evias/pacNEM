@@ -274,7 +274,7 @@ var GameController = function(socket, nem)
 
 		// Draw game
 		drawEmptyGameBoard(canvas, ctx, grid_);
-		var $items = $("#game_details .list-group-item-text");
+		var $items = $("#game_details .player-row");
 		for (var i = 0 ; i != data['pacmans'].length ; i++) {
 			var pacman = data['pacmans'][i];
 			drawPacMan(canvas, ctx, frame_, pacman, data['pacmans'].length == 1 ? "#777700" : GHOSTS_COLORS[i %GHOSTS_COLORS.length]);
@@ -320,7 +320,8 @@ var GameController = function(socket, nem)
 	this.hasSession = function()
 	{
 		var u = $("#username").val();
-		return u.length > 0;
+		var a = $("#address").val();
+		return u.length > 0 && a.length > 0;
 	};
 
 	/**
@@ -353,6 +354,7 @@ var GameUI = function(socket, controller, $)
 	var ctrl_ = controller;
 	var jquery_ = $;
 	var rooms_ctr_ = undefined;
+	var session = undefined;
 
 	/**
 	 * /!\
@@ -422,18 +424,19 @@ var GameUI = function(socket, controller, $)
 	this.displayUserDetails = function(rawdata)
 	{
 		var self = this;
-	    var $details = $("#game_details").first();
-	    var $userRow = $details.find(".players-list li.hidden").first();
+	    var $details = $("#game_details ul.list-group").first();
+	    var $userRow = $details.find("li.hidden").first();
+	    var players  = ctrl_.getPlayers();
 
 	    // interpret data, prepare display
 	    var data = JSON.parse(rawdata);
 
 	    if (players.length)
 	        // clear players list first
-	        $details.empty();
+	        $details.find(".player-row").remove();
 
 	    for (var i = 0 ; i < players.length ; i++) {
-	        var $row  = $userRow.clone().removeClass("hidden");
+	        var $row  = $userRow.clone().removeClass("hidden").addClass("player-row");
 	        var color = GHOSTS_COLORS[i % GHOSTS_COLORS.length];
 
 	        // set player name and add to DOM
