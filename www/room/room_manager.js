@@ -84,7 +84,6 @@ var RoomManager = function(io) {
 	// Create a new room
 	this.createRoom = function(sid) {
 		assert(map_member_roomid_.hasOwnProperty(sid));
-		assert.strictEqual(map_member_roomid_[sid], undefined);
 
 		var room_id = last_room_id_++;
 		var room = new Room(io, self);
@@ -108,6 +107,21 @@ var RoomManager = function(io) {
 			delete map_id_rooms_[room_id];
 		}
 		map_member_roomid_[sid] = undefined;
+		self.notifyChanges();
+	};
+
+	// Acknowledge a room membership
+	this.ackRoomMember = function(sid, rid)
+	{
+		assert(map_member_roomid_.hasOwnProperty(sid));
+
+		var room_id = rid;
+		var room = new Room(io, self);
+		var hasJoined = room.join(sid);
+		assert(hasJoined);
+
+		map_member_roomid_[sid] = rid;
+		map_id_rooms_[room_id] = room;
 		self.notifyChanges();
 	};
 

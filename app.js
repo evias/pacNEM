@@ -130,6 +130,12 @@ io.sockets.on('connection', function(socket) {
 		room_manager.leaveRoom(socket.id);
 	});
 
+	// Acknowledge room membership
+	socket.on('ack_room', function(room_id) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] ack_room(' + room_id + ')');
+		room_manager.ackRoomMember(socket.id, room_id);
+	});
+
 	// Ask to launch the game inside the room
 	// The game will not start immediately and other members can cancel its launch
 	socket.on('run_game', function() {

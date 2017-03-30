@@ -1,7 +1,8 @@
 
 <script type="text/javascript">
     var socket    = io.connect(window.location.protocol + '//' + window.location.host);
-    var game_ctrl = new GameController(socket);
+    var nem       = require("nem-sdk").default;
+    var game_ctrl = new GameController(socket, nem);
     var game_ui   = new GameUI(socket, game_ctrl, $);
 
     $(document).ready(function()
@@ -23,7 +24,7 @@
             </div>
             <div class="panel-body">
                 <p class="text-justify hide-on-auth">
-                    <span>Welcome to the </span><span>Pac</span><span class="NEMifiedText">nem</span><span> Game. This game is a Free &amp; Open Source NodeJS web application
+                    <span>Welcome to the </span><span>Pac</span><span class="NEMifiedText">nem</span><span> Game. This game is a Free &amp; Open Source Node.js web application
                     which you may download for installation or Play online.</span>
                     <span>This project will use the </span><span class="NEMifiedText">nem</span><span> Blockchain to save and retrieve High Scores.</span><br />
                 </p>
@@ -45,7 +46,7 @@
                             <input id="address" type="text" class="form-control xem-address" placeholder="XEM Address" aria-describedby="describe-address" maxlength="46" />
                         </div>
                     </div>
-                    <div id="create_my_room" class="col-md-2 text-left">
+                    <div id="create_my_room" class="col-md-2 text-left hide-on-auth">
                         <a id="save_auth" class="btn btn-primary" role="button" href="#"><span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;Save</a>
                     </div>
                 </div>
@@ -53,10 +54,7 @@
         </div>
     </div>
 
-    <div class="panel panel-success text-success text-left msgSelectRoom show-on-auth successMessage" style="display: none;">
-        <i class="glyphicon glyphicon-ok"></i>&nbsp;
-        <strong>Thank you, Now please select a Room to Join in the list.</strong>
-    </div>
+    <pre class="text-left msgSelectRoom show-on-auth" style="display: none;"><i class="glyphicon glyphicon-ok"></i>&nbsp;<strong>Thank you, Now please select a Room to Join in the list.</strong></pre>
 
     <div class="container-fluid">
         <div class="container-fluid col-md-4">
@@ -93,34 +91,49 @@
 
 </div>
 
+<div class="col-md-3">
+    <div class="row">
+        <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-tasks"></i>&nbsp;Pac<span class="NEMifiedText">nem</span> rooms</h4>
+        <div id="rooms"></div>
 
-<div class="col-md-3 hide-on-auth">
-    <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-heart"></i>&nbsp;Spread the Word / Donate / Links</h4>
-    <p class="text-justify">
-    This game was developed with NodeJS, Socket.io, Handlebars and <a target="_blank" href="https://nem.io" class="NEMifiedText">nem</a> and
-    started as a fork of <a href="https://github.com/dubzzz/js-pacman" target="_blank">this project</a>. Mainly what I did is User -Interface
-    &amp; -Experience Optimization and Refactoring &amp; Optimization of the JS source code.
-    </p>
-    <p class="text-left">
-    I recommend following Links:
-    <ul class="text-left">
-        <li><a href="https://github.com/evias/pacNEM" target="_blank">Source Code</a></li>
-        <li><a href="https://nem.io" target="_blank" class="NEMifiedText">nem Official Website</a></li>
-        <li><a href="https://blog.nem.io" target="_blank" class="NEMifiedText">nem Official Blog</a></li>
-        <li><a href="https://forum.nem.io" target="_blank" class="NEMifiedText">nem Official Forum</a></li>
-    </ul>
-    </p>
-    <p class="text-left">
-        If you feel like Donating, send XEM Donations to:
-        <pre>NB72EM6TTSX72O47T3GQFL345AB5WYKIDODKPPYW</pre>
-    </p>
-</div>
+        <a href="#" class="btn btn-block btn-success roomCreateNew hidden">Create Room</a>
+    </div>
 
-<div class="col-md-3" style="display: none;">
-    <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-tasks"></i>&nbsp;Pac<span class="NEMifiedText">nem</span> rooms</h4>
-    <div id="rooms"></div>
+    <div id="spread-the-word" class="row">
+        <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-heart"></i>&nbsp;Spread the Word / Donate / Links</h4>
+        <p class="text-justify">
+        This game was developed with Node.js, Socket.io, Handlebars and <a target="_blank" href="https://nem.io" class="NEMifiedText">nem</a> and
+        started as a fork of <a href="https://github.com/dubzzz/js-pacman" target="_blank">this project</a>. This project aims to use
+        <a target="_blank" href="https://nem.io" class="NEMifiedText">nem</a> in as many ways as possible in order for me to collect experience
+        in the blockchain application development industry.
+        </p>
+        <p class="text-left">
+        I recommend following Links:
+            <ul class="text-left">
+                <li><a href="https://github.com/evias/pacNEM" target="_blank">Source Code</a></li>
+                <li><a href="https://nem.io" target="_blank" class="NEMifiedText">nem Official Website</a></li>
+                <li><a href="https://nem.io/install" target="_blank" class="NEMifiedText">nem Official Downloads Page</a></li>
+                <li><a href="https://blog.nem.io" target="_blank" class="NEMifiedText">nem Official Blog</a></li>
+                <li><a href="https://forum.nem.io" target="_blank" class="NEMifiedText">nem Official Forum</a></li>
+            </ul>
+        </p>
 
-    <a href="#" class="btn btn-block btn-success roomCreateNew hidden">Create Room</a>
+        <p class="text-left">
+        Following Links were useful during Development:
+            <ul class="text-left">
+                <li><a href="https://nem.io" target="_blank" class="NEMifiedText">nem Official Website</a></li>
+                <li><a href="https://github.com/NemProject/NanoWallet" target="_blank" class="NEMifiedText">nem NanoWallet Source Code</a></li>
+                <li><a href="https://github.com/QuantumMechanics/NEM-sdk" target="_blank" class="NEMifiedText">nem Library for Node.js</a></li>
+                <li><a href="https://blog.nem.io/nem-development-101/" target="_blank" class="NEMifiedText">nem Development 101</a></li>
+                <li><a href="http://bob.nem.ninja/docs/" target="_blank" class="NEMifiedText">nem NIS API Documentation</a></li>
+                <li><a href="https://forum.nem.io/t/easy-to-use-library-for-nem-in-node-js/3614" target="_blank" class="NEMifiedText">nem Official Blog</a></li>
+            </ul>
+        </p>
+        <p class="text-left">
+            If you feel like Donating, send XEM Donations to:
+            <pre>NB72EM6TTSX72O47T3GQFL345AB5WYKIDODKPPYW</pre>
+        </p>
+    </div>
 </div>
 
 <div id="room-template" class="hidden">
