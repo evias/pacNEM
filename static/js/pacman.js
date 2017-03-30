@@ -339,7 +339,7 @@ var GameController = function(socket, nem)
 	 */
 	this.ackRoomMember = function(room_id)
 	{
-		socket_.emit("ack_room", room_id);
+		//socket_.emit("ack_room", room_id);
 	};
 
 	/**
@@ -558,13 +558,6 @@ var GameUI = function(socket, controller, $)
 			self.enableCreateRoom();
 			return 0;
 		}
-
-		if (!ctrl_.hasSession()) {
-			$rooms.parent().hide();
-			return 0;
-		}
-
-		$rooms.parent().show();
 
 		var playerInRoom = false;
 		for (var i = 0; i < data["rooms"].length; i++) {
@@ -883,6 +876,8 @@ var GameUI = function(socket, controller, $)
 
 			if (self.formValidate(validators)) {
 				self.emitUsername();
+				self.displayPlayerUI();
+				$("#rooms").parent().show();
 			}
 
 			return false;
@@ -900,7 +895,10 @@ var GameUI = function(socket, controller, $)
 			self.updateUserFormWithSession(session_);
 			self.emitUsername();
 			self.displayPlayerUI();
+			$("#rooms").parent().show();
 		}
+		else
+			$("#rooms").parent().hide();
 
 		return this;
 	};

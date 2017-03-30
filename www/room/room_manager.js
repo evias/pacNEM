@@ -84,7 +84,6 @@ var RoomManager = function(io) {
 	// Create a new room
 	this.createRoom = function(sid) {
 		assert(map_member_roomid_.hasOwnProperty(sid));
-		assert.strictEqual(map_member_roomid_[sid], undefined);
 
 		var room_id = last_room_id_++;
 		var room = new Room(io, self);
