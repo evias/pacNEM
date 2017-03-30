@@ -898,6 +898,7 @@ var GameUI = function(socket, controller, $)
 		var session_ = new GameSession();
 		if (session_.identified()) {
 			self.updateUserFormWithSession(session_);
+			self.emitUsername();
 			self.displayPlayerUI();
 		}
 
