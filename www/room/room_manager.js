@@ -111,6 +111,19 @@ var RoomManager = function(io) {
 		self.notifyChanges();
 	};
 
+	// Acknowledge a room membership
+	this.ackRoomMember = function(sid, rid)
+	{
+		assert(map_member_roomid_.hasOwnProperty(sid));
+		assert.strictEqual(map_member_roomid_[sid], undefined);
+
+		var room_id = rid;
+		var room = new Room(io, self);
+
+		map_member_roomid_[sid] = rid;
+		map_id_rooms_[room_id] = room;
+	};
+
 	// User has left the manager
 	this.disconnect = function(sid) {
 		assert(map_member_roomid_.hasOwnProperty(sid));

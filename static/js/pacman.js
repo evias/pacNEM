@@ -325,6 +325,23 @@ var GameController = function(socket, nem)
 	};
 
 	/**
+	 * Acknowledge current room. This is used
+	 * to cache room data when the user reloads
+	 * the page (he won't have left the room
+	 * and will be back in the room directly)
+	 *
+	 * This fake join must be acknowledged by the UI
+	 * such that the room manager instance is up to
+	 * date.
+	 *
+	 * @return {[type]} [description]
+	 */
+	this.ackRoomMember = function(room_id)
+	{
+		socket_emit("ack_room", room_id);
+	};
+
+	/**
 	 * Return the nem SDK instance used for
 	 * working with NEM blockchain features.
 	 *
@@ -405,9 +422,9 @@ var GameUI = function(socket, controller, $)
 
             self.displayRooms($rooms, sid, data);
 
-            if (! rooms.length)
+            //if (! rooms.length)
                 // create a new room, no one else online
-                socket_.emit("create_room");
+                //socket_.emit("create_room");
         });
 
         rooms_ctr_ = $("#rooms");
@@ -505,9 +522,15 @@ var GameUI = function(socket, controller, $)
 
 		$rooms.parent().show();
 
-	    var playerInRoom = false;
-	    for (var i = 0; i < data["rooms"].length; i++)
-	        playerInRoom |= self.displayRoom(i+1, $rooms, sid, data["rooms"][i], data["users"]);
+		var playerInRoom = false;
+		for (var i = 0; i < data["rooms"].length; i++) {
+			var inThisRoom = self.displayRoom(i+1, $rooms, sid, data["rooms"][i], data["users"]);
+
+			if (inThisRoom)
+				ctrl_.ackRoomMember(data["rooms"][i]["id"]);
+
+			playerInRoom |= inThisRoom;
+		}
 
 		if (! playerInRoom)
 			self.enableCreateRoom();
