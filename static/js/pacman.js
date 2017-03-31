@@ -446,8 +446,6 @@ var GameUI = function(socket, controller, $)
                 //socket_.emit("create_room");
         });
 
-        rooms_ctr_ = $("#rooms");
-
         return this;
 	};
 
@@ -532,7 +530,7 @@ var GameUI = function(socket, controller, $)
 	 */
 	this.disableCreateRoom = function()
 	{
-		var $button = rooms_ctr_.find(".roomCreateNew").first();
+		var $button = $(".roomCreateNew").first();
 
 		if (!$button)
 			return this;
@@ -711,6 +709,8 @@ var GameUI = function(socket, controller, $)
 				$(".roomActionJoin").removeAttr("disabled")
 									.removeClass("btn-default")
 									.addClass("btn-primary");
+
+				self.enableCreateRoom();
 			});
 
 			// Members of Room must first Leave a Room before they can
@@ -718,6 +718,9 @@ var GameUI = function(socket, controller, $)
 			$(".roomActionJoin").attr("disabled", "disabled")
 								.removeClass("btn-primary")
 								.addClass("btn-default");
+
+			// also disable room creation (needs leave first)
+			self.disableCreateRoom();
 	    }
 	    else if (room["status"] == "join") {
 	        var $button = $domRoom.find(".roomActionJoin").first();
@@ -727,8 +730,11 @@ var GameUI = function(socket, controller, $)
 	        else {
 				self.displayRoomAction(room, $button, function($btn, room) {
 					socket_.emit("join_room", room["id"]);
+					self.disableCreateRoom();
 				});
 			}
+
+			self.enableCreateRoom();
 	    }
 
 	    return this;
@@ -853,7 +859,9 @@ var GameUI = function(socket, controller, $)
      */
 	this.initDOMListeners = function()
 	{
-		var self = this;
+		var self   = this;
+		rooms_ctr_ = $("#rooms");
+
 		var validators = [
 			{
 				"selector": "#username",
