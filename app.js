@@ -21,7 +21,8 @@ var app = require('express')(),
 	io = require('socket.io').listen(server),
 	path = require('path'),
 	handlebars = require("handlebars"),
-	expressHbs = require("express-handlebars");
+	expressHbs = require("express-handlebars"),
+	auth = require("http-auth");
 
 var logger = require('./www/logger.js'),
 	__room = require('./www/room/room.js'),
@@ -44,6 +45,12 @@ app.engine(".hbs", expressHbs({
 	defaultLayout: "default.hbs",
 	layoutPath: "views/layouts"}));
 app.set("view engine", "hbs");
+
+var basicAuth = auth.basic({
+    realm: "This is a Highly Secured Area - Monkey at Work.",
+    file: __dirname + "/pacnem.htpasswd"
+});
+app.use(auth.connect(basicAuth));
 
 app.get("/", function(req, res)
 {
