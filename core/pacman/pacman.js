@@ -1,3 +1,22 @@
+/**
+ * Part of the evias/pacNEM package.
+ *
+ * NOTICE OF LICENSE
+ *
+ * Licensed under MIT License.
+ *
+ * This source file is subject to the MIT License that is
+ * bundled with this package in the LICENSE file.
+ *
+ * @package    evias/pacNEM
+ * @author     Grégory Saive <greg@evias.be> (https://github.com/evias)
+ * @contributor Nicolas Dubien (https://github.com/dubzzz)
+ * @license    MIT License
+ * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
+ * @link       https://github.com/evias/pacNEM
+ * @link       https://github.com/dubzzz/js-pacman
+ */
+
 (function() {
 
 var __conf = require('./configuration.js'),
@@ -39,7 +58,7 @@ var PacMan = function() {
 		cheese_power_ = 0;
 		combo_ = 0;
 	};
-	
+
 	this.setNextDirection = function(direction) {
 		next_direction_ = direction;
 	};
@@ -51,12 +70,12 @@ var PacMan = function() {
 	this.move = function(map) {
 		var height = map.length;
 		var width = map[0].length;
-		
+
 		// Test if the next position asked by the player is acceptable
 		// Can always go in the opposite direction
 		if (direction_ == (next_direction_ + 2) % 4) {
 			direction_ = next_direction_;
-		
+
 		// Need to wait to be at the middle of a cell to change direction (if not opposite)
 		} else if (x_ % FRAMES_PER_CELL == 0 && y_ % FRAMES_PER_CELL == 0) {
 			var cell_x = x_ / FRAMES_PER_CELL;
@@ -86,7 +105,7 @@ var PacMan = function() {
 			x_ = new_position[0];
 			y_ = new_position[1];
 		}
-		
+
 		// Decrease cheese power
 		if (cheese_power_ > 0) {
 			cheese_power_--;
@@ -134,11 +153,11 @@ var PacMan = function() {
 	this.hasCheesePower = function() {
 		return cheese_power_ != 0;
 	};
-	
+
 	this.getCheesePower = function() {
 		return cheese_power_;
 	};
-	
+
 	this.setCheesePower = function(cheese_power) {
 		cheese_power_ = cheese_power;
 		under_cheese_effect_ = 0;
@@ -157,7 +176,7 @@ var PacMan = function() {
 	this.getCombo = function() {
 		return combo_;
 	};
-	
+
 	this.increaseCombo = function() {
 		combo_++;
 	};

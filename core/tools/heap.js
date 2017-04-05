@@ -1,3 +1,22 @@
+/**
+ * Part of the evias/pacNEM package.
+ *
+ * NOTICE OF LICENSE
+ *
+ * Licensed under MIT License.
+ *
+ * This source file is subject to the MIT License that is
+ * bundled with this package in the LICENSE file.
+ *
+ * @package    evias/pacNEM
+ * @author     Grégory Saive <greg@evias.be> (https://github.com/evias)
+ * @contributor Nicolas Dubien (https://github.com/dubzzz)
+ * @license    MIT License
+ * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
+ * @link       https://github.com/evias/pacNEM
+ * @link       https://github.com/dubzzz/js-pacman
+ */
+
 (function() {
 
 /**
@@ -8,18 +27,18 @@
 var Heap = function() {
 	var elements_ = new Array();
 	var num_elements_ = 0;
-	
+
 	this.push = function(heap_element) {
 		// room available?
 		if (elements_.length > num_elements_)
 			elements_[num_elements_] = heap_element;
 		else
 			elements_.push(heap_element);
-		
+
 		num_elements_++;
 		moveUp(num_elements_ -1);
 	};
-	
+
 	this.pop = function() {
 		if (num_elements_ == 0) {
 			return undefined;
@@ -30,22 +49,22 @@ var Heap = function() {
 
 		if (num_elements_ == 0)
 			return head_heap_elt;
-		
+
 		elements_[0] = elements_[num_elements_];
 		elements_.splice(num_elements_, 1);
 		moveDown(0);
 		return head_heap_elt;
 	};
-	
+
 	this.free = function() {
 		elements_ = new Array();
 		num_elements_ = 0;
 	};
-	
+
 	this.size = function() {
 		return num_elements_;
 	};
-	
+
 	var moveUp = function(id) {
 		if (id == 0)
 			return;
@@ -58,12 +77,12 @@ var Heap = function() {
 			moveUp(parent_id);
 		}
 	};
-	
+
 	var moveDown = function(id) {
 		var child1_id = id*2 +1;
 		if (child1_id >= num_elements_) // it does not have any child
 			return;
-		
+
 		var child_id = child1_id;
 		var child2_id = id*2 +2;
 		if (child2_id < num_elements_) { // only one child

@@ -10,9 +10,11 @@
  *
  * @package    evias/pacNEM
  * @author     Grégory Saive <greg@evias.be> (https://github.com/evias)
+ * @contributor Nicolas Dubien (https://github.com/dubzzz)
  * @license    MIT License
  * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
  * @link       https://github.com/evias/pacNEM
+ * @link       https://github.com/dubzzz/js-pacman
  */
 
 /**
@@ -84,6 +86,35 @@ var DisplayPoints = function(x, y, color, value)
 };
 
 /**
+ * class GameAPI is used for in-game assets management
+ * and storage.
+ *
+ * Sponsoring / Pay per Play is handled with the MongoDB
+ * database.
+ * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
+ */
+var GameAPI = function(socket, controller, $)
+{
+	var jquery_ = $;
+
+	this.storeResource = function(resource, dictionary)
+	{
+		jquery_.ajax({
+			url: "/api/v1/" + resource + "/store",
+			type: "POST",
+			dataType: "json",
+			beforeSend: function(req) {
+				if (req && req.overrideMimeType)
+					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(res) {
+
+			}
+		});
+	};
+};
+
+/**
  * class GameSessions defines a Storage capability
  * for the PacNEM game.
  *
@@ -95,11 +126,10 @@ var GameSession = function(userName, xemAddress)
 {
 	var details_ = {
 		"user": userName,
+		"type": "sponsored",
 		"xem": xemAddress,
 		"score": 0,
 	};
-
-	var xem_account_ = {};
 
 	this.sync = function()
 	{
@@ -113,10 +143,6 @@ var GameSession = function(userName, xemAddress)
 		if (json && json.length)
 			details_ = JSON.parse(json);
 
-		var acct = storage.getItem("evias.pacnem:account");
-		if (acct && acct.length)
-			xem_account_ = JSON.parse(acct);
-
 		return this;
 	};
 
@@ -129,6 +155,7 @@ var GameSession = function(userName, xemAddress)
 			return false;
 
 		storage.setItem("evias.pacnem:player", JSON.stringify(details_));
+		return this;
 	};
 
 	this.clear = function()
@@ -139,6 +166,7 @@ var GameSession = function(userName, xemAddress)
 			return false;
 
 		storage.clear();
+		return this;
 	};
 
 	this.identified = function()
@@ -900,6 +928,7 @@ var GameUI = function(socket, controller, $)
 
 		var session_ = new GameSession();
 		if (session_.identified()) {
+			// post page-load reload from localStorage
 			self.updateUserFormWithSession(session_);
 			self.emitUsername();
 			self.displayPlayerUI();

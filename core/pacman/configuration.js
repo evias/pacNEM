@@ -1,3 +1,22 @@
+/**
+ * Part of the evias/pacNEM package.
+ *
+ * NOTICE OF LICENSE
+ *
+ * Licensed under MIT License.
+ *
+ * This source file is subject to the MIT License that is
+ * bundled with this package in the LICENSE file.
+ *
+ * @package    evias/pacNEM
+ * @author     Grégory Saive <greg@evias.be> (https://github.com/evias)
+ * @contributor Nicolas Dubien (https://github.com/dubzzz)
+ * @license    MIT License
+ * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
+ * @link       https://github.com/evias/pacNEM
+ * @link       https://github.com/dubzzz/js-pacman
+ */
+
 (function() {
 
 /*
@@ -25,7 +44,7 @@ function moveCharacter(map, x, y, direction, pacman) {
 	var y_old = y;
 	var height = map.length;
 	var width = map[0].length;
-	
+
 	if (direction == LEFT) {
 		x--;
 		// out of the grid
@@ -107,7 +126,7 @@ function isForbiddenFor(map, target_cell_type, x_old, y_old, direction, pacman) 
 		} else {
 			current_cell_type = map[Math.floor(1.*y_old/FRAMES_PER_CELL)][x_old/FRAMES_PER_CELL];
 		}
-		
+
 		return isForbiddenForGhost(target_cell_type, current_cell_type);
 	}
 	return isForbiddenForPacMan(target_cell_type);
@@ -116,7 +135,7 @@ function isForbiddenFor(map, target_cell_type, x_old, y_old, direction, pacman) 
 var distancePx = function(map, x1, y1, x2, y2) {
 	var width = (map[0].length -1) * FRAMES_PER_CELL;
 	var height = (map.length -1) * FRAMES_PER_CELL;
-	
+
 	// Deltas take into account possible paths from side to side
 	var delta_x = Math.min(Math.abs(x1-x2), Math.abs(x1-x2+width), Math.abs(x2-x1+width));
 	var delta_y = Math.min(Math.abs(y1-y2), Math.abs(y1-y2+height), Math.abs(y2-y1+height));
@@ -127,7 +146,7 @@ var distancePx = function(map, x1, y1, x2, y2) {
 var distanceCells = function(map, x1, y1, x2, y2) {
 	var width = map[0].length;
 	var height = map.length;
-	
+
 	// Deltas take into account possible paths from side to side
 	var delta_x = Math.min(Math.abs(x1-x2), Math.abs(x1-x2+width), Math.abs(x2-x1+width));
 	var delta_y = Math.min(Math.abs(y1-y2), Math.abs(y1-y2+height), Math.abs(y2-y1+height));

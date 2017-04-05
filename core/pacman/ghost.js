@@ -1,3 +1,22 @@
+/**
+ * Part of the evias/pacNEM package.
+ *
+ * NOTICE OF LICENSE
+ *
+ * Licensed under MIT License.
+ *
+ * This source file is subject to the MIT License that is
+ * bundled with this package in the LICENSE file.
+ *
+ * @package    evias/pacNEM
+ * @author     Grégory Saive <greg@evias.be> (https://github.com/evias)
+ * @contributor Nicolas Dubien (https://github.com/dubzzz)
+ * @license    MIT License
+ * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
+ * @link       https://github.com/evias/pacNEM
+ * @link       https://github.com/dubzzz/js-pacman
+ */
+
 (function() {
 
 var __conf = require('./configuration.js'),
@@ -49,16 +68,16 @@ var Ghost = function() {
 	this.setDifficulty = function(difficulty) {
 		difficulty_ = difficulty;
 	};
-	
+
 	this.changeDirectionStupid = function(map) {
 		var height = map.length;
 		var width = map[0].length;
-		
+
 		// Check if possible direction
 		var cell_x = x_ / FRAMES_PER_CELL;
 		var cell_y = y_ / FRAMES_PER_CELL;
 		var available_directions = new Array();
-		
+
 		var cell_x_move, cell_y_move;
 
 		//  Check LEFT
@@ -71,7 +90,7 @@ var Ghost = function() {
 		if (! isForbiddenForGhost(map[cell_y_move][cell_x_move], map[cell_y][cell_x])) {
 			available_directions.push(LEFT);
 		}
-		
+
 		//  Check UP
 		cell_x_move = cell_x;
 		if (cell_y > 0) {
@@ -82,7 +101,7 @@ var Ghost = function() {
 		if (! isForbiddenForGhost(map[cell_y_move][cell_x_move], map[cell_y][cell_x])) {
 			available_directions.push(UP);
 		}
-		
+
 		//  Check RIGHT
 		if (cell_x < width -1) {
 			cell_x_move = cell_x +1;
@@ -93,7 +112,7 @@ var Ghost = function() {
 		if (! isForbiddenForGhost(map[cell_y_move][cell_x_move], map[cell_y][cell_x])) {
 			available_directions.push(RIGHT);
 		}
-		
+
 		//  Check DOWN
 		cell_x_move = cell_x;
 		if (cell_y < height -1) {
@@ -113,12 +132,12 @@ var Ghost = function() {
 				available_directions.splice(index, 1);
 			}
 		}
-		
+
 		// Update direction
 		direction_ = available_directions[Math.floor(Math.random() * available_directions.length)];
 	};
-	
-	
+
+
 	this.createHeapElement = function(x, y, map, truefalse_grid, previous, current_direction, target_x, target_y) {
 		if (truefalse_grid[y][x]) {
 			truefalse_grid[y][x] = false;
@@ -130,34 +149,34 @@ var Ghost = function() {
 		}
 		return null;
 	};
-	
+
 	this.changeDirectionAStar = function(map, bool_map, pacman, ghosts) {
 		var height = map.length;
 		var width = map[0].length;
-		
+
 		var cell_x = x_ / FRAMES_PER_CELL;
 		var cell_y = y_ / FRAMES_PER_CELL;
 		if (map[cell_y][cell_x] == "g" || map[cell_y][cell_x] == "_") {
 			return this.changeDirectionStupid(map);
 		}
-		
+
 		var target_x = Math.floor(pacman.getX() / FRAMES_PER_CELL);
 		var target_y = Math.floor(pacman.getY() / FRAMES_PER_CELL);
-		
+
 		var heap = new Heap();
 		heap.push(new HeapElement(cell_x, cell_y, -1, 0, distanceCells(map, cell_x, cell_y, target_x, target_y)));
-		
+
 		var bmap = new Array();
 		for (var j=0 ; j!=bool_map.length ; j++) {
 			bmap.push(bool_map[j].slice());
 		}
-		
+
 		// Cannot walk on other ghosts path
 		// the idea is to reach the target by taking several paths
 		for (var i=0 ; i!=ghosts.length ; i++) {
 			bmap[Math.floor(ghosts[i].getY() / FRAMES_PER_CELL)][Math.floor(ghosts[i].getX() / FRAMES_PER_CELL)] = false;
 		}
-		
+
 		var num_elts = 0;
 		var current_elt = undefined;
 		while (heap.size() > 0) {
@@ -196,7 +215,7 @@ var Ghost = function() {
 				}
 				heap.push(elt);
 			}
-			
+
 			elt = this.createHeapElement(current_elt.x, (current_elt.y +1) % height, map, bmap, current_elt, DOWN, target_x, target_y);
 			if (elt != null) {
 				if (elt.x == target_x && elt.y == target_y) {
@@ -205,7 +224,7 @@ var Ghost = function() {
 				}
 				heap.push(elt);
 			}
-			
+
 			// if only one direction is possible from this point
 			if (current_elt.initial_direction == -1 && heap.size() == 1) {
 				direction_ = heap.pop().initial_direction;
@@ -213,7 +232,7 @@ var Ghost = function() {
 			}
 		}
 	};
-	
+
 	this.changeDirection = function(map, bool_map, pacman, ghosts) {
 		// if on the center of a cell: change direction?
 		if (x_ % FRAMES_PER_CELL == 0 && y_ % FRAMES_PER_CELL == 0) {
@@ -225,7 +244,7 @@ var Ghost = function() {
 			}
 		}
 	};
-	
+
 	this.move = function(map, bool_map, pacman, ghosts) {
 		// Change direction if necessary/possible
 		this.changeDirection(map, bool_map, pacman, ghosts);
@@ -263,7 +282,7 @@ var Ghost = function() {
 	this.setUnderCheeseEffect = function(value) {
 		under_cheese_effect_ = value;
 	};
-	
+
 	this.toDictionary = function() {
 		return {
 				'x': x_,

@@ -22,12 +22,13 @@ var app = require('express')(),
 	path = require('path'),
 	handlebars = require("handlebars"),
 	expressHbs = require("express-handlebars"),
-	auth = require("http-auth");
+	auth = require("http-auth"),
+	mongoose = require("mongoose");
 
-var logger = require('./www/logger.js'),
-	__room = require('./www/room/room.js'),
+var logger = require('./core/logger.js'),
+	__room = require('./core/room/room.js'),
 	Room = __room.Room,
-	RoomManager = require('./www/room/room_manager.js').RoomManager;
+	RoomManager = require('./core/room/room_manager.js').RoomManager;
 
 var __smartfilename = path.basename(__filename);
 
@@ -46,22 +47,61 @@ app.engine(".hbs", expressHbs({
 	layoutPath: "views/layouts"}));
 app.set("view engine", "hbs");
 
+/**
+ * Basic HTTP Authentication
+ *
+ * COMMENT BLOCK if you wish to open the website
+ * to the public.
+ */
 var basicAuth = auth.basic({
     realm: "This is a Highly Secured Area - Monkey at Work.",
     file: __dirname + "/pacnem.htpasswd"
 });
 app.use(auth.connect(basicAuth));
+/**
+ * End Basic HTTP Authentication BLOCK
+ */
 
+/**
+ * Prepare the MongoDB database connection used
+ * for session data storage and in-game mosaics
+ * attributes and storage.
+ *
+ * Currently using a Sandbox mLab.
+ */
+var host = process.env['MONGOLAB_URI'] || "mongodb://localhost/pacNEM";
+mongoose.connect(host, function(err, res)
+	{
+		if (err)
+			console.log("ERROR with PacNEM DB (" + host + "): " + err);
+		else
+			console.log("PacNEM Database connection is now up with " + host);
+	});
+
+var Models = require('./core/db/models.js');
+
+/**
+ * Frontend Web Application Serving
+ *
+ * Following routes define several entry points
+ * like / and /scores.
+ */
 app.get("/", function(req, res)
-{
-	serverLog(req, "Welcome", "START");
-	res.render("play");
-});
+	{
+		serverLog(req, "Welcome", "START");
+		res.render("play");
+	});
 
 app.get("/scores", function(req, res)
-{
-	res.render("scores");
-});
+	{
+		res.render("scores");
+	});
+
+app.get("/api/:version/:resource/:uri", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+		res.send(JSON.stringify());
+	});
 
 /**
  * Static Files Serving
@@ -69,18 +109,22 @@ app.get("/scores", function(req, res)
  * Following routes define static files serving routes
  * such as the CSS, JS and images files.
  */
-app.get('/favicon.ico', function(req, res) {
-	res.sendfile(__dirname + '/static/favicon.ico');
-})
-.get('/img/:image', function(req, res) {
-	res.sendfile(__dirname + '/img/' + req.params.image);
-})
-.get('/css/style.css', function(req, res) {
-	res.sendfile(__dirname + '/static/css/style.css');
-})
-.get('/js/:source.js', function(req, res) {
-	res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
-});
+app.get('/favicon.ico', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/favicon.ico');
+	})
+.get('/img/:image', function(req, res)
+	{
+		res.sendfile(__dirname + '/img/' + req.params.image);
+	})
+.get('/css/style.css', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/css/style.css');
+	})
+.get('/js/:source.js', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
+	});
 
 /**
  * Socket.IO RoomManager implementation
@@ -103,7 +147,8 @@ app.get('/favicon.ico', function(req, res) {
  */
 var room_manager = new RoomManager(io);
 
-io.sockets.on('connection', function(socket) {
+io.sockets.on('connection', function(socket)
+{
 	logger.info(__smartfilename, __line, '[' + socket.id + '] ()');
 	room_manager.register(socket.id);
 
