@@ -62,23 +62,8 @@ app.use(auth.connect(basicAuth));
  * End Basic HTTP Authentication BLOCK
  */
 
-/**
- * Prepare the MongoDB database connection used
- * for session data storage and in-game mosaics
- * attributes and storage.
- *
- * Currently using a Sandbox mLab.
- */
-var host = process.env['MONGOLAB_URI'] || "mongodb://localhost/pacNEM";
-mongoose.connect(host, function(err, res)
-	{
-		if (err)
-			console.log("ERROR with PacNEM DB (" + host + "): " + err);
-		else
-			console.log("PacNEM Database connection is now up with " + host);
-	});
-
-var Models = require('./core/db/models.js');
+var models = require('./core/db/models.js');
+var dataLayer = new models.pacnem(io);
 
 /**
  * Frontend Web Application Serving
@@ -97,10 +82,69 @@ app.get("/scores", function(req, res)
 		res.render("scores");
 	});
 
-app.get("/api/:version/:resource/:uri", function(req, res)
+/**
+ * API Routes
+ *
+ * Following routes are used for handling the business
+ * layer and managing the data layer.
+ *
+ * localStorage does not need any API requests to be
+ * executed, only the database synchronization needs
+ * these API endpoints.
+ *
+ * The sponsoring feature will also be built using API
+ * routes.
+ */
+app.post("/api/v1/session/store", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
-		res.send(JSON.stringify());
+
+		var input = req.params;
+
+		console.log(input);
+
+		dataLayer.NEMGamer.findOne({"xem": input.xem}, function(err, player)
+		{
+			if (! err && player) {
+			// update mode
+				var highScore = input.score > player.highScore ? input.score : player.highScore;
+
+				player.username  = input.username;
+				player.xem 		 = input.xem;
+				player.lastScore = input.score;
+				player.highScore = highScore;
+
+				if (! player.socketIds || ! player.socketIds.length)
+					player.socketIds = [input.sid];
+				else
+					player.socketIds.push(input.sid);
+
+				player.save();
+
+				res.send(JSON.stringify(player));
+			}
+			else if (! player) {
+			// creation mode
+				var player = new dataLayer.NEMGamer({
+					username: input.user,
+					xem: input.xem,
+					lastScore: input.score,
+					highScore: input.score,
+					countGames: 0,
+					socketIds: [input.sid]
+				});
+				player.save();
+
+				res.send(JSON.stringify(player));
+			}
+			else {
+			// error mode
+				var errorMessage = "Error occured on NEMGamer update: " + err;
+
+				serverLog(req, errorMessage, "ERROR");
+				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+			}
+		});
 	});
 
 /**
