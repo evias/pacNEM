@@ -934,10 +934,10 @@ var GameUI = function(socket, controller, $)
 			{
 				"selector": "#address",
 				"required": true,
-				"reg_exp": /[A-Z0-9]{37,43}/,
+				"reg_exp": /[A-Z0-9\-]{37,43}/,
 				"callback": function(val) {
 					// Verify the XEM address with the NEM SDK
-					return ctrl_.nem().model.address.isValid(val);
+					return ctrl_.nem().model.address.isValid(val.replace(/-/g, ""));
 				}
 			}
 		];

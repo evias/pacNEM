@@ -48,16 +48,29 @@ var service = function(io, nemSDK)
     // this is the address of the Hoster of the pacNEM game. This address must have enough
     // evias.pacnem:cheese and enough evias.pacnem:heart mosaics in order to transfer them
     // to the paying player or sponsor wallets.
-    var pacNEM_  = process.env["NEM_ADDRESS"] || config.get("hoster.xem") || "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ";
+    var pacNEM_  = (process.env["NEM_ADDRESS"] || config.get("hoster.xem") || "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ").replace(/-/g, "");
 
+    /**
+     * Get the status of the currently select NEM blockchain node.
+     *
+     * @return Promise
+     */
     this.heartbeat = function()
     {
         return nem_.com.requests.endpoint.heartbeat(node_);
     };
 
+    /**
+     * This method fetches mosaics for the given NEMGamer.xem address.
+     *
+     * If the mosaic evias.pacnem:heart can be found in the account, the
+     * NEMGamer.countHearts property will be updated accordingly.
+     *
+     * @param  NEMGamer gamer
+     */
     this.fetchHeartsByGamer = function(gamer)
     {
-        nem_.com.requests.account.mosaics(node_, gamer.xem).then(function(res)
+        nem_.com.requests.account.mosaics(node_, gamer.getAddress()).then(function(res)
         {
             if (! res.data || ! res.data.length)
                 return null;

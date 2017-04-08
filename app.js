@@ -113,15 +113,15 @@ app.post("/api/v1/session/store", function(req, res)
 		res.setHeader('Content-Type', 'application/json');
 
 		var input = {
-			"xem" : req.body.xem,
-			"username" : req.body.username,
-			"score": req.body.score,
-			"type": req.body.type,
-			"sid": req.body.sid
+			"xem" : req.body.xem.replace(/-/g, ""),
+			"username" : req.body.username.replace(/[^A-Za-z0-9\-_\.]/g, ""),
+			"score": parseInt(req.body.score),
+			"type": req.body.type.replace(/[^a-z0-9\-]/g, ""),
+			"sid": req.body.sid.replace(/[^A-Za-z0-9\-_\.#~]/g, "")
 		};
 
 		// mongoDB model NEMGamer unique on username + xem address pair.
-		dataLayer.NEMGamer.findOne({"username": input.username, "xem": input.xem}, function(err, player)
+		dataLayer.NEMGamer.findOne({"xem": input.xem}, function(err, player)
 		{
 			if (! err && player) {
 			// update mode
@@ -153,9 +153,7 @@ app.post("/api/v1/session/store", function(req, res)
 					lastScore: input.score,
 					highScore: input.score,
 					socketIds: [input.sid],
-					countGames: 0,
-					countHearts: 0,
-					countHeartsTxs: []
+					countGames: 0
 				});
 				player.save();
 

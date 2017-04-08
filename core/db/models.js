@@ -52,8 +52,8 @@ var pacnem = function(io, chainDataLayer)
 
     // Schema definition
     this.NEMGamer_ = new mongoose.Schema({
-        username: String,
         xem: String,
+        username: String,
         socketIds: [String],
         lastScore: {type: Number, min: 0},
         highScore: {type: Number, min: 0},
@@ -61,6 +61,13 @@ var pacnem = function(io, chainDataLayer)
         countHearts: {type: Number, min: 0},
         lastRead: {type: Number, min: 0}
     });
+
+    this.NEMGamer_.methods = {
+        getAddress: function()
+        {
+            return this.xem.replace(/-/g, "");
+        }
+    };
 
     this.NEMGamer_.post("save", function(gamer, next)
     {
