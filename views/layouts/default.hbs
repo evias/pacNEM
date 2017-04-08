@@ -18,6 +18,8 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
         <script src="/socket.io/socket.io.js"></script>
         <script src="/js/nem-sdk.js"></script>
+        <script src="/js/handlebars.min.js"></script>
+        <script src="/js/jquery-hbs-file-template.js"></script>
         <script src="/js/pacman.js"></script>
     </head>
     <body>
@@ -35,9 +37,15 @@
                 <div class="collapse navbar-collapse" id="pacNEMNav">
                     <ul class="nav navbar-nav">
                         <li class="active"><a href="/">Play</a></li>
-                        <li><a href="/scores">High Scores</a></li>
+                        <li><a id="pacnem-scores-trigger" href="#" data-display="0">High Scores</a></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
+                        <li id="currentBlockchain">
+                            <a href="#">
+                                <span class="glyphicon glyphicon-globe"></span>&nbsp;
+                                <span id="currentBlockchain-network"><img src="/img/loading.gif" style="max-height: 30px;"/></span>
+                            </a>
+                        </li>
                         <li id="currentHearts" style="display: none;">
                             <a href="#">
                                 <span class="glyphicon glyphicon-heart"></span>&nbsp;
@@ -48,7 +56,7 @@
                             <a href="#"><span class="glyphicon glyphicon-user"></span>&nbsp;<span id="currentUser-username"></span></a>
                             <input type="hidden" id="pacNEM-sessionId" value="" />
                         </li>
-                        <li style="display: none;"><a href="#" id="purge_auth" class="text-danger"><span class="glyphicon glyphicon-trash"></span> Purge</a></li>
+                        <li style="display: none;"><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-trash"></span> Purge</a></li>
                         <li><a href="https://github.com/evias/pacNEM" target="_blank"><span class="glyphicon glyphicon-inbox"></span> Source</a></li>
                     </ul>
                 </div>
@@ -65,7 +73,7 @@
           <p>
             Made with &hearts; for the <a href="https://nem.io" target="_blank"><span class="NEMifiedText">nem</span> Project</a>.<br />
             Copyright &copy; 2017 <a href="https://github.com/evias" target="_blank">Grégory Saive &lt;greg@evias.be&gt;</a>. Source code for the PacNEM project can be found <a href="https://github.com/evias/pacNEM" target="_blank">here</a>.<br />
-            Special Thanks to Nicolas Dubien for the original open source js-pacman project (<a href="https://github.com/dubzzz/js-pacman" target="_blank">dubzzz/js-pacman</a>).<br />
+            Credits to Nicolas Dubien for the original open source js-pacman project (<a href="https://github.com/dubzzz/js-pacman" target="_blank">dubzzz/js-pacman</a>).<br />
           </p>
         </footer>
     </body>

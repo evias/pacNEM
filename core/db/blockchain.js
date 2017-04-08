@@ -51,6 +51,22 @@ var service = function(io, nemSDK)
     var pacNEM_  = (process.env["NEM_ADDRESS"] || config.get("hoster.xem") || "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ").replace(/-/g, "");
 
     /**
+     * Get the Network details. This will return the currently
+     * used config for the NEM node (endpoint).
+     *
+     * @return Object
+     */
+    this.getNetwork = function()
+    {
+        var isTest = config.get("nem.isTestMode");
+        return {
+            "host": node_.host,
+            "port": node_.port,
+            "label": isTest ? "Testnet" : "Mainnet"
+        };
+    };
+
+    /**
      * Get the status of the currently select NEM blockchain node.
      *
      * @return Promise

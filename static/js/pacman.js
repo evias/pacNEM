@@ -93,11 +93,12 @@ var DisplayPoints = function(x, y, color, value)
  * database.
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameAPI = function(socket, controller, $)
+var GameAPI = function(socket, controller, $, jQFileTemplate)
 {
 	this.socket_ = socket;
 	this.ctrl_   = controller;
 	this.jquery_ = $;
+	this.template_ = jQFileTemplate;
 
 	this.getSocket = function()
 	{
@@ -107,7 +108,7 @@ var GameAPI = function(socket, controller, $)
 	this.storeSession = function(details)
 	{
 		this.jquery_.ajax({
-			url: "/api/v1/session/store",
+			url: "/api/v1/sessions/store",
 			type: "POST",
 			dataType: "json",
 			data: details,
@@ -115,7 +116,31 @@ var GameAPI = function(socket, controller, $)
 				if (req && req.overrideMimeType)
 					req.overrideMimeType("application/json;charset=UTF-8");
 			},
-			success: function(player) {
+			success: function(response) {
+				// player = (JSON.parse(response)).item
+			}
+		});
+	};
+
+	this.fetchScores = function(callback)
+	{
+		var self = this;
+		self.jquery_.ajax({
+			url: "/api/v1/scores",
+			type: "GET",
+			dataType: "json",
+			beforeSend: function(req) {
+				if (req && req.overrideMimeType)
+					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(response) {
+				var scores = response.data;
+
+				self.template_.render("scores-container", function(compileWith)
+				{
+					$("#pacnem-scores-wrapper").html(compileWith(response));
+					callback(scores);
+				});
 			}
 		});
 	};
@@ -445,14 +470,15 @@ var GameController = function(socket, nem)
  *
  * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameUI = function(socket, controller, $)
+var GameUI = function(socket, controller, $, jQFileTemplate)
 {
 	var socket_ = socket;
 	var ctrl_ = controller;
 	var jquery_ = $;
 	var rooms_ctr_ = undefined;
 	var session = undefined;
-	var API_ = new GameAPI(socket, controller, $);
+	var API_ = new GameAPI(socket, controller, $, jQFileTemplate);
+	var template_ = jQFileTemplate;
 
 	/**
 	 * /!\
@@ -499,9 +525,9 @@ var GameUI = function(socket, controller, $)
             $rooms.empty();
 
             if (isAuth)
-                $("#save_auth").attr("disabled", "disabled");
+                $("#pacnem-save-trigger").attr("disabled", "disabled");
             else
-                $("#save_auth").removeAttr("disabled");
+                $("#pacnem-save-trigger").removeAttr("disabled");
 
             self.displayRooms($rooms, sid, data);
 
@@ -870,7 +896,7 @@ var GameUI = function(socket, controller, $)
 		// view effects & modifications
 		$("#currentUser-username").html("&nbsp;" + $("#username").val());
 		$("#currentUser").fadeIn("slow");
-		$("#purge_auth").parent().show();
+		$("#pacnem-purge-trigger").parent().show();
 		$(".hide-on-auth").hide();
 		$(".show-on-auth").show();
 		$("#my-details .panel").first().removeClass("panel-info");
@@ -961,7 +987,7 @@ var GameUI = function(socket, controller, $)
 			}
 		];
 
-		$("#save_auth").click(function() {
+		$("#pacnem-save-trigger").click(function() {
 			$(".error-input").removeClass("error-input");
 
 			if (self.formValidate(validators)) {
@@ -973,11 +999,30 @@ var GameUI = function(socket, controller, $)
 			return false;
 		});
 
-		$("#purge_auth").click(function()
+		$("#pacnem-purge-trigger").click(function()
 		{
 			session_.clear();
 			window.location.href = "/";
 			return false;
+		});
+
+		$("#pacnem-scores-trigger").on("click", function()
+		{
+			var flag = $(this).attr("data-display");
+
+			if (flag == "0") {
+				$(this).attr("data-display", "1");
+				API_.fetchScores(function(scores)
+					{
+						$(".msgSelectRoom").hide();
+						$("#pacnem-scores-wrapper").show();
+					});
+			}
+			else {
+				$(this).attr("data-display", "0");
+				$(".msgSelectRoom").show();
+				$("#pacnem-scores-wrapper").hide();
+			}
 		});
 
 		var session_ = new GameSession(API_);

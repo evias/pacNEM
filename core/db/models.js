@@ -75,9 +75,9 @@ var pacnem = function(io, chainDataLayer)
         // have data for the given gamer.
 
         // blockchain timing check
-        var currentTime = new Date().valueOf();
-        var tenSeconds  = 10 * 1000;
-        if (! this.lastRead || currentTime >= this.lastRead + tenSeconds) {
+        var currentTime  = new Date().valueOf();
+        var threeSeconds = 3 * 1000;
+        if (! this.lastRead || currentTime >= this.lastRead + threeSeconds) {
             chainDataLayer_.fetchHeartsByGamer(gamer);
         }
 
@@ -101,7 +101,6 @@ var pacnem = function(io, chainDataLayer)
 
 module.exports.pacnem = pacnem;
 module.exports.NEMGamer = pacnem.NEMGamer;
-module.exports.NEMHeart = pacnem.NEMHeart;
 module.exports.NEMSponsor = pacnem.NEMSponsor;
 }());
 

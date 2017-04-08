@@ -3,11 +3,14 @@
     var socket    = io.connect(window.location.protocol + '//' + window.location.host);
     var nem       = require("nem-sdk").default;
     var game_ctrl = new GameController(socket, nem);
-    var game_ui   = new GameUI(socket, game_ctrl, $);
+    var game_ui   = new GameUI(socket, game_ctrl, $, new jQFileTemplate());
 
     $(document).ready(function()
     {
         game_ui.initDOMListeners();
+
+        // set blockchain network
+        $("#currentBlockchain-network").text("{{currentNetwork.label}}");
     });
 </script>
 
@@ -47,7 +50,7 @@
                         </div>
                     </div>
                     <div id="create_my_room" class="col-md-2 text-left hide-on-auth">
-                        <a id="save_auth" class="btn btn-primary" role="button" href="#"><span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;Save</a>
+                        <a id="pacnem-save-trigger" class="btn btn-primary" role="button" href="#"><span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;Save</a>
                     </div>
                 </div>
             </div>
@@ -56,7 +59,9 @@
 
     <pre class="text-left msgSelectRoom show-on-auth" style="display: none;"><i class="glyphicon glyphicon-ok"></i>&nbsp;<strong>Thank you, Now please select a Room to Join in the list.</strong></pre>
 
-    <div class="container-fluid">
+    <div id="pacnem-scores-wrapper" class="container-fluid" style="display: none;">&nbsp;</div>
+
+    <div id="pacnem-game-wrapper" class="container-fluid">
         <div class="container-fluid col-md-4">
             <div id="game_details" class="row">
                 <ul class="list-group players-list">
