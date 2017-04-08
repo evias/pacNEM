@@ -1,7 +1,7 @@
 {
     "hoster": {
         "xem": "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ",
-        "private_key": "Your Private Key Here",
+        "private_key": "Your Private Key Here"
     },
     "nem": {
         "isTestMode": true,
