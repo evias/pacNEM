@@ -29,9 +29,10 @@ var mongoose = require('mongoose');
  *
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var pacnem = function(io)
+var pacnem = function(io, chainDataLayer)
 {
     var socket_ = io;
+    var chainDataLayer_ = chainDataLayer;
 
     /**
      * Prepare the MongoDB database connection used
@@ -58,6 +59,26 @@ var pacnem = function(io)
         highScore: {type: Number, min: 0},
         countGames: {type: Number, min: 0},
         lastRead: {type: Number, min: 0}
+    });
+
+    this.NEMGamer_.post("save", function(gamer, next)
+    {
+        // check whether the blockchain must be read or if we
+        // have data for the given gamer. POST-save mechanism
+        // only checks every 30 minutes using the blockchain.
+        // More frequent checks are done in case of Payment
+        // events but those will not be handled in this Model.
+
+        // blockchain timing check
+        var currentTime   = new Date().valueOf();
+        var thirtyMinutes = 30 * 60 * 1000;
+        if (! this.lastRead || currentTime >= this.lastRead + thirtyMinutes) {
+            //XXX blockchainLayer_.fetchHeartsByAddress(gamer.xem);
+            console.log("NOW READ BLOCKCHAIN FOR " + gamer.xem);
+        }
+
+        // next middleware
+        next();
     });
 
     this.pacNEMHeartsCache_ = new mongoose.Schema({

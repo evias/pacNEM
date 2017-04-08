@@ -26,10 +26,9 @@ var config = require("config");
  *
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var service = function(io, dataLayer, nemSDK)
+var service = function(io, nemSDK)
 {
     var socket_ = io;
-    var db_     = dataLayer;
 
     // initialize the current running game's blockchain service with
     // the NEM blockchain. This will create the endpoint for the given
@@ -68,34 +67,6 @@ var service = function(io, dataLayer, nemSDK)
         // and only when needed.
         //XXX var common_  = nem.model.objects.create("common")("", process.env["NEM_PRIV"] || config.get("hoster.private_key") || "Your Private Key Here");
     };
-
-/**
- * PacNEM model overrides and Hooks configuration to parallelly
- * with localStorage + DB + Blockchain.
- */
-    db_.NEMGamer_.post("save", function(err, gamer, next)
-    {
-        // check whether the blockchain must be read or if we
-        // have data for the given gamer. POST-save mechanism
-        // only checks every 30 minutes using the blockchain.
-        // More frequent checks are done in case of Payment
-        // events but those will not be handled in this Model.
-
-        if (err)
-            // bubble-up the error..
-            return next(err);
-
-        // blockchain timing check
-        var currentTime   = new Date().valueOf();
-        var thirtyMinutes = 30 * 60 * 1000;
-        if (! this.lastRead || currentTime >= this.lastRead + thirtyMinutes) {
-            //XXX blockchainLayer_.fetchHeartsByAddress(gamer.xem);
-            console.log("NOW READ BLOCKCHAIN FOR " + gamer.xem);
-        }
-
-        // next middleware
-        return next();
-    });
 };
 
 module.exports.service = service;

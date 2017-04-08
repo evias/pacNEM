@@ -70,12 +70,13 @@ app.use(auth.connect(basicAuth));
  * End Basic HTTP Authentication BLOCK
  */
 
+// configure blockchain layer
+var blockchain = require('./core/db/blockchain.js');
+var chainDataLayer = new blockchain.service(io, nem);
+
 // configure database layer
 var models = require('./core/db/models.js');
-var dataLayer = new models.pacnem(io);
-
-var blockchain = require('./core/db/blockchain.js');
-var blockchainLayer = new blockchain.service(io, dataLayer, nem);
+var dataLayer = new models.pacnem(io, chainDataLayer);
 
 /**
  * Frontend Web Application Serving
