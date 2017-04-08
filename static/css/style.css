@@ -180,3 +180,7 @@ footer {
 .colNEMOrange { color: #f7a800; }
 .colNEMBlue { color: #67b2e8; }
 .colNEMGreen { color: #00c4b3; }
+
+.bgcNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: center center; }
+.bglNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: left center; }
+.bgrNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: right center; }

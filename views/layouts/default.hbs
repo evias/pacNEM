@@ -38,6 +38,12 @@
                         <li><a href="/scores">High Scores</a></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
+                        <li id="currentHearts" style="display: none;">
+                            <a href="#">
+                                <span class="glyphicon glyphicon-heart"></span>&nbsp;
+                                <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 30px;"/></span>
+                            </a>
+                        </li>
                         <li id="currentUser" style="display: none;">
                             <a href="#"><span class="glyphicon glyphicon-user"></span>&nbsp;<span id="currentUser-username"></span></a>
                             <input type="hidden" id="pacNEM-sessionId" value="" />

@@ -85,6 +85,8 @@ var service = function(io, nemSDK)
                     gamer.countHearts = parseInt(mosaic.quantity); // /!\ Divisibility of evias.pacnem:heart is 0
                     gamer.lastRead = new Date().valueOf();
                     gamer.save();
+
+                    socket_.emit("pacnem_heart_sync", gamer.countHearts);
                 }
             }
         }, function(err) {

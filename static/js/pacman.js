@@ -114,6 +114,8 @@ var GameAPI = function(socket, controller, $)
 			beforeSend: function(req) {
 				if (req && req.overrideMimeType)
 					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(player) {
 			}
 		});
 	};
@@ -508,6 +510,19 @@ var GameUI = function(socket, controller, $)
                 //socket_.emit("create_room");
         });
 
+        socket_.on("pacnem_heart_sync", function(rawdata)
+        {
+			var data = JSON.parse(rawdata);
+
+			// when session is stored, the Hearts blockchain request
+			// will be triggered by the underlying API endpoint.
+			var $wrap = $("#currentHearts").first();
+			var $data = $("#currentHearts-hearts").first();
+
+			$data.text(data + " Credits");
+			$wrap.show();
+        });
+
         return this;
 	};
 
@@ -861,6 +876,10 @@ var GameUI = function(socket, controller, $)
 		$("#my-details .panel").first().removeClass("panel-info");
 		$("#spread-the-word").addClass("mt10");
 		$("#username").parents(".input-group").first().parent().addClass("col-md-offset-1");
+
+		// blockchain query uses Promises and is sent with
+		// socket io "pacnem_heart_sync" event
+		$("#currentHearts").fadeIn("slow");
 	};
 
 	/**
