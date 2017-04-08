@@ -113,8 +113,6 @@ app.post("/api/v1/session/store", function(req, res)
 			"sid": req.body.sid
 		};
 
-		console.log(input);
-
 		dataLayer.NEMGamer.findOne({"xem": input.xem}, function(err, player)
 		{
 			if (! err && player) {

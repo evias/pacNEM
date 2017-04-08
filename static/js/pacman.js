@@ -114,9 +114,6 @@ var GameAPI = function(socket, controller, $)
 			beforeSend: function(req) {
 				if (req && req.overrideMimeType)
 					req.overrideMimeType("application/json;charset=UTF-8");
-			},
-			success: function(res) {
-				console.log("/session/store POST response: ", res);
 			}
 		});
 	};
@@ -300,8 +297,7 @@ var GameController = function(socket, nem)
 
 		// Screen transition for a new game
 		TransitionHelper(function() {
-				console.log('Sent: start');
-				socket_.emit('start');
+			socket_.emit('start');
 		});
 
 		return this;

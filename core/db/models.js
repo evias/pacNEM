@@ -41,7 +41,7 @@ var pacnem = function(io)
      *
      * Currently using a Sandbox mLab.
      */
-    var host = process.env['MONGOLAB_URI'] || "mongodb://localhost/pacNEM";
+    var host = process.env['MONGODB_URI'] || process.env['MONGOLAB_URI'] || "mongodb://localhost/pacNEM";
     mongoose.connect(host, function(err, res)
         {
             if (err)
