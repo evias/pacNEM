@@ -58,6 +58,7 @@ var pacnem = function(io, chainDataLayer)
         lastScore: {type: Number, min: 0},
         highScore: {type: Number, min: 0},
         countGames: {type: Number, min: 0},
+        countHearts: {type: Number, min: 0},
         lastRead: {type: Number, min: 0}
     });
 
@@ -70,42 +71,33 @@ var pacnem = function(io, chainDataLayer)
         // events but those will not be handled in this Model.
 
         // blockchain timing check
-        var currentTime   = new Date().valueOf();
-        var thirtyMinutes = 30 * 60 * 1000;
-        if (! this.lastRead || currentTime >= this.lastRead + thirtyMinutes) {
-            //XXX blockchainLayer_.fetchHeartsByAddress(gamer.xem);
-            console.log("NOW READ BLOCKCHAIN FOR " + gamer.xem);
+        var currentTime  = new Date().valueOf();
+        var threeMinutes = 3 * 60 * 1000;
+        if (! this.lastRead || currentTime >= this.lastRead + threeMinutes) {
+            chainDataLayer_.fetchHeartsByGamer(gamer);
         }
 
         // next middleware
         next();
     });
 
-    this.pacNEMHeartsCache_ = new mongoose.Schema({
-        xem: String,
-        countHearts: {type: Number, min: 0},
-        heartsTxs: [String]
-    });
-
     this.pacNEMSponsor_ = new mongoose.Schema({
         slug: String,
         name: String,
         xem: String,
+        description: String,
         imageUrl: String,
-        countGames: {type: Number, min: 0},
-        countHearts: {type: Number, min: 0},
-        cacheHeartsTxs: [String]
+        websiteUrl: String
     });
 
     // Models classes
     this.NEMGamer = mongoose.model("NEMGamer", this.NEMGamer_);
-    this.NEMHeart = mongoose.model("NEMHeart", this.pacNEMHeartsCache_);
     this.NEMSponsor = mongoose.model("NEMSponsor", this.pacNEMSponsor_);
 };
 
 module.exports.pacnem = pacnem;
 module.exports.NEMGamer = pacnem.NEMGamer;
-module.exports.NEMHeart = pacnem.NEMGamer;
-module.exports.NEMSponsor = pacnem.NEMGamer;
+module.exports.NEMHeart = pacnem.NEMHeart;
+module.exports.NEMSponsor = pacnem.NEMSponsor;
 }());
 

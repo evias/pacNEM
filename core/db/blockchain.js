@@ -41,26 +41,41 @@ var service = function(io, nemSDK)
     var confSuffix = isTestMode ? "_test" : "";
 
     // connect to the blockchain with the NEM SDK
-    var nemHost = process.env["NEM_HOST" + envSuffix] || config.get("nem.nodes" + confSuffix) || nem_.model.nodes.defaultTestnet;
-    var nemPort = process.env["NEM_PORT" + envSuffix] || config.get("nem.nodes" + confSuffix) || nem_.model.nodes.defaultPort;
-
+    var nemHost = process.env["NEM_HOST" + envSuffix] || config.get("nem.nodes" + confSuffix)[0].host;
+    var nemPort = process.env["NEM_PORT" + envSuffix] || config.get("nem.nodes" + confSuffix)[0].port;
     var node_   = nem_.model.objects.create("endpoint")(nemHost, nemPort);
 
-    // "authenticate" the pacnem hoster wallet for sending hearts and cheeses
+    // this is the address of the Hoster of the pacNEM game. This address must have enough
+    // evias.pacnem:cheese and enough evias.pacnem:heart mosaics in order to transfer them
+    // to the paying player or sponsor wallets.
     var pacNEM_  = process.env["NEM_ADDRESS"] || config.get("hoster.xem") || "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ";
 
-    this.status = function()
+    this.heartbeat = function()
     {
-        return nem_.com.requests.endpoint.heartbeat(endpoint);
+        return nem_.com.requests.endpoint.heartbeat(node_);
     };
 
-    this.fetchHeartsByAddress = function(address)
+    this.fetchHeartsByGamer = function(gamer)
     {
-        nem_.com.requests.account.data(node_, address).then(function(res) {
-            console.log("\nAccount data:");
-            console.log(res);
+        nem_.com.requests.account.mosaics(node_, gamer.xem).then(function(res)
+        {
+            if (! res.data || ! res.data.length)
+                return null;
+
+            // this accounts owns mosaics, check if he has evias.pacnem:heart
+            // mosaic so that he can play.
+            for (var i in res.data) {
+                var mosaic = res.data[i];
+                var slug   = mosaic.mosaicId.namespaceId + ":" + mosaic.mosaicId.name;
+                if ("evias.pacnem:heart" === slug) {
+                    // this account has some lives available.
+                    gamer.countHearts = parseInt(mosaic.quantity); // /!\ Divisibility of evias.pacnem:heart is 0
+                    gamer.lastRead = new Date().valueOf();
+                    gamer.save();
+                }
+            }
         }, function(err) {
-            console.error("NEM SDK RESPONSE ERROR: ", err);
+            // NO Mosaics available / wrong Network for address / General Request Error
         });
 
         // create common object in local scope only!!
