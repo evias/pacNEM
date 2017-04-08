@@ -38,7 +38,10 @@
                         <li><a href="/scores">High Scores</a></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
-                        <li id="currentUser" style="display: none;"><a href="#"><span class="glyphicon glyphicon-user"></span>&nbsp;<span id="currentUser-username"></span></a></li>
+                        <li id="currentUser" style="display: none;">
+                            <a href="#"><span class="glyphicon glyphicon-user"></span>&nbsp;<span id="currentUser-username"></span></a>
+                            <input type="hidden" id="pacNEM-sessionId" value="" />
+                        </li>
                         <li style="display: none;"><a href="#" id="purge_auth" class="text-danger"><span class="glyphicon glyphicon-trash"></span> Purge</a></li>
                         <li><a href="https://github.com/evias/pacNEM" target="_blank"><span class="glyphicon glyphicon-inbox"></span> Source</a></li>
                     </ul>

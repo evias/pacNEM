@@ -21,12 +21,18 @@ var app = require('express')(),
 	io = require('socket.io').listen(server),
 	path = require('path'),
 	handlebars = require("handlebars"),
-	expressHbs = require("express-handlebars");
+	expressHbs = require("express-handlebars"),
+	auth = require("http-auth"),
+	mongoose = require("mongoose"),
+	bodyParser = require("body-parser"),
+	config = require("config"),
+	nem = require("nem-sdk").default;
 
-var logger = require('./www/logger.js'),
-	__room = require('./www/room/room.js'),
+// core dependencies
+var logger = require('./core/logger.js'),
+	__room = require('./core/room/room.js'),
 	Room = __room.Room,
-	RoomManager = require('./www/room/room_manager.js').RoomManager;
+	RoomManager = require('./core/room/room_manager.js').RoomManager;
 
 var __smartfilename = path.basename(__filename);
 
@@ -39,22 +45,129 @@ var serverLog = function(req, msg, type)
 	logger.info(__smartfilename, __line, logMsg);
 };
 
+// configure view engine
 app.engine(".hbs", expressHbs({
 	extname: ".hbs",
 	defaultLayout: "default.hbs",
 	layoutPath: "views/layouts"}));
 app.set("view engine", "hbs");
 
-app.get("/", function(req, res)
-{
-	serverLog(req, "Welcome", "START");
-	res.render("play");
+// configure body-parser usage for POST API calls.
+app.use(bodyParser.urlencoded({ extended: true }));
+
+/**
+ * Basic HTTP Authentication
+ *
+ * COMMENT BLOCK if you wish to open the website
+ * to the public.
+ */
+var basicAuth = auth.basic({
+    realm: "This is a Highly Secured Area - Monkey at Work.",
+    file: __dirname + "/pacnem.htpasswd"
 });
+app.use(auth.connect(basicAuth));
+/**
+ * End Basic HTTP Authentication BLOCK
+ */
+
+// configure blockchain layer
+var blockchain = require('./core/db/blockchain.js');
+var chainDataLayer = new blockchain.service(io, nem);
+
+// configure database layer
+var models = require('./core/db/models.js');
+var dataLayer = new models.pacnem(io, chainDataLayer);
+
+/**
+ * Frontend Web Application Serving
+ *
+ * Following routes define several entry points
+ * like / and /scores.
+ */
+app.get("/", function(req, res)
+	{
+		serverLog(req, "Welcome", "START");
+		res.render("play");
+	});
 
 app.get("/scores", function(req, res)
-{
-	res.render("scores");
-});
+	{
+		res.render("scores");
+	});
+
+/**
+ * API Routes
+ *
+ * Following routes are used for handling the business
+ * layer and managing the data layer.
+ *
+ * localStorage does not need any API requests to be
+ * executed, only the database synchronization needs
+ * these API endpoints.
+ *
+ * The sponsoring feature will also be built using API
+ * routes.
+ */
+app.post("/api/v1/session/store", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		var input = {
+			"xem" : req.body.xem.replace(/-/g, ""),
+			"username" : req.body.username.replace(/[^A-Za-z0-9\-_\.]/g, ""),
+			"score": parseInt(req.body.score),
+			"type": req.body.type.replace(/[^a-z0-9\-]/g, ""),
+			"sid": req.body.sid.replace(/[^A-Za-z0-9\-_\.#~]/g, "")
+		};
+
+		// mongoDB model NEMGamer unique on username + xem address pair.
+		dataLayer.NEMGamer.findOne({"xem": input.xem}, function(err, player)
+		{
+			if (! err && player) {
+			// update mode
+				var highScore = input.score > player.highScore ? input.score : player.highScore;
+
+				player.username  = input.username;
+				player.xem 		 = input.xem;
+				player.lastScore = input.score;
+				player.highScore = highScore;
+
+				if (! player.socketIds || ! player.socketIds.length)
+					player.socketIds = [input.sid];
+				else {
+					var sockets = player.socketIds;
+					sockets.push(input.sid);
+
+					player.socketIds = sockets;
+				}
+
+				player.save();
+
+				res.send(JSON.stringify(player));
+			}
+			else if (! player) {
+			// creation mode
+				var player = new dataLayer.NEMGamer({
+					username: input.username,
+					xem: input.xem,
+					lastScore: input.score,
+					highScore: input.score,
+					socketIds: [input.sid],
+					countGames: 0
+				});
+				player.save();
+
+				res.send(JSON.stringify(player));
+			}
+			else {
+			// error mode
+				var errorMessage = "Error occured on NEMGamer update: " + err;
+
+				serverLog(req, errorMessage, "ERROR");
+				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+			}
+		});
+	});
 
 /**
  * Static Files Serving
@@ -62,18 +175,22 @@ app.get("/scores", function(req, res)
  * Following routes define static files serving routes
  * such as the CSS, JS and images files.
  */
-app.get('/favicon.ico', function(req, res) {
-	res.sendfile(__dirname + '/static/favicon.ico');
-})
-.get('/img/:image', function(req, res) {
-	res.sendfile(__dirname + '/img/' + req.params.image);
-})
-.get('/css/style.css', function(req, res) {
-	res.sendfile(__dirname + '/static/css/style.css');
-})
-.get('/js/:source.js', function(req, res) {
-	res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
-});
+app.get('/favicon.ico', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/favicon.ico');
+	})
+.get('/img/:image', function(req, res)
+	{
+		res.sendfile(__dirname + '/img/' + req.params.image);
+	})
+.get('/css/style.css', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/css/style.css');
+	})
+.get('/js/:source.js', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
+	});
 
 /**
  * Socket.IO RoomManager implementation
@@ -96,7 +213,8 @@ app.get('/favicon.ico', function(req, res) {
  */
 var room_manager = new RoomManager(io);
 
-io.sockets.on('connection', function(socket) {
+io.sockets.on('connection', function(socket)
+{
 	logger.info(__smartfilename, __line, '[' + socket.id + '] ()');
 	room_manager.register(socket.id);
 
