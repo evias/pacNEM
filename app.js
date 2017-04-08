@@ -24,7 +24,9 @@ var app = require('express')(),
 	expressHbs = require("express-handlebars"),
 	auth = require("http-auth"),
 	mongoose = require("mongoose"),
-	bodyParser = require("body-parser");
+	bodyParser = require("body-parser"),
+	config = require("config"),
+	nem = require("nem-sdk").default;
 
 // core dependencies
 var logger = require('./core/logger.js'),
@@ -68,8 +70,12 @@ app.use(auth.connect(basicAuth));
  * End Basic HTTP Authentication BLOCK
  */
 
+// configure database layer
 var models = require('./core/db/models.js');
 var dataLayer = new models.pacnem(io);
+
+var blockchain = require('./core/db/blockchain.js');
+var blockchainLayer = new blockchain.service(io, dataLayer, nem);
 
 /**
  * Frontend Web Application Serving
@@ -113,7 +119,8 @@ app.post("/api/v1/session/store", function(req, res)
 			"sid": req.body.sid
 		};
 
-		dataLayer.NEMGamer.findOne({"xem": input.xem}, function(err, player)
+		// mongoDB model NEMGamer unique on username + xem address pair.
+		dataLayer.NEMGamer.findOne({"username": input.username, "xem": input.xem}, function(err, player)
 		{
 			if (! err && player) {
 			// update mode
@@ -140,12 +147,14 @@ app.post("/api/v1/session/store", function(req, res)
 			else if (! player) {
 			// creation mode
 				var player = new dataLayer.NEMGamer({
-					username: input.user,
+					username: input.username,
 					xem: input.xem,
 					lastScore: input.score,
 					highScore: input.score,
+					socketIds: [input.sid],
 					countGames: 0,
-					socketIds: [input.sid]
+					countHearts: 0,
+					countHeartsTxs: []
 				});
 				player.save();
 

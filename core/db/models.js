@@ -14,7 +14,6 @@
  * @license    MIT License
  * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
  * @link       https://github.com/evias/pacNEM
- * @link       https://github.com/dubzzz/js-pacman
  */
 
 (function() {
@@ -23,7 +22,7 @@ var mongoose = require('mongoose');
 
 /**
  * class pacnem connects to a mongoDB database
- * either locally or using MONGOLAB_URI env.
+ * either locally or using MONGODB_URI|MONGOLAB_URI env.
  *
  * This class also defines all available data
  * models.
@@ -41,7 +40,7 @@ var pacnem = function(io)
      *
      * Currently using a Sandbox mLab.
      */
-    var host = process.env['MONGODB_URI'] || process.env['MONGOLAB_URI'] || "mongodb://localhost/pacNEM";
+    host = process.env['MONGODB_URI'] || process.env['MONGOLAB_URI'] || "mongodb://localhost/pacNEM";
     mongoose.connect(host, function(err, res)
         {
             if (err)
@@ -50,21 +49,42 @@ var pacnem = function(io)
                 console.log("PacNEM Database connection is now up with " + host);
         });
 
-    // Schema for NEMGamer model
+    // Schema definition
     this.NEMGamer_ = new mongoose.Schema({
         username: String,
         xem: String,
         socketIds: [String],
         lastScore: {type: Number, min: 0},
         highScore: {type: Number, min: 0},
-        countGames: {type: Number, min: 0}
+        countGames: {type: Number, min: 0},
+        lastRead: {type: Number, min: 0}
     });
 
-    // Model representing NEMGamer
+    this.pacNEMHeartsCache_ = new mongoose.Schema({
+        xem: String,
+        countHearts: {type: Number, min: 0},
+        heartsTxs: [String]
+    });
+
+    this.pacNEMSponsor_ = new mongoose.Schema({
+        slug: String,
+        name: String,
+        xem: String,
+        imageUrl: String,
+        countGames: {type: Number, min: 0},
+        countHearts: {type: Number, min: 0},
+        cacheHeartsTxs: [String]
+    });
+
+    // Models classes
     this.NEMGamer = mongoose.model("NEMGamer", this.NEMGamer_);
+    this.NEMHeart = mongoose.model("NEMHeart", this.pacNEMHeartsCache_);
+    this.NEMSponsor = mongoose.model("NEMSponsor", this.pacNEMSponsor_);
 };
 
 module.exports.pacnem = pacnem;
 module.exports.NEMGamer = pacnem.NEMGamer;
+module.exports.NEMHeart = pacnem.NEMGamer;
+module.exports.NEMSponsor = pacnem.NEMGamer;
 }());
 
