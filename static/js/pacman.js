@@ -95,20 +95,28 @@ var DisplayPoints = function(x, y, color, value)
  */
 var GameAPI = function(socket, controller, $)
 {
-	var jquery_ = $;
+	this.socket_ = socket;
+	this.ctrl_   = controller;
+	this.jquery_ = $;
 
-	this.storeResource = function(resource, dictionary)
+	this.getSocket = function()
 	{
-		jquery_.ajax({
-			url: "/api/v1/" + resource + "/store",
+		return this.socket_;
+	};
+
+	this.storeSession = function(details)
+	{
+		this.jquery_.ajax({
+			url: "/api/v1/session/store",
 			type: "POST",
 			dataType: "json",
+			data: details,
 			beforeSend: function(req) {
 				if (req && req.overrideMimeType)
 					req.overrideMimeType("application/json;charset=UTF-8");
 			},
 			success: function(res) {
-
+				console.log("/session/store POST response: ", res);
 			}
 		});
 	};
@@ -122,14 +130,16 @@ var GameAPI = function(socket, controller, $)
  *
  * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameSession = function(userName, xemAddress)
+var GameSession = function(API, userName, xemAddress)
 {
-	var details_ = {
-		"user": userName,
-		"type": "sponsored",
+	this.details_ = {
+		"username": userName,
+		"type": "pay-per-play",
 		"xem": xemAddress,
-		"score": 0,
+		"score": 0
 	};
+
+	this.API_  = API;
 
 	this.sync = function()
 	{
@@ -141,7 +151,7 @@ var GameSession = function(userName, xemAddress)
 
 		var json = storage.getItem("evias.pacnem:player");
 		if (json && json.length)
-			details_ = JSON.parse(json);
+			this.details_ = JSON.parse(json);
 
 		return this;
 	};
@@ -150,11 +160,29 @@ var GameSession = function(userName, xemAddress)
 	{
 		var storage = window.localStorage;
 
+		this.details_.sid = $("#pacNEM-sessionId").val();
+
 		if (! storage)
 			//XXX display error message
-			return false;
+			return this;
+		else
+			// save to localStorage
+			storage.setItem("evias.pacnem:player", JSON.stringify(this.details_));
 
-		storage.setItem("evias.pacnem:player", JSON.stringify(details_));
+		// save to database
+		if (this.details_.sid.length)
+			// save now
+			this.API_.storeSession(this.details_);
+		else {
+			// issue db save in 3 seconds because rooms_update event
+			// was not emitted yet.
+			var self = this;
+			setTimeout(function()
+			{
+				self.details_.sid = $("#pacNEM-sessionId").val();
+				self.API_.storeSession(self.details_);
+			}, 3000);
+		}
 		return this;
 	};
 
@@ -176,23 +204,30 @@ var GameSession = function(userName, xemAddress)
 
 	this.getPlayer = function()
 	{
-		if (typeof details_.user == 'undefined' || !details_.user)
+		if (typeof this.details_.username == 'undefined' || !this.details_.username)
 			return "";
 
-		return details_.user;
+		return this.details_.username;
 	};
 
 	this.getAddress = function()
 	{
-		if (typeof details_.xem == 'undefined' || !details_.xem)
+		if (typeof this.details_.xem == 'undefined' || !this.details_.xem)
 			return "";
 
-		return details_.xem;
+		return this.details_.xem;
+	};
+
+	this.getSocketId = function()
+	{
+		return this.API_.getSocket().id;
 	};
 
 	var self = this;
 	{
-		if (! self.getPlayer() || ! self.getAddress())
+		// sessionId available
+		if (typeof userName == 'undefined' || ! userName.length
+			|| typeof xemAddress == 'undefined' || ! xemAddress.length)
 			// try to sync from localStorage
 			self.sync();
 		else
@@ -419,6 +454,7 @@ var GameUI = function(socket, controller, $)
 	var jquery_ = $;
 	var rooms_ctr_ = undefined;
 	var session = undefined;
+	var API_ = new GameAPI(socket, controller, $);
 
 	/**
 	 * /!\
@@ -458,6 +494,8 @@ var GameUI = function(socket, controller, $)
             var $rooms = $("#rooms");
             var rooms  = data["rooms"];
             var isAuth = $("#username").val().length > 0 && $("#address").val().length > 0;
+
+            $("#pacNEM-sessionId").val(sid);
 
             // clear UI
             $rooms.empty();
@@ -784,6 +822,9 @@ var GameUI = function(socket, controller, $)
 
 	this.updateUserFormWithSession = function(session)
 	{
+		var username = $("#username").val();
+		var address  = $("#address").val();
+
 		if (! username.length) {
 			$("#username").val(session.getPlayer());
 			username = session.getPlayer();
@@ -804,14 +845,12 @@ var GameUI = function(socket, controller, $)
 	{
 		var details = this.getPlayerDetails();
 
+		// save the game session details
+		session_ = new GameSession(API_, details.username, details.address);
+
 		// Socket IO emit username change and notify others.
 		socket_.emit('change_username', details.username);
 		socket_.emit("notify");
-
-		// save the game session details
-		session_ = new GameSession(details.username, details.address);
-
-		this.displayPlayerUI();
 		return this;
 	};
 
@@ -926,7 +965,7 @@ var GameUI = function(socket, controller, $)
 			return false;
 		});
 
-		var session_ = new GameSession();
+		var session_ = new GameSession(API_);
 		if (session_.identified()) {
 			// post page-load reload from localStorage
 			self.updateUserFormWithSession(session_);

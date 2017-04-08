@@ -23,8 +23,10 @@ var app = require('express')(),
 	handlebars = require("handlebars"),
 	expressHbs = require("express-handlebars"),
 	auth = require("http-auth"),
-	mongoose = require("mongoose");
+	mongoose = require("mongoose"),
+	bodyParser = require("body-parser");
 
+// core dependencies
 var logger = require('./core/logger.js'),
 	__room = require('./core/room/room.js'),
 	Room = __room.Room,
@@ -41,11 +43,15 @@ var serverLog = function(req, msg, type)
 	logger.info(__smartfilename, __line, logMsg);
 };
 
+// configure view engine
 app.engine(".hbs", expressHbs({
 	extname: ".hbs",
 	defaultLayout: "default.hbs",
 	layoutPath: "views/layouts"}));
 app.set("view engine", "hbs");
+
+// configure body-parser usage for POST API calls.
+app.use(bodyParser.urlencoded({ extended: true }));
 
 /**
  * Basic HTTP Authentication
@@ -62,23 +68,8 @@ app.use(auth.connect(basicAuth));
  * End Basic HTTP Authentication BLOCK
  */
 
-/**
- * Prepare the MongoDB database connection used
- * for session data storage and in-game mosaics
- * attributes and storage.
- *
- * Currently using a Sandbox mLab.
- */
-var host = process.env['MONGOLAB_URI'] || "mongodb://localhost/pacNEM";
-mongoose.connect(host, function(err, res)
-	{
-		if (err)
-			console.log("ERROR with PacNEM DB (" + host + "): " + err);
-		else
-			console.log("PacNEM Database connection is now up with " + host);
-	});
-
-var Models = require('./core/db/models.js');
+var models = require('./core/db/models.js');
+var dataLayer = new models.pacnem(io);
 
 /**
  * Frontend Web Application Serving
@@ -97,10 +88,79 @@ app.get("/scores", function(req, res)
 		res.render("scores");
 	});
 
-app.get("/api/:version/:resource/:uri", function(req, res)
+/**
+ * API Routes
+ *
+ * Following routes are used for handling the business
+ * layer and managing the data layer.
+ *
+ * localStorage does not need any API requests to be
+ * executed, only the database synchronization needs
+ * these API endpoints.
+ *
+ * The sponsoring feature will also be built using API
+ * routes.
+ */
+app.post("/api/v1/session/store", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
-		res.send(JSON.stringify());
+
+		var input = {
+			"xem" : req.body.xem,
+			"username" : req.body.username,
+			"score": req.body.score,
+			"type": req.body.type,
+			"sid": req.body.sid
+		};
+
+		console.log(input);
+
+		dataLayer.NEMGamer.findOne({"xem": input.xem}, function(err, player)
+		{
+			if (! err && player) {
+			// update mode
+				var highScore = input.score > player.highScore ? input.score : player.highScore;
+
+				player.username  = input.username;
+				player.xem 		 = input.xem;
+				player.lastScore = input.score;
+				player.highScore = highScore;
+
+				if (! player.socketIds || ! player.socketIds.length)
+					player.socketIds = [input.sid];
+				else {
+					var sockets = player.socketIds;
+					sockets.push(input.sid);
+
+					player.socketIds = sockets;
+				}
+
+				player.save();
+
+				res.send(JSON.stringify(player));
+			}
+			else if (! player) {
+			// creation mode
+				var player = new dataLayer.NEMGamer({
+					username: input.user,
+					xem: input.xem,
+					lastScore: input.score,
+					highScore: input.score,
+					countGames: 0,
+					socketIds: [input.sid]
+				});
+				player.save();
+
+				res.send(JSON.stringify(player));
+			}
+			else {
+			// error mode
+				var errorMessage = "Error occured on NEMGamer update: " + err;
+
+				serverLog(req, errorMessage, "ERROR");
+				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+			}
+		});
 	});
 
 /**
