@@ -23,8 +23,10 @@ var app = require('express')(),
 	handlebars = require("handlebars"),
 	expressHbs = require("express-handlebars"),
 	auth = require("http-auth"),
-	mongoose = require("mongoose");
+	mongoose = require("mongoose"),
+	bodyParser = require("body-parser");
 
+// core dependencies
 var logger = require('./core/logger.js'),
 	__room = require('./core/room/room.js'),
 	Room = __room.Room,
@@ -41,11 +43,15 @@ var serverLog = function(req, msg, type)
 	logger.info(__smartfilename, __line, logMsg);
 };
 
+// configure view engine
 app.engine(".hbs", expressHbs({
 	extname: ".hbs",
 	defaultLayout: "default.hbs",
 	layoutPath: "views/layouts"}));
 app.set("view engine", "hbs");
+
+// configure body-parser usage for POST API calls.
+app.use(bodyParser.urlencoded({ extended: true }));
 
 /**
  * Basic HTTP Authentication
@@ -99,7 +105,13 @@ app.post("/api/v1/session/store", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		var input = req.params;
+		var input = {
+			"xem" : req.body.xem,
+			"username" : req.body.username,
+			"score": req.body.score,
+			"type": req.body.type,
+			"sid": req.body.sid
+		};
 
 		console.log(input);
 
@@ -116,8 +128,12 @@ app.post("/api/v1/session/store", function(req, res)
 
 				if (! player.socketIds || ! player.socketIds.length)
 					player.socketIds = [input.sid];
-				else
-					player.socketIds.push(input.sid);
+				else {
+					var sockets = player.socketIds;
+					sockets.push(input.sid);
+
+					player.socketIds = sockets;
+				}
 
 				player.save();
 
