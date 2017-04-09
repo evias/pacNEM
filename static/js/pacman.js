@@ -572,11 +572,35 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 			var $wrap = $("#currentHearts").first();
 			var $data = $("#currentHearts-hearts").first();
 
-			$data.text(data + " Credits");
 			$wrap.show();
+			self.animateCounter($data, 0, data, " Credits");
         });
 
         return this;
+	};
+
+	/**
+	 * Animate a DOM element with an integer counter in it.
+	 *
+	 * This method will smoothly count up from `start` to
+	 * `end`, suffixing the string `string` to the element
+	 * `$element`.
+	 *
+	 * @param  jQuery DOM Object $element [description]
+	 * @param  integer start    [description]
+	 * @param  integer end      [description]
+	 * @param  string suffix   [description]
+	 * @return GameUI
+	 */
+	this.animateCounter = function($element, start, end, suffix)
+	{
+		jQuery({ Counter: start }).animate({ Counter: parseInt(end) }, {
+			duration: 1000,
+			easing: 'swing',
+			step: function () {
+				$element.text(Math.ceil(this.Counter) + suffix);
+			}
+		});
 	};
 
 	/**
