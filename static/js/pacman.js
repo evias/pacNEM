@@ -1014,6 +1014,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 				$(this).attr("data-display", "1");
 				API_.fetchScores(function(scores)
 					{
+						self.initBackToPlayButtons();
 						$(".msgSelectRoom").hide();
 						$("#pacnem-scores-wrapper").show();
 					});
@@ -1024,6 +1025,8 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 				$("#pacnem-scores-wrapper").hide();
 			}
 		});
+
+		this.initBackToPlayButtons();
 
 		var session_ = new GameSession(API_);
 		if (session_.identified()) {
@@ -1061,6 +1064,25 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
         }, false);
 
 	    return this;
+    };
+
+    /**
+     * Register click event listener for pacnem
+     * back to play features.
+     *
+     * @return GameUI
+     */
+    this.initBackToPlayButtons = function()
+    {
+		$(".pacnem-back-to-play").off("click");
+		$(".pacnem-back-to-play").on("click", function()
+		{
+			$("#pacnem-scores-trigger").attr("data-display", "0");
+			$("#pacnem-scores-wrapper").hide();
+			$(".msgSelectRoom").show();
+		});
+
+		return this;
     };
 
 	// new GameUI instances should initialize Socket IO connection
