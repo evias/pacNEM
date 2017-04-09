@@ -62,7 +62,8 @@ var service = function(io, nemSDK)
         return {
             "host": node_.host,
             "port": node_.port,
-            "label": isTest ? "Testnet" : "Mainnet"
+            "label": isTest ? "Testnet" : "Mainnet",
+            "config": isTest ? nem_.model.network.data.testnet : nem_.model.network.data.mainnet
         };
     };
 

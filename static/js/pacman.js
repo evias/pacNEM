@@ -272,10 +272,12 @@ var GameSession = function(API, userName, xemAddress)
  * @author 	Nicolas Dubien (https://github.com/dubzzz)
  * @author 	Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameController = function(socket, nem)
+var GameController = function(socket, nem, chainId)
 {
-	var socket_ = socket;
-	var nem_    = nem;
+	var socket_  = socket;
+	var nem_     = nem;
+	var chainId_ = chainId;
+	var networks_ = {"104": "Mainnet", "-104": "Testnet", "96": "Mijin"};
 	var frame_ = 0;
 	var ongoing_game_ = false;
 	var ongoing_refresh_ = false;
@@ -361,7 +363,7 @@ var GameController = function(socket, nem)
 
 		// Draw game
 		drawEmptyGameBoard(canvas, ctx, grid_);
-		var $items = $("#game_details .player-row");
+		var $items = $("#pacnem-current-room-wrapper .player-row");
 		for (var i = 0 ; i != data['pacmans'].length ; i++) {
 			var pacman = data['pacmans'][i];
 			drawPacMan(canvas, ctx, frame_, pacman, data['pacmans'].length == 1 ? "#777700" : GHOSTS_COLORS[i %GHOSTS_COLORS.length]);
@@ -455,6 +457,31 @@ var GameController = function(socket, nem)
 	this.nem = function()
 	{
 		return nem_;
+	};
+
+	/**
+	 * Validate a blockchain Wallet Address on the
+	 * NEM blockchain using the NEM SDK.
+	 *
+	 * This method validate the FORMAT and the AUTHENTICITY
+	 * of the address using address.isValid and
+	 * address.isFromNetwork.
+	 *
+	 * @param  string 	address
+	 * @return boolean
+	 */
+	this.validateBlockchainWalletAddress = function(address)
+	{
+		var format = this.nem().model.address.isValid(address.replace(/-/g, ""));
+		if (! format)
+			throw "Invalid XEM address, please verify your input.";
+
+		// also validate that it is an address on the right network
+		var authentic = this.nem().model.address.isFromNetwork(address, chainId_);
+		if (! authentic)
+			throw "XEM address cannot be used on network " + networks_[""+chainId_];
+
+		return true;
 	};
 };
 
@@ -561,7 +588,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 	this.displayUserDetails = function(rawdata)
 	{
 		var self = this;
-	    var $details = $("#game_details ul.list-group").first();
+	    var $details = $("#pacnem-current-room-wrapper ul.list-group").first();
 	    var $userRow = $details.find("li.hidden").first();
 	    var players  = ctrl_.getPlayers();
 
@@ -582,7 +609,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 	        $row.appendTo($details);
 	    }
 
-	    $details.show();
+	    $("#pacnem-game-wrapper").show();
 	    return this;
 	};
 
@@ -892,16 +919,28 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 		return this;
 	};
 
+	/**
+	 * Display the UI as it should be for logged in users.
+	 *
+	 * This method will fail if the pre-requirements do not
+	 * match when it is called.
+	 *
+	 * @return GameUI
+	 */
 	this.displayPlayerUI = function()
 	{
 		// view effects & modifications
 		$("#currentUser-username").html("&nbsp;" + $("#username").val());
 		$("#currentUser").fadeIn("slow");
 		$("#pacnem-purge-trigger").parent().show();
+
+		// auth process effect (form disappears, rooms displayed)
 		$(".hide-on-auth").hide();
 		$(".show-on-auth").show();
-		$("#my-details .panel").first().removeClass("panel-info");
+		$("#pacnem-current-player-details .panel").first().removeClass("panel-info");
 		$("#spread-the-word").addClass("mt10");
+
+		// form must now be disabled
 		$("#username").parents(".input-group").first().parent().addClass("col-md-offset-1");
 		$("#username").prop("disabled", true);
 		$("#address").prop("disabled", true);
@@ -909,6 +948,8 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 		// blockchain query uses Promises and is sent with
 		// socket io "pacnem_heart_sync" event
 		$("#currentHearts").fadeIn("slow");
+
+		return this;
 	};
 
 	/**
@@ -917,18 +958,34 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 	 * Fields definition *must* contain `selector` and
 	 * *can* contain `required`, `reg_exp`, `callback`.
 	 *
-	 * @param  {[type]} fields [description]
 	 * @return {[type]}        [description]
 	 */
-	this.formValidate = function(fields)
+	this.formValidate = function()
 	{
+		var validators = [
+			{
+				"selector": "#username",
+				"required": true,
+				"reg_exp": /[A-Za-z0-9\-\_\.]+/
+			},
+			{
+				"selector": "#address",
+				"required": true,
+				"reg_exp": /[A-Z0-9\-]{37,43}/,
+				"callback": function(val) {
+					// Verify the XEM address with the NEM SDK
+					return ctrl_.validateBlockchainWalletAddress(val);
+				}
+			}
+		];
+
 		var self  = this;
 		var valid = true;
-		for (i in fields) {
-			var selector = fields[i].selector;
-			var required = fields[i].required;
-			var reg_exp  = fields[i].reg_exp;
-			var callback = fields[i].callback;
+		for (i in validators) {
+			var selector = validators[i].selector;
+			var required = validators[i].required;
+			var reg_exp  = validators[i].reg_exp;
+			var callback = validators[i].callback;
 
 			if (typeof selector == 'undefined')
 				continue;
@@ -954,7 +1011,19 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 				valid = false;
 			}
 
-			if (valid && callback && !callback(value)) {
+			try {
+				if (valid && callback && !callback(value)) {
+					$dom_element.addClass("error-input");
+					valid = false;
+				}
+			}
+			catch (e) {
+				// print error beneath input-group (in span.error-block)
+				var $input_group = $dom_element.parents(".input-group").first();
+				var $error_block = $input_group.siblings(".error-block").first();
+				$error_block.find(".error").text(e);
+				$error_block.fadeIn("slow");
+
 				$dom_element.addClass("error-input");
 				valid = false;
 			}
@@ -973,27 +1042,12 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 		var self   = this;
 		rooms_ctr_ = $("#rooms");
 
-		var validators = [
-			{
-				"selector": "#username",
-				"required": true,
-				"reg_exp": /[A-Za-z0-9\-\_\.]+/
-			},
-			{
-				"selector": "#address",
-				"required": true,
-				"reg_exp": /[A-Z0-9\-]{37,43}/,
-				"callback": function(val) {
-					// Verify the XEM address with the NEM SDK
-					return ctrl_.nem().model.address.isValid(val.replace(/-/g, ""));
-				}
-			}
-		];
-
 		$("#pacnem-save-trigger").click(function() {
 			$(".error-input").removeClass("error-input");
+			$(".error-block").hide();
+			$(".error-block .error").text("");
 
-			if (self.formValidate(validators)) {
+			if (self.formValidate()) {
 				self.emitUsername();
 				self.displayPlayerUI();
 				$("#rooms").parent().show();
