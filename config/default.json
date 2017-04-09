@@ -5,6 +5,7 @@
     },
     "nem": {
         "isTestMode": true,
+        "isMijin": false,
         "nodes": [
             {"host": "http://62.75.171.41", "port": 7890},
             {"host": "http://185.53.131.101", "port": 7890},

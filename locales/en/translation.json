@@ -1,0 +1,37 @@
+{
+    "languages": {
+        "en": "English",
+        "de": "Deutsch",
+        "fr": "Français"
+    },
+    "networks": {
+        "Mainnet": "Mainnet",
+        "Testnet": "Testnet",
+        "Mijin": "Mijin"
+    },
+    "meta": {
+        "title": "PacMan meets NEM",
+        "description": "An Open Source PacMan game using the NEM Blockchain featuring XEM Accounts, Sponsored Play, Pay per Play with XEM and NEM blockchain Mosaics.",
+        "keywords": "pacman, pacnem, multiplayer pacman, multiplayer game, blockchain, nem, nemblockchain, pacman nem, mosaics, namespaces, multi signature, multisig, sponsored play, pay per play, pay-per-play, crypto currencies, cryptocurrency, game advertisement, game sponsor, blockchain gaming"
+    },
+    "menus": {
+        "play": "Play",
+        "high_scores": "High Scores",
+        "purge": "Sign out",
+        "change_name": "Change name",
+        "language": "Language"
+    },
+    "guest": {
+        "title_blue_box": "Multiplayer Pacman Game",
+        "welcome_paragraph_1_1": "<span>Welcome to the </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Game. This game is a Free &amp; Open Source Node.js Browser Game.</span>",
+        "welcome_paragraph_1_2": "<span>This project uses the </span><span class='NEMifiedText'>nem</span><span> Blockchain to authenticate Players as well as for Managing Game Sponsors and it stores the High Scores on the blockchain. This game will reflect how easy it is to use </span><span class='NEMifiedText'>nem</span><span> in your applications or games business layers and will emphasize the easy Setup for sponsoring and advertising Software in the Gaming industry using the </span><span class='NEMifiedText'>nem</span><span> Blockchain and Instant Payments.</span>",
+        "welcome_paragraph_2_1": "<span>Please enter a username and XEM address below and hit the 'Save' button to join Multiplayer Rooms for </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>.</span>",
+        "welcome_paragraph_2_2": "",
+        "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> will never ask you to enter Sensitive information like your Password or your Private Key.</span>"
+    },
+    "forms": {
+        "username_placeholder": "Your name",
+        "address_placeholder": "XEM Wallet Address",
+        "button_save": "Save"
+    }
+}

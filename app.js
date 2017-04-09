@@ -26,7 +26,10 @@ var app = require('express')(),
 	mongoose = require("mongoose"),
 	bodyParser = require("body-parser"),
 	config = require("config"),
-	nem = require("nem-sdk").default;
+	nem = require("nem-sdk").default,
+	i18n = require("i18next"),
+    i18nFileSystemBackend = require('i18next-node-fs-backend'),
+    i18nMiddleware = require('i18next-express-middleware');
 
 // core dependencies
 var logger = require('./core/logger.js'),
@@ -51,6 +54,20 @@ app.engine(".hbs", expressHbs({
 	defaultLayout: "default.hbs",
 	layoutPath: "views/layouts"}));
 app.set("view engine", "hbs");
+
+// configure translations with i18next
+i18n.use(i18nFileSystemBackend)
+	.init({
+		lng: "en",
+		fallbackLng: "en",
+		defaultNS: "translation",
+		whitelist: ["en", "de", "fr"],
+		nonExplicitWhitelist: true,
+		preload: ["en", "de", "fr"],
+		backend: {
+			loadPath: "locales/{{lng}}/{{ns}}.json"
+		}
+	});
 
 // configure body-parser usage for POST API calls.
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -79,6 +96,20 @@ var models = require('./core/db/models.js');
 var dataLayer = new models.pacnem(io, chainDataLayer);
 
 /**
+ * View Engine Customization
+ *
+ * - handlebars t() helper for template translations handling with i18next
+ **/
+handlebars.registerHelper('t', function(key, sub)
+{
+	if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
+		// dynamic subnamespace
+		var key = key + "." + sub;
+
+	return new handlebars.SafeString(i18n.t(key));
+});
+
+/**
  * Static Files Serving
  *
  * Following routes define static files serving routes
@@ -87,6 +118,10 @@ var dataLayer = new models.pacnem(io, chainDataLayer);
 app.get('/favicon.ico', function(req, res)
 	{
 		res.sendfile(__dirname + '/static/favicon.ico');
+	})
+.get('/img/flags/:country.png', function(req, res)
+	{
+		res.sendfile(__dirname + '/img/flags/' + req.params.country + ".png");
 	})
 .get('/img/:image', function(req, res)
 	{
@@ -111,11 +146,21 @@ app.get('/favicon.ico', function(req, res)
  * Following routes define several entry points
  * like / and /scores.
  */
-app.get("/", function(req, res)
+app.get("/:lang", function(req, res)
 	{
-		var currentNetwork = chainDataLayer.getNetwork();
+		var currentLanguage = req.params.lang;
+		var currentNetwork  = chainDataLayer.getNetwork();
 
-		res.render("play", {currentNetwork: currentNetwork});
+		i18n.changeLanguage(currentLanguage);
+
+		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage});
+	})
+	.get("/", function(req, res)
+	{
+		var currentLanguage = i18n.language;
+		var currentNetwork  = chainDataLayer.getNetwork();
+
+		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage});
 	});
 
 /**

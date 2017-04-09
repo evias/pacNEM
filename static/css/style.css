@@ -67,6 +67,10 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
     font-size: 15px;
 }
 
+.countriesList li a img {
+    margin-top: -3px;
+}
+
 .pacnem-lounge {
     min-height: 120px;
     margin-bottom: 5px;
@@ -96,7 +100,7 @@ footer {
 
 @media (min-width: 768px) {
     .navbar-nav>li {
-        font-size: 18px;
+        font-size: 14px;
     }
 }
 
