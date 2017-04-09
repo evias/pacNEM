@@ -58,12 +58,14 @@ var service = function(io, nemSDK)
      */
     this.getNetwork = function()
     {
-        var isTest = config.get("nem.isTestMode");
+        var isTest  = config.get("nem.isTestMode");
+        var isMijin = config.get("nem.isMijin");
+
         return {
             "host": node_.host,
             "port": node_.port,
-            "label": isTest ? "Testnet" : "Mainnet",
-            "config": isTest ? nem_.model.network.data.testnet : nem_.model.network.data.mainnet
+            "label": isTest ? "Testnet" : isMijin ? "Mijin" : "Mainnet",
+            "config": isTest ? nem_.model.network.data.testnet : isMijin ? nem_.model.network.data.mijin : nem_.model.network.data.mainnet
         };
     };
 

@@ -23,24 +23,30 @@
         <div class="panel panel-info">
             <div class="panel-heading hide-on-auth" style="text-align: left;">
                 <span class="glyphicon glyphicon-user"></span>&nbsp;
-                <div style="display: inline;"><span>Pac</span><span class="NEMifiedText">nem</span><span>&nbsp; Multiplayer Pacman Game</span></div>
+                <div style="display: inline;"><span>Pac</span><span class="NEMifiedText">nem</span><span>&nbsp; {{t "guest.title_blue_box"}}</span></div>
             </div>
             <div class="panel-body">
                 <p class="text-justify hide-on-auth">
-                    <span>Welcome to the </span><span>Pac</span><span class="NEMifiedText">nem</span><span> Game. This game is a Free &amp; Open Source Node.js web application
-                    which you may download for installation or Play online.</span>
-                    <span>This project will use the </span><span class="NEMifiedText">nem</span><span> Blockchain to save and retrieve High Scores.</span><br />
+                    {{t "guest.welcome_paragraph_1_1"}}
+                    {{t "guest.welcome_paragraph_1_2"}}<br />
                 </p>
+                <div class="row hide-on-auth">
+                    <div class="col-md-10 col-md-offset-1 text-left">
+                        <ul style="list-style: none; margin: 0; padding: 0;">
+                            <li class="text-danger" style="margin: 0; padding: 0;"><span class="glyphicon glyphicon-warning-sign"></span>&nbsp;{{t "guest.security_paragraph_1"}}</li>
+                        </ul>
+                    </div>
+                </div>
                 <p class="text-justify hide-on-auth">
-                    <span>Please enter a username below and hit the 'Send' button when you are ready to join Multiplayer Rooms for </span>
-                    <span>Pac</span><span class="NEMifiedText">nem</span><span>. Your Username will be stored in your Browser. If you want
-                    to change it, please use the Purge button (<i class="glyphicon glyphicon-trash"></i>).</span>
+                    <br />
+                    {{t "guest.welcome_paragraph_2_1"}}
+                    {{t "guest.welcome_paragraph_2_2"}}
                 </p>
                 <div class="user-form form form-horizontal">
                     <div class="col-md-3">
                         <div class="input-group">
                             <span class="input-group-addon" id="describe-username"><span class="glyphicon glyphicon-user"></span></span>
-                            <input id="username" type="text" class="form-control" placeholder="Username" aria-describedby="describe-username" maxlength="20" />
+                            <input id="username" type="text" class="form-control" placeholder="{{t "forms.username_placeholder"}}" aria-describedby="describe-username" maxlength="20" />
                         </div>
                         <div class="error-block username-error text-danger" style="display: none;">
                             <span class="glyphicon glyphicon-remove-circle"></span>&nbsp;
@@ -50,7 +56,7 @@
                     <div class="col-md-7">
                         <div class="input-group">
                             <span class="input-group-addon" id="describe-address"><img src="/img/NEM_100x100.png" style="height: 20px;"/></span>
-                            <input id="address" type="text" class="form-control xem-address" placeholder="XEM Address" aria-describedby="describe-address" maxlength="46" />
+                            <input id="address" type="text" class="form-control xem-address" placeholder="{{t "forms.address_placeholder"}} ({{t "networks" currentNetwork.label}})" aria-describedby="describe-address" maxlength="46" />
                         </div>
                         <div class="error-block network-error text-danger" style="display: none;">
                             <span class="glyphicon glyphicon-remove-circle"></span>&nbsp;
@@ -58,7 +64,7 @@
                         </div>
                     </div>
                     <div id="create_my_room" class="col-md-2 text-left hide-on-auth">
-                        <a id="pacnem-save-trigger" class="btn btn-primary" role="button" href="#"><span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;Save</a>
+                        <a id="pacnem-save-trigger" class="btn btn-primary" role="button" href="#"><span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;{{t "forms.button_save"}}</a>
                     </div>
                 </div>
             </div>

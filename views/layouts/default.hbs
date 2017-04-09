@@ -40,8 +40,8 @@
                 </div>
                 <div class="collapse navbar-collapse" id="pacNEMNav">
                     <ul class="nav navbar-nav">
-                        <li class="active pacnem-back-to-play"><a href="#">{{t "menus.play"}}</a></li>
-                        <li><a id="pacnem-scores-trigger" href="#" data-display="0">{{t "menus.high_scores"}}</a></li>
+                        <li class="active pacnem-back-to-play"><a href="#"><span class="glyphicon glyphicon-home"></span>&nbsp;<span>{{t "menus.play"}}</span></a></li>
+                        <li><a id="pacnem-scores-trigger" href="#" data-display="0"><span class="glyphicon glyphicon-calendar"></span>&nbsp;<span>{{t "menus.high_scores"}}</span></a></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right" style="margin-right: 25px;">
                         <li id="currentBlockchain">
@@ -56,14 +56,29 @@
                                 <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
                             </a>
                         </li>
-                        <li id="currentUser" style="display: none;">
-                            <a href="#"><span class="glyphicon glyphicon-user"></span>&nbsp;<span id="currentUser-username"></span></a>
+                        <li id="currentUser" class="dropdown" style="display: none;">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <span class="glyphicon glyphicon-user"></span>&nbsp;
+                                <span id="currentUser-username"></span>&nbsp;
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#"><span class="glyphicon glyphicon-edit"></span>&nbsp;<span>{{t "menus.change_name"}}</span></a></li>
+                                <li><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-log-out"></span>&nbsp;<span>{{t "menus.purge"}}</span></a></li>
+                            </ul>
                             <input type="hidden" id="pacNEM-sessionId" value="" />
                         </li>
-                        <li style="display: none;">
-                            <a href="#" id="pacnem-purge-trigger" class="text-danger">
-                                <span class="glyphicon glyphicon-trash"></span>&nbsp;<span>{{t "menus.purge"}}</span>
+                        <li id="currentLanguage" class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <span class="glyphicon glyphicon-list-alt"></span>&nbsp;
+                                <span id="currentLanguage-language">{{t "menus.language"}}: {{t "languages" currentLanguage}}</span>&nbsp;
+                                <span class="caret"></span>
                             </a>
+                            <ul class="dropdown-menu countriesList">
+                                <li><a href="/en"><img src="/img/flags/gb.png" alt="{{t "languages.en"}}" />&nbsp;<span>{{t "languages.en"}}</span></a></li>
+                                <li><a href="/de"><img src="/img/flags/de.png" alt="{{t "languages.de"}}" />&nbsp;<span>{{t "languages.de"}}</span></a></li>
+                                <li><a href="/fr"><img src="/img/flags/fr.png" alt="{{t "languages.fr"}}" />&nbsp;<span>{{t "languages.fr"}}</span></a></li>
+                            </ul>
                         </li>
                     </ul>
                 </div>

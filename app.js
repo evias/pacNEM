@@ -69,13 +69,6 @@ i18n.use(i18nFileSystemBackend)
 		}
 	});
 
-// handlebars t() helper for template translations handling with i18next
-handlebars.registerHelper('t', function(key)
-{
-	var result = i18n.t(key);
-	return new handlebars.SafeString(result);
-});
-
 // configure body-parser usage for POST API calls.
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -103,6 +96,20 @@ var models = require('./core/db/models.js');
 var dataLayer = new models.pacnem(io, chainDataLayer);
 
 /**
+ * View Engine Customization
+ *
+ * - handlebars t() helper for template translations handling with i18next
+ **/
+handlebars.registerHelper('t', function(key, sub)
+{
+	if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
+		// dynamic subnamespace
+		var key = key + "." + sub;
+
+	return new handlebars.SafeString(i18n.t(key));
+});
+
+/**
  * Static Files Serving
  *
  * Following routes define static files serving routes
@@ -111,6 +118,10 @@ var dataLayer = new models.pacnem(io, chainDataLayer);
 app.get('/favicon.ico', function(req, res)
 	{
 		res.sendfile(__dirname + '/static/favicon.ico');
+	})
+.get('/img/flags/:country.png', function(req, res)
+	{
+		res.sendfile(__dirname + '/img/flags/' + req.params.country + ".png");
 	})
 .get('/img/:image', function(req, res)
 	{
