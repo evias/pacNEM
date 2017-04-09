@@ -72,15 +72,12 @@ var pacnem = function(io, chainDataLayer)
     this.NEMGamer_.post("save", function(gamer, next)
     {
         // check whether the blockchain must be read or if we
-        // have data for the given gamer. POST-save mechanism
-        // only checks every 30 minutes using the blockchain.
-        // More frequent checks are done in case of Payment
-        // events but those will not be handled in this Model.
+        // have data for the given gamer.
 
         // blockchain timing check
         var currentTime  = new Date().valueOf();
-        var threeMinutes = 3 * 60 * 1000;
-        if (! this.lastRead || currentTime >= this.lastRead + threeMinutes) {
+        var threeSeconds = 3 * 1000;
+        if (! this.lastRead || currentTime >= this.lastRead + threeSeconds) {
             chainDataLayer_.fetchHeartsByGamer(gamer);
         }
 
@@ -104,7 +101,6 @@ var pacnem = function(io, chainDataLayer)
 
 module.exports.pacnem = pacnem;
 module.exports.NEMGamer = pacnem.NEMGamer;
-module.exports.NEMHeart = pacnem.NEMHeart;
 module.exports.NEMSponsor = pacnem.NEMSponsor;
 }());
 

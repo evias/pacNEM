@@ -37,12 +37,6 @@ ul.members li.member .member-name {
     word-break: break-all;
 }
 
-#my-details,
-#game_details
-{
-    margin-top: 10px;
-}
-
 /**
  * PacNEM overwrite by Grégory Saive. Following
  * styles are used in the fork to provide with
@@ -67,6 +61,7 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
     font-weight: 900;
     color: #000;
     text-shadow: #dcdcdc 2px 2px;
+    margin-top: -7px;
 }
 .page-header .pacNEMTitle .smallerTitle {
     font-size: 15px;
@@ -107,6 +102,9 @@ footer {
 
 .xem-address {
     text-transform: uppercase;
+}
+.network-error {
+    margin-top: 8px;
 }
 
 .successMessage {
@@ -180,3 +178,7 @@ footer {
 .colNEMOrange { color: #f7a800; }
 .colNEMBlue { color: #67b2e8; }
 .colNEMGreen { color: #00c4b3; }
+
+.bgcNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: center center; }
+.bglNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: left center; }
+.bgrNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: right center; }

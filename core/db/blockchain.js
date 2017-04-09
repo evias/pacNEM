@@ -51,6 +51,23 @@ var service = function(io, nemSDK)
     var pacNEM_  = (process.env["NEM_ADDRESS"] || config.get("hoster.xem") || "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ").replace(/-/g, "");
 
     /**
+     * Get the Network details. This will return the currently
+     * used config for the NEM node (endpoint).
+     *
+     * @return Object
+     */
+    this.getNetwork = function()
+    {
+        var isTest = config.get("nem.isTestMode");
+        return {
+            "host": node_.host,
+            "port": node_.port,
+            "label": isTest ? "Testnet" : "Mainnet",
+            "config": isTest ? nem_.model.network.data.testnet : nem_.model.network.data.mainnet
+        };
+    };
+
+    /**
      * Get the status of the currently select NEM blockchain node.
      *
      * @return Promise
@@ -85,6 +102,8 @@ var service = function(io, nemSDK)
                     gamer.countHearts = parseInt(mosaic.quantity); // /!\ Divisibility of evias.pacnem:heart is 0
                     gamer.lastRead = new Date().valueOf();
                     gamer.save();
+
+                    socket_.emit("pacnem_heart_sync", gamer.countHearts);
                 }
             }
         }, function(err) {

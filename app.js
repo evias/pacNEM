@@ -45,7 +45,7 @@ var serverLog = function(req, msg, type)
 	logger.info(__smartfilename, __line, logMsg);
 };
 
-// configure view engine
+// configure view engine (handlebars)
 app.engine(".hbs", expressHbs({
 	extname: ".hbs",
 	defaultLayout: "default.hbs",
@@ -79,6 +79,33 @@ var models = require('./core/db/models.js');
 var dataLayer = new models.pacnem(io, chainDataLayer);
 
 /**
+ * Static Files Serving
+ *
+ * Following routes define static files serving routes
+ * such as the CSS, JS and images files.
+ */
+app.get('/favicon.ico', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/favicon.ico');
+	})
+.get('/img/:image', function(req, res)
+	{
+		res.sendfile(__dirname + '/img/' + req.params.image);
+	})
+.get('/css/style.css', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/css/style.css');
+	})
+.get('/js/:source.js', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
+	})
+.get('/resources/templates/:name', function(req, res)
+	{
+		res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
+	});
+
+/**
  * Frontend Web Application Serving
  *
  * Following routes define several entry points
@@ -86,13 +113,9 @@ var dataLayer = new models.pacnem(io, chainDataLayer);
  */
 app.get("/", function(req, res)
 	{
-		serverLog(req, "Welcome", "START");
-		res.render("play");
-	});
+		var currentNetwork = chainDataLayer.getNetwork();
 
-app.get("/scores", function(req, res)
-	{
-		res.render("scores");
+		res.render("play", {currentNetwork: currentNetwork});
 	});
 
 /**
@@ -108,7 +131,7 @@ app.get("/scores", function(req, res)
  * The sponsoring feature will also be built using API
  * routes.
  */
-app.post("/api/v1/session/store", function(req, res)
+app.post("/api/v1/sessions/store", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
@@ -143,7 +166,7 @@ app.post("/api/v1/session/store", function(req, res)
 
 				player.save();
 
-				res.send(JSON.stringify(player));
+				res.send(JSON.stringify({item: player}));
 			}
 			else if (! player) {
 			// creation mode
@@ -157,7 +180,7 @@ app.post("/api/v1/session/store", function(req, res)
 				});
 				player.save();
 
-				res.send(JSON.stringify(player));
+				res.send(JSON.stringify({item: player}));
 			}
 			else {
 			// error mode
@@ -169,27 +192,27 @@ app.post("/api/v1/session/store", function(req, res)
 		});
 	});
 
-/**
- * Static Files Serving
- *
- * Following routes define static files serving routes
- * such as the CSS, JS and images files.
- */
-app.get('/favicon.ico', function(req, res)
+app.get("/api/v1/scores", function(req, res)
 	{
-		res.sendfile(__dirname + '/static/favicon.ico');
-	})
-.get('/img/:image', function(req, res)
-	{
-		res.sendfile(__dirname + '/img/' + req.params.image);
-	})
-.get('/css/style.css', function(req, res)
-	{
-		res.sendfile(__dirname + '/static/css/style.css');
-	})
-.get('/js/:source.js', function(req, res)
-	{
-		res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
+		res.setHeader('Content-Type', 'application/json');
+
+		var scores = [];
+		for (var i = 0; i < 10; i++) {
+			var rScore = Math.floor(Math.random() * 20001);
+			var rUser  = Math.floor(Math.random() * 15);
+			var rDay   = Math.floor(Math.random() * 32);
+
+			scores.push({
+				position: i+1,
+				score: Math.floor(Math.random() * 20001),
+				username: "greg" + Math.floor(Math.random() * 15),
+				address: "TATKHV5JJTQXCUCXPXH2WPHLAYE73REUMGDOZKUW",
+				truncAddress: ("TATKHV5JJTQXCUCXPXH2WPHLAYE73REUMGDOZKUW").substr(0, 8),
+				scoreDate: "2017-03-" + (rDay > 9 ? rDay : "0" + rDay) + " at 00:01"
+			});
+		}
+
+		res.send(JSON.stringify({data: scores}));
 	});
 
 /**
