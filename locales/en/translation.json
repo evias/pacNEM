@@ -1,5 +1,12 @@
 {
+    "meta": {
+        "title": "PacMan meets NEM",
+        "description": "An Open Source PacMan game using the NEM Blockchain featuring XEM Accounts, Sponsored Play, Pay per Play with XEM and NEM blockchain Mosaics.",
+        "keywords": "pacman, pacnem, multiplayer pacman, multiplayer game, blockchain, nem, nemblockchain, pacman nem, mosaics, namespaces, multi signature, multisig, sponsored play, pay per play, pay-per-play, crypto currencies, cryptocurrency, game advertisement, game sponsor, blockchain gaming"
+    },
     "menus": {
-        "play": "Play"
+        "play": "Play",
+        "high_scores": "High Scores",
+        "purge": "Sign out"
     }
 }

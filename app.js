@@ -56,14 +56,14 @@ app.engine(".hbs", expressHbs({
 app.set("view engine", "hbs");
 
 // configure translations with i18next
-i18n.use(i18nMiddleware.LanguageDetector)
-	.use(i18nFileSystemBackend)
+i18n.use(i18nFileSystemBackend)
 	.init({
 		lng: "en",
 		fallbackLng: "en",
 		defaultNS: "translation",
-		whitelist: ["en", "de"],
+		whitelist: ["en", "de", "fr"],
 		nonExplicitWhitelist: true,
+		preload: ["en", "de", "fr"],
 		backend: {
 			loadPath: "locales/{{lng}}/{{ns}}.json"
 		}
@@ -75,7 +75,6 @@ handlebars.registerHelper('t', function(key)
 	var result = i18n.t(key);
 	return new handlebars.SafeString(result);
 });
-
 
 // configure body-parser usage for POST API calls.
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -136,11 +135,21 @@ app.get('/favicon.ico', function(req, res)
  * Following routes define several entry points
  * like / and /scores.
  */
-app.get("/", function(req, res)
+app.get("/:lang", function(req, res)
 	{
-		var currentNetwork = chainDataLayer.getNetwork();
+		var currentLanguage = req.params.lang;
+		var currentNetwork  = chainDataLayer.getNetwork();
 
-		res.render("play", {currentNetwork: currentNetwork});
+		i18n.changeLanguage(currentLanguage);
+
+		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage});
+	})
+	.get("/", function(req, res)
+	{
+		var currentLanguage = i18n.language;
+		var currentNetwork  = chainDataLayer.getNetwork();
+
+		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage});
 	});
 
 /**
