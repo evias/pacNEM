@@ -639,6 +639,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 			return this;
 
 		$button.attr("disabled", "disabled").addClass("disabled");
+		$button.off("click");
 		return this;
 	};
 
@@ -902,6 +903,8 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 		$("#my-details .panel").first().removeClass("panel-info");
 		$("#spread-the-word").addClass("mt10");
 		$("#username").parents(".input-group").first().parent().addClass("col-md-offset-1");
+		$("#username").prop("disabled", true);
+		$("#address").prop("disabled", true);
 
 		// blockchain query uses Promises and is sent with
 		// socket io "pacnem_heart_sync" event
@@ -1079,7 +1082,10 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 		{
 			$("#pacnem-scores-trigger").attr("data-display", "0");
 			$("#pacnem-scores-wrapper").hide();
-			$(".msgSelectRoom").show();
+
+			var sess = new GameSession(API_);
+			if (sess.identified())
+				$(".msgSelectRoom").show();
 		});
 
 		return this;

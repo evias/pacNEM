@@ -67,6 +67,7 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
     font-weight: 900;
     color: #000;
     text-shadow: #dcdcdc 2px 2px;
+    margin-top: -7px;
 }
 .page-header .pacNEMTitle .smallerTitle {
     font-size: 15px;
