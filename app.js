@@ -26,7 +26,10 @@ var app = require('express')(),
 	mongoose = require("mongoose"),
 	bodyParser = require("body-parser"),
 	config = require("config"),
-	nem = require("nem-sdk").default;
+	nem = require("nem-sdk").default,
+	i18n = require("i18next"),
+    i18nFileSystemBackend = require('i18next-node-fs-backend'),
+    i18nMiddleware = require('i18next-express-middleware');
 
 // core dependencies
 var logger = require('./core/logger.js'),
@@ -51,6 +54,28 @@ app.engine(".hbs", expressHbs({
 	defaultLayout: "default.hbs",
 	layoutPath: "views/layouts"}));
 app.set("view engine", "hbs");
+
+// configure translations with i18next
+i18n.use(i18nMiddleware.LanguageDetector)
+	.use(i18nFileSystemBackend)
+	.init({
+		lng: "en",
+		fallbackLng: "en",
+		defaultNS: "translation",
+		whitelist: ["en", "de"],
+		nonExplicitWhitelist: true,
+		backend: {
+			loadPath: "locales/{{lng}}/{{ns}}.json"
+		}
+	});
+
+// handlebars t() helper for template translations handling with i18next
+handlebars.registerHelper('t', function(key)
+{
+	var result = i18n.t(key);
+	return new handlebars.SafeString(result);
+});
+
 
 // configure body-parser usage for POST API calls.
 app.use(bodyParser.urlencoded({ extended: true }));

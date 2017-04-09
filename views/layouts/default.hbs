@@ -23,7 +23,7 @@
         <script src="/js/pacman.js"></script>
     </head>
     <body>
-        <div class="row page-header">
+        <div class="row page-header" style="margin-top: 20px;">
             <div class="container-fluid">
                 <div class="navbar-header" style="margin-left: 25px;">
                     <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#pacNEMNav">
@@ -36,27 +36,31 @@
                 </div>
                 <div class="collapse navbar-collapse" id="pacNEMNav">
                     <ul class="nav navbar-nav">
-                        <li class="active pacnem-back-to-play"><a href="#">Play</a></li>
+                        <li class="active pacnem-back-to-play"><a href="#">{{t "menus.play"}}</a></li>
                         <li><a id="pacnem-scores-trigger" href="#" data-display="0">High Scores</a></li>
                     </ul>
-                    <ul class="nav navbar-nav navbar-right">
+                    <ul class="nav navbar-nav navbar-right" style="margin-right: 25px;">
                         <li id="currentBlockchain">
                             <a href="#">
                                 <span class="glyphicon glyphicon-globe"></span>&nbsp;
-                                <span id="currentBlockchain-network"><img src="/img/loading.gif" style="max-height: 30px;"/></span>
+                                <span id="currentBlockchain-network"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
                             </a>
                         </li>
                         <li id="currentHearts" style="display: none;">
                             <a href="#">
                                 <span class="glyphicon glyphicon-heart"></span>&nbsp;
-                                <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 30px;"/></span>
+                                <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
                             </a>
                         </li>
                         <li id="currentUser" style="display: none;">
                             <a href="#"><span class="glyphicon glyphicon-user"></span>&nbsp;<span id="currentUser-username"></span></a>
                             <input type="hidden" id="pacNEM-sessionId" value="" />
                         </li>
-                        <li style="display: none;"><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-trash"></span> Purge</a></li>
+                        <li style="display: none;">
+                            <a href="#" id="pacnem-purge-trigger" class="text-danger">
+                                <span class="glyphicon glyphicon-trash"></span>&nbsp;<span>Purge</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
