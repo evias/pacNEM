@@ -69,7 +69,7 @@
         "nem_sdk": "nem SDK pour Node.js",
         "nem_dev_101": "nem Development 101"
     },
-    "score": {
+    "scores": {
         "title": "<span>Pac</span><span class='NEMifiedText'>nem</span><span>&nbsp;<b>High Scores</b></span>",
         "explain": "<span>Bienvenue sur la page des High Scores de </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>. Cette page est construite à l'aide de données récoltées sur la blockchain </span><span class='NEMifiedText'>nem</span><span>.</span>",
         "score_label": "Points",

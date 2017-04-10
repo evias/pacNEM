@@ -29,7 +29,8 @@ var app = require('express')(),
 	nem = require("nem-sdk").default,
 	i18n = require("i18next"),
     i18nFileSystemBackend = require('i18next-node-fs-backend'),
-    i18nMiddleware = require('i18next-express-middleware');
+    i18nMiddleware = require('i18next-express-middleware'),
+    fs = require("fs");
 
 // core dependencies
 var logger = require('./core/logger.js'),
@@ -134,10 +135,25 @@ app.get('/favicon.ico', function(req, res)
 .get('/js/:source.js', function(req, res)
 	{
 		res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
-	})
-.get('/resources/templates/:name', function(req, res)
+	});
+
+/**
+ * - Asynchronous Template Serving
+ * - XHR Translations loading
+ *
+ * The templates present in views/partials can be rendered
+ * using the jQFileTemplate frontend implementation.
+ */
+app.get('/resources/templates/:name', function(req, res)
 	{
 		res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
+	})
+	.get('/locales/:lang', function(req, res)
+	{
+		var json = fs.readFileSync(__dirname + '/locales/' + req.params.lang + '/translation.json');
+
+		res.setHeader("Content-Type", "application/json; charset=utf-8");
+		res.send(json);
 	});
 
 /**
@@ -154,7 +170,7 @@ app.get('/css/3rdparty/:sheet.css', function(req, res)
 	.get('/js/3rdparty/:source.js', function(req, res)
 	{
 		res.sendfile(__dirname + '/static/js/3rdparty/' + req.params.source + '.js');
-	})
+	});
 
 /**
  * Frontend Web Application Serving

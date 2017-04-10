@@ -68,7 +68,7 @@
         "nem_sdk": "nem SDK for Node.js",
         "nem_dev_101": "nem Development 101"
     },
-    "score": {
+    "scores": {
         "title": "<span>Pac</span><span class='NEMifiedText'>nem</span><span>&nbsp;<b>High Scores</b></span>",
         "explain": "<span>Welcome to the </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> High Scores. The following list is held up to date via the </span><span class='NEMifiedText'>nem</span><span> blockchain.</span>",
         "score_label": "Score",
