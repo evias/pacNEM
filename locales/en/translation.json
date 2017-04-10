@@ -1,0 +1,81 @@
+{
+    "languages": {
+        "en": "English",
+        "de": "Deutsch",
+        "fr": "Français"
+    },
+    "networks": {
+        "Mainnet": "Mainnet",
+        "Testnet": "Testnet",
+        "Mijin": "Mijin"
+    },
+    "meta": {
+        "title": "PacMan meets NEM",
+        "description": "An Open Source PacMan game using the NEM Blockchain featuring XEM Accounts, Sponsored Play, Pay per Play with XEM and NEM blockchain Mosaics.",
+        "keywords": "pacman, pacnem, multiplayer pacman, multiplayer game, blockchain, nem, nemblockchain, pacman nem, mosaics, namespaces, multi signature, multisig, sponsored play, pay per play, pay-per-play, crypto currencies, cryptocurrency, game advertisement, game sponsor, blockchain gaming"
+    },
+    "menus": {
+        "play": "Play",
+        "high_scores": "High Scores",
+        "purge": "Sign out",
+        "change_name": "Change name",
+        "language": "Language"
+    },
+    "guest": {
+        "title_blue_box": "Multiplayer Pacman Game",
+        "welcome_paragraph_1_1": "<span>Welcome to the </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Game. This game is a Free &amp; Open Source Node.js Browser Game.</span>",
+        "welcome_paragraph_1_2": "<span>This project uses the </span><span class='NEMifiedText'>nem</span><span> Blockchain to authenticate Players as well as for Managing Game Sponsors and it stores the High Scores on the blockchain. This game will reflect how easy it is to use </span><span class='NEMifiedText'>nem</span><span> in your applications or games business layers and will emphasize the easy Setup for sponsoring and advertising Software in the Gaming industry using the </span><span class='NEMifiedText'>nem</span><span> Blockchain and Instant Payments.</span>",
+        "welcome_paragraph_2_1": "<span>Please enter a username and XEM address below and hit the 'Save' button to join Multiplayer Rooms for </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>.</span>",
+        "welcome_paragraph_2_2": "",
+        "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> will never ask you to enter Sensitive information like your Password or your Private Key.</span>"
+    },
+    "forms": {
+        "username_placeholder": "Your name",
+        "address_placeholder": "XEM Wallet Address",
+        "button_save": "Save",
+        "error_format_address": "Invalid XEM address, please verify your input.",
+        "error_network_address": "XEM address cannot be used on this blockchain"
+    },
+    "player": {
+        "select_room_message": "Thank you, Now please select a Room to Join in the list.",
+        "room_players_title": "Pac<span class='NEMifiedText'>nem</span> Room Players",
+        "score_label": "Score",
+        "lives_label": "Lives",
+        "combo_label": "Combo",
+        "rooms_title": "Pac<span class='NEMifiedText'>nem</span> rooms",
+        "create_room_button": "Create room",
+        "room_join_button": "Join Room",
+        "room_play_button": "Play",
+        "room_leave_button": "Leave Room",
+        "room_starting": "Starting..",
+        "room_seconds_label": "sec.."
+    },
+    "donations": {
+        "title": "Share - Links - Donations",
+        "description": "This game was developed with Node.js, Socket.io, Handlebars and <a target='_blank' href='https://nem.io' class='NEMifiedText'>nem</a> and started as a fork of <a href='https://github.com/dubzzz/js-pacman' target='_blank'>this project</a>. This project aims to use <a target='_blank' href='https://nem.io' class='NEMifiedText'>nem</a> in as many ways as possible in order for me to collect experience in the blockchain application development industry.",
+        "explain": "If you like the initiative, and for the sake of <b>good mood</b>, I recommend you take a few minutes to Donate a beer or Three <i>[because belgians like that]</i> by sending some XEM (or whatever Mosaic you think pays me a few beers someday!) to my XEM Wallet"
+    },
+    "links": {
+        "intro": "Following is a list of Links / References useful during Development of this project",
+        "source_code": "PacNEM Source Code",
+        "nem_website": "nem Official Website",
+        "nem_downloads": "nem Official Downloads Page",
+        "nem_blog": "nem Official Blog",
+        "nem_forum": "nem Official Forum",
+        "nem_dev_guide": "nem Developer Guide",
+        "nem_nis_doc": "nem NIS API Documentation",
+        "nem_nanowallet_src": "nem NanoWallet Source Code",
+        "nem_sdk": "nem SDK for Node.js",
+        "nem_dev_101": "nem Development 101"
+    },
+    "scores": {
+        "title": "<span>Pac</span><span class='NEMifiedText'>nem</span><span>&nbsp;<b>High Scores</b></span>",
+        "explain": "<span>Welcome to the </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> High Scores. The following list is held up to date via the </span><span class='NEMifiedText'>nem</span><span> blockchain.</span>",
+        "score_label": "Score",
+        "username_label": "Player Name",
+        "xem_label": "XEM Wallet",
+        "date_label": "Date of Game",
+        "hide_button": "Hide",
+        "empty_highscores": "Currently, no PacNEM high scores have been saved to the blockchain yet."
+    }
+}

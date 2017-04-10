@@ -26,7 +26,11 @@ var app = require('express')(),
 	mongoose = require("mongoose"),
 	bodyParser = require("body-parser"),
 	config = require("config"),
-	nem = require("nem-sdk").default;
+	nem = require("nem-sdk").default,
+	i18n = require("i18next"),
+    i18nFileSystemBackend = require('i18next-node-fs-backend'),
+    i18nMiddleware = require('i18next-express-middleware'),
+    fs = require("fs");
 
 // core dependencies
 var logger = require('./core/logger.js'),
@@ -51,6 +55,20 @@ app.engine(".hbs", expressHbs({
 	defaultLayout: "default.hbs",
 	layoutPath: "views/layouts"}));
 app.set("view engine", "hbs");
+
+// configure translations with i18next
+i18n.use(i18nFileSystemBackend)
+	.init({
+		lng: "en",
+		fallbackLng: "en",
+		defaultNS: "translation",
+		whitelist: ["en", "de", "fr"],
+		nonExplicitWhitelist: true,
+		preload: ["en", "de", "fr"],
+		backend: {
+			loadPath: "locales/{{lng}}/{{ns}}.json"
+		}
+	});
 
 // configure body-parser usage for POST API calls.
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -79,30 +97,79 @@ var models = require('./core/db/models.js');
 var dataLayer = new models.pacnem(io, chainDataLayer);
 
 /**
- * Static Files Serving
+ * View Engine Customization
  *
- * Following routes define static files serving routes
- * such as the CSS, JS and images files.
+ * - handlebars t() helper for template translations handling with i18next
+ **/
+handlebars.registerHelper('t', function(key, sub)
+{
+	if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
+		// dynamic subnamespace
+		var key = key + "." + sub;
+
+	return new handlebars.SafeString(i18n.t(key));
+});
+
+/**
+ * Static Files (assets) Serving
+ *
+ * Also includes asynchronously loaded templates,
+ * those are stored in views/partials/*.hbs files.
  */
 app.get('/favicon.ico', function(req, res)
 	{
 		res.sendfile(__dirname + '/static/favicon.ico');
 	})
+.get('/img/flags/:country.png', function(req, res)
+	{
+		res.sendfile(__dirname + '/img/flags/' + req.params.country + ".png");
+	})
 .get('/img/:image', function(req, res)
 	{
 		res.sendfile(__dirname + '/img/' + req.params.image);
 	})
-.get('/css/style.css', function(req, res)
+.get('/css/:sheet.css', function(req, res)
 	{
-		res.sendfile(__dirname + '/static/css/style.css');
+		res.sendfile(__dirname + '/static/css/' + req.params.sheet + '.css');
 	})
 .get('/js/:source.js', function(req, res)
 	{
 		res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
-	})
-.get('/resources/templates/:name', function(req, res)
+	});
+
+/**
+ * - Asynchronous Template Serving
+ * - XHR Translations loading
+ *
+ * The templates present in views/partials can be rendered
+ * using the jQFileTemplate frontend implementation.
+ */
+app.get('/resources/templates/:name', function(req, res)
 	{
 		res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
+	})
+	.get('/locales/:lang', function(req, res)
+	{
+		var json = fs.readFileSync(__dirname + '/locales/' + req.params.lang + '/translation.json');
+
+		res.setHeader("Content-Type", "application/json; charset=utf-8");
+		res.send(json);
+	});
+
+/**
+ * Third Party assets Serving
+ * - Bootstrap
+ * - Handlebars
+ * - i18next
+ * - jQuery
+ */
+app.get('/css/3rdparty/:sheet.css', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/css/3rdparty/' + req.params.sheet + '.css');
+	})
+	.get('/js/3rdparty/:source.js', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/js/3rdparty/' + req.params.source + '.js');
 	});
 
 /**
@@ -111,11 +178,23 @@ app.get('/favicon.ico', function(req, res)
  * Following routes define several entry points
  * like / and /scores.
  */
-app.get("/", function(req, res)
+app.get("/:lang", function(req, res)
 	{
-		var currentNetwork = chainDataLayer.getNetwork();
+		var currentLanguage = req.params.lang;
+		var currentNetwork  = chainDataLayer.getNetwork();
+		var translator 		= i18n;
 
-		res.render("play", {currentNetwork: currentNetwork});
+		i18n.changeLanguage(currentLanguage);
+
+		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage, translator: translator});
+	})
+	.get("/", function(req, res)
+	{
+		var currentLanguage = i18n.language;
+		var currentNetwork  = chainDataLayer.getNetwork();
+		var translator 		= i18n;
+
+		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage, translator: translator});
 	});
 
 /**

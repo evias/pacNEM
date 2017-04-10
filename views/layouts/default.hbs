@@ -1,29 +1,76 @@
-<html>
+<html lang="{{currentLanguage}}">
     <head>
-        <title>PacNEM</title>
+        <title>PacNEM - {{t "meta.title"}}</title>
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-        <meta name="description" content="A PacMan game with NodeJS using the NEM Blockchain" />
-        <meta name="keywords" content="pacman, pacnem, multiplayer pacman, multiplayer game, blockchain, nem, nemblockchain, pacman nem" />
+        <meta name="description" content="{{t "meta.description"}}" />
+        <meta name="keywords" content="{{t "meta.keywords"}}" />
         <meta name="author" content="Grégory Saive (https://github.com/evias)" />
         <meta name="robots" content="index, follow" />
 
-        <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-        <link rel="icon" href="favicon.ico" type="image/x-icon">
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
         <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
         <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="/js/3rdparty/jquery.min.js"></script>
+        <script src="/js/3rdparty/bootstrap.min.js"></script>
+        <script src="/js/3rdparty/i18next.min.js" ></script>
+        <script src="/js/3rdparty/i18next-xhr-backend.min.js" ></script>
+        <script src="/js/3rdparty/i18next-jquery.min.js" ></script>
+        <script src="/js/3rdparty/handlebars.min.js"></script>
+
         <script src="/socket.io/socket.io.js"></script>
         <script src="/js/nem-sdk.js"></script>
-        <script src="/js/handlebars.min.js"></script>
-        <script src="/js/jquery-hbs-file-template.js"></script>
         <script src="/js/pacman.js"></script>
+
+        <script type="text/javascript">
+/**
+ * Specification for i18next object so that Asynchronously
+ * loaded Templates can also contain translations and use
+ * the t() custom handlebars template from pacNEM.
+ *
+ * Requires i18nextXHRBackend and i18nextJquery plugins
+ * to function correctly.
+ * @link    https://github.com/evias/pacNEM
+ */
+window.i18next.use(window.i18nextXHRBackend).init({
+    lng: "{{currentLanguage}}",
+    fallbackLng: "en",
+    defaultNS: "translation",
+    whitelist: ["en", "de", "fr"],
+    nonExplicitWhitelist: true,
+    preload: ["en", "de", "fr"],
+    backend: {
+        loadPath: "/locales/\{\{lng\}\}"
+    }
+}, function(err, t) {
+    window.i18nextJquery.init(window.i18next, $);
+});
+
+/**
+ * Handlebars t() helper implementation for frontend
+ * templates.
+ */
+Handlebars.registerHelper('t', function(key, sub)
+{
+    if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
+        // dynamic subnamespace
+        var key = key + "." + sub;
+
+    return new Handlebars.SafeString(window.i18next.t(key));
+});
+        </script>
+
+        <script src="/js/jquery-hbs-file-template.js"></script>
     </head>
     <body>
-        <div class="row page-header">
+        <img src="/img/pacnem_logo.png" alt="PacNEM - {{t "meta.title"}}" title="PacNEM - {{t "meta.title"}}" style="display: none;" />
+        <h1 style="display: none;">{{t "meta.title"}}</h1>
+        <p style="display: none;">{{t "meta.description"}}</p>
+
+        <div class="row page-header" style="margin-top: 20px;">
             <div class="container-fluid">
                 <div class="navbar-header" style="margin-left: 25px;">
                     <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#pacNEMNav">
@@ -36,27 +83,46 @@
                 </div>
                 <div class="collapse navbar-collapse" id="pacNEMNav">
                     <ul class="nav navbar-nav">
-                        <li class="active pacnem-back-to-play"><a href="#">Play</a></li>
-                        <li><a id="pacnem-scores-trigger" href="#" data-display="0">High Scores</a></li>
+                        <li class="active pacnem-back-to-play"><a href="#"><span class="glyphicon glyphicon-home"></span>&nbsp;<span>{{t "menus.play"}}</span></a></li>
+                        <li><a id="pacnem-scores-trigger" href="#" data-display="0"><span class="glyphicon glyphicon-calendar"></span>&nbsp;<span>{{t "menus.high_scores"}}</span></a></li>
                     </ul>
-                    <ul class="nav navbar-nav navbar-right">
+                    <ul class="nav navbar-nav navbar-right" style="margin-right: 25px;">
                         <li id="currentBlockchain">
                             <a href="#">
                                 <span class="glyphicon glyphicon-globe"></span>&nbsp;
-                                <span id="currentBlockchain-network"><img src="/img/loading.gif" style="max-height: 30px;"/></span>
+                                <span id="currentBlockchain-network"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
                             </a>
                         </li>
                         <li id="currentHearts" style="display: none;">
                             <a href="#">
                                 <span class="glyphicon glyphicon-heart"></span>&nbsp;
-                                <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 30px;"/></span>
+                                <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
                             </a>
                         </li>
-                        <li id="currentUser" style="display: none;">
-                            <a href="#"><span class="glyphicon glyphicon-user"></span>&nbsp;<span id="currentUser-username"></span></a>
+                        <li id="currentUser" class="dropdown" style="display: none;">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <span class="glyphicon glyphicon-user"></span>&nbsp;
+                                <span id="currentUser-username"></span>&nbsp;
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#"><span class="glyphicon glyphicon-edit"></span>&nbsp;<span>{{t "menus.change_name"}}</span></a></li>
+                                <li><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-log-out"></span>&nbsp;<span>{{t "menus.purge"}}</span></a></li>
+                            </ul>
                             <input type="hidden" id="pacNEM-sessionId" value="" />
                         </li>
-                        <li style="display: none;"><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-trash"></span> Purge</a></li>
+                        <li id="currentLanguage" class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <span class="glyphicon glyphicon-list-alt"></span>&nbsp;
+                                <span id="currentLanguage-language">{{t "menus.language"}}: {{t "languages" currentLanguage}}</span>&nbsp;
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu countriesList">
+                                <li><a href="/en"><img src="/img/flags/gb.png" alt="{{t "languages.en"}}" />&nbsp;<span>{{t "languages.en"}}</span></a></li>
+                                <li><a href="/de"><img src="/img/flags/de.png" alt="{{t "languages.de"}}" />&nbsp;<span>{{t "languages.de"}}</span></a></li>
+                                <li><a href="/fr"><img src="/img/flags/fr.png" alt="{{t "languages.fr"}}" />&nbsp;<span>{{t "languages.fr"}}</span></a></li>
+                            </ul>
+                        </li>
                     </ul>
                 </div>
             </div>

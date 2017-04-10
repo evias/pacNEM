@@ -14,7 +14,7 @@
  * @license    MIT License
  * @copyright  (c) 2017, Grégory Saive <greg@evias.be>
  * @link       https://github.com/evias/pacNEM
- * @link       https://github.com/wycats/handlebars.js/issues/82
+ * @link       https://gist.github.com/utkarsh2012/2287070
  */
 
 /*
@@ -33,14 +33,15 @@ var jQFileTemplate = function() {
 var T = new jQFileTemplate();
 $.extend(jQFileTemplate.prototype, {
     render: function(name, callback) {
-        if (T.isCached(name)) {
-            callback(T.cached[name]);
-        } else {
+        //if (T.isCached(name)) {
+        //    callback(T.cached[name]);
+        //} else {
             $.get(T.urlFor(name), function(raw) {
                 T.store(name, raw);
-                T.render(name, callback);
+        //        T.render(name, callback);
+                callback(T.cached[name]);
             });
-        }
+        //}
     },
     renderSync: function(name, callback) {
         if (!T.isCached(name)) {

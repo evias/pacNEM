@@ -3,24 +3,22 @@
     <div class="panel panel-warning">
         <div class="panel-heading" style="text-align: left;">
             <span class="glyphicon glyphicon-cloud"></span>&nbsp;
-            <div style="display: inline;"><span>Pac</span><span class="NEMifiedText">nem</span><span>&nbsp;<b>High Scores</b></span></div>
+            <div style="display: inline;">{{t "scores.title"}}</div>
             <div class="pull-right">
-                <a href="#" class="btn btn-sm btn-default pacnem-back-to-play"><span class="glyphicon glyphicon-eye-close"></span>&nbsp;Hide</a>
+                <a href="#" class="btn btn-sm btn-default pacnem-back-to-play"><span class="glyphicon glyphicon-eye-close"></span>&nbsp;{{t "scores.hide_button"}}</a>
             </div>
         </div>
         <div class="panel-body">
-            <p class="text-justify">
-                <span>Welcome to the </span><span>Pac</span><span class="NEMifiedText">nem</span><span> High Scores. The following list is held up to date via the </span><span class="NEMifiedText">nem</span><span> blockchain.</span>
-            </p>
+            <p class="text-justify">{{t "scores.explain"}}</p>
 
             <table class="table table-condensed">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Score</th>
-                        <th>Username</th>
-                        <th>XEM Address</th>
-                        <th>Date of History</th>
+                        <th>{{t "scores.score_label"}}</th>
+                        <th>{{t "scores.username_label"}}</th>
+                        <th>{{t "scores.xem_label"}}</th>
+                        <th>{{t "scores.date_label"}}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -28,7 +26,7 @@
                 {{#unless data.length}}
                     <tr class="table-info">
                         <td colspan="5" class="text-center">
-                            <span>Currently, no PacNEM high scores have been saved to the blockchain yet.</span>
+                            <span>{{t "scores.empty_high_scores"}}</span>
                         </td>
                     </tr>
                 {{/unless}}
