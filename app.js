@@ -110,10 +110,10 @@ handlebars.registerHelper('t', function(key, sub)
 });
 
 /**
- * Static Files Serving
+ * Static Files (assets) Serving
  *
- * Following routes define static files serving routes
- * such as the CSS, JS and images files.
+ * Also includes asynchronously loaded templates,
+ * those are stored in views/partials/*.hbs files.
  */
 app.get('/favicon.ico', function(req, res)
 	{
@@ -127,9 +127,9 @@ app.get('/favicon.ico', function(req, res)
 	{
 		res.sendfile(__dirname + '/img/' + req.params.image);
 	})
-.get('/css/style.css', function(req, res)
+.get('/css/:sheet.css', function(req, res)
 	{
-		res.sendfile(__dirname + '/static/css/style.css');
+		res.sendfile(__dirname + '/static/css/' + req.params.sheet + '.css');
 	})
 .get('/js/:source.js', function(req, res)
 	{
@@ -141,6 +141,22 @@ app.get('/favicon.ico', function(req, res)
 	});
 
 /**
+ * Third Party assets Serving
+ * - Bootstrap
+ * - Handlebars
+ * - i18next
+ * - jQuery
+ */
+app.get('/css/3rdparty/:sheet.css', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/css/3rdparty/' + req.params.sheet + '.css');
+	})
+	.get('/js/3rdparty/:source.js', function(req, res)
+	{
+		res.sendfile(__dirname + '/static/js/3rdparty/' + req.params.source + '.js');
+	})
+
+/**
  * Frontend Web Application Serving
  *
  * Following routes define several entry points
@@ -150,17 +166,19 @@ app.get("/:lang", function(req, res)
 	{
 		var currentLanguage = req.params.lang;
 		var currentNetwork  = chainDataLayer.getNetwork();
+		var translator 		= i18n;
 
 		i18n.changeLanguage(currentLanguage);
 
-		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage});
+		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage, translator: translator});
 	})
 	.get("/", function(req, res)
 	{
 		var currentLanguage = i18n.language;
 		var currentNetwork  = chainDataLayer.getNetwork();
+		var translator 		= i18n;
 
-		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage});
+		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage, translator: translator});
 	});
 
 /**

@@ -32,6 +32,51 @@
     "forms": {
         "username_placeholder": "Votre nom",
         "address_placeholder": "Adresse XEM",
-        "button_save": "Continuer"
+        "button_save": "Continuer",
+        "error_format_address": "Le format de l'adresse XEM est erroné, veuillez vérifier votre Saisie.",
+        "error_network_address": "Cette adresse XEM ne peut être utilisée sur cette Blockchain"
+    },
+    "player": {
+        "select_room_message": "Sélectionnez ou ajoutez und Salle de Jeu Pacnem dans la liste à droite.",
+        "room_players_title": "Salles de Jeu Pac<span class='NEMifiedText'>nem</span>",
+        "room_players_title": "Joueurs de la Salle Pac<span class='NEMifiedText'>nem</span>",
+        "score_label": "Points",
+        "lives_label": "Vie(s)",
+        "combo_label": "Combo",
+        "rooms_title": "Salles Pac<span class='NEMifiedText'>nem</span>",
+        "create_room_button": "Créer une Salle",
+        "room_join_button": "Rejoindre",
+        "room_play_button": "Jouer",
+        "room_leave_button": "Quitter",
+        "room_starting": "Début..",
+        "room_seconds_label": "sec.."
+    },
+    "donations": {
+        "title": "Partages - Liens - Donations",
+        "description": "Ce jeu est développé avec Node.js, Socket.io, Handlebars et <a target='_blank' href='https://nem.io' class='NEMifiedText'>nem</a>, et est à la base un fork de <a href='https://github.com/dubzzz/js-pacman' target='_blank'>ce projet</a>. Pacnem intégrer autant de modules et fonctionnalités de la blockchain <a target='_blank' href='https://nem.io' class='NEMifiedText'>nem</a> que possible. Le but de ce projet étant d'étendre mes connaissances et mon expérience dans le développement d'applications liées à des Cryptocurrency et Blockchain.",
+        "explain": "Vous aimez cette initiative ou désirez améliorer mon humeur du jour ? Prenez donc quelques secondes (et oui secondes, avec NEM..) et envoyez quelques XEM (ou tout autre Mosaic) à mon Wallet XEM"
+    },
+    "links": {
+        "intro": "Ci dessous vous trouverez une liste de liens et de références m'ayant aidés durant le développement du Jeu",
+        "source_code": "Code source de PacNEM",
+        "nem_website": "Site web de nem",
+        "nem_downloads": "Page de téléchargements de nem",
+        "nem_blog": "nem Blog",
+        "nem_forum": "nem Forum",
+        "nem_dev_guide": "nem Development Guide",
+        "nem_nis_doc": "nem NIS API Documentation",
+        "nem_nanowallet_src": "Code source du nem NanoWallet",
+        "nem_sdk": "nem SDK pour Node.js",
+        "nem_dev_101": "nem Development 101"
+    },
+    "score": {
+        "title": "<span>Pac</span><span class='NEMifiedText'>nem</span><span>&nbsp;<b>High Scores</b></span>",
+        "explain": "<span>Bienvenue sur la page des High Scores de </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>. Cette page est construite à l'aide de données récoltées sur la blockchain </span><span class='NEMifiedText'>nem</span><span>.</span>",
+        "score_label": "Points",
+        "username_label": "Nom du Joueur",
+        "xem_label": "Wallet XEM",
+        "date_label": "Date du Jeu",
+        "hide_button": "Masquer",
+        "empty_highscores": "Il n'y a actuellement encore aucun High Score de publié sur la blockchain."
     }
 }

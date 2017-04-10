@@ -473,13 +473,17 @@ var GameController = function(socket, nem, chainId)
 	this.validateBlockchainWalletAddress = function(address)
 	{
 		var format = this.nem().model.address.isValid(address.replace(/-/g, ""));
-		if (! format)
-			throw "Invalid XEM address, please verify your input.";
+		if (! format) {
+			var err = $("#pacnem-error-address-format").text();
+			throw err;
+		}
 
 		// also validate that it is an address on the right network
 		var authentic = this.nem().model.address.isFromNetwork(address, chainId_);
-		if (! authentic)
-			throw "XEM address cannot be used on network " + networks_[""+chainId_];
+		if (! authentic) {
+			var err = $("#pacnem-error-address-network").text();
+			throw err;
+		}
 
 		return true;
 	};

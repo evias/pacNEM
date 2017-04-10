@@ -14,13 +14,43 @@
         <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
         <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="/js/3rdparty/jquery.min.js"></script>
+        <script src="/js/3rdparty/bootstrap.min.js"></script>
+        <script src="/js/3rdparty/i18next.min.js" ></script>
+        <script src="/js/3rdparty/handlebars.min.js"></script>
+
         <script src="/socket.io/socket.io.js"></script>
         <script src="/js/nem-sdk.js"></script>
-        <script src="/js/handlebars.min.js"></script>
         <script src="/js/jquery-hbs-file-template.js"></script>
         <script src="/js/pacman.js"></script>
+
+        <script type="text/javascript">
+        i18next.init({
+            lng: "en",
+            fallbackLng: "en",
+            defaultNS: "translation",
+            whitelist: ["en", "de", "fr"],
+            nonExplicitWhitelist: true,
+            preload: ["en", "de", "fr"],
+            backend: {
+                loadPath: "locales/{{lng}}/{{ns}}.json"
+            }
+        });
+
+        /**
+         * Handlebars t() helper implementation for frontend
+         * templates.
+         */
+        Handlebars.registerHelper('t', function(key, sub)
+        {
+            if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
+                // dynamic subnamespace
+                var key = key + "." + sub;
+
+            return new Handlebars.SafeString(i18next.t(key));
+        });
+        </script>
+
     </head>
     <body>
         <img src="/img/pacnem_logo.png" alt="PacNEM - {{t "meta.title"}}" title="PacNEM - {{t "meta.title"}}" style="display: none;" />

@@ -71,14 +71,17 @@
         </div>
     </div>
 
-    <pre class="text-left msgSelectRoom show-on-auth" style="display: none;"><i class="glyphicon glyphicon-ok"></i>&nbsp;<strong>Thank you, Now please select a Room to Join in the list.</strong></pre>
+    <span id="pacnem-error-address-format" style="display: none;">{{t "forms.error_format_address"}}</span>
+    <span id="pacnem-error-address-network" style="display: none;">{{t "forms.error_network_address"}}&nbsp;({{currentNetwork.label}})</span>
+
+    <pre class="text-left msgSelectRoom show-on-auth" style="display: none;"><i class="glyphicon glyphicon-ok"></i>&nbsp;<strong>{{t "player.select_room_message"}}</strong></pre>
 
     <div id="pacnem-scores-wrapper" class="container-fluid" style="display: none;">&nbsp;</div>
 
     <div id="pacnem-game-wrapper" class="container-fluid" style="display: none;">
         <div class="container-fluid col-md-4">
             <div id="pacnem-current-room-wrapper" class="row">
-                <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-user"></i>&nbsp;Pac<span class="NEMifiedText">nem</span> Room Players</h4>
+                <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-user"></i>&nbsp;{{t "player.room_players_title"}}</h4>
 
                 <ul class="list-group players-list">
                     <li class="list-group-item hidden">
@@ -88,15 +91,15 @@
                         </h4>
                         <div class="list-group-item-text">
                             <div class="row">
-                                <div class="col-md-6">Score</div>
+                                <div class="col-md-6">{{t "player.score_label"}}</div>
                                 <div class="col-md-6 pc-score"></div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6">Lifes</div>
+                                <div class="col-md-6">{{t "player.lives_label"}}</div>
                                 <div class="col-md-6 pc-lifes"></div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6">Combo</div>
+                                <div class="col-md-6">{{t "player.combo_label"}}</div>
                                 <div class="col-md-6 pc-combo"></div>
                             </div>
                         </div>
@@ -114,47 +117,35 @@
 
 <div class="col-md-3">
     <div class="row">
-        <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-tasks"></i>&nbsp;Pac<span class="NEMifiedText">nem</span> rooms</h4>
+        <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-tasks"></i>&nbsp;{{t "player.rooms_title"}}</h4>
         <div id="rooms"></div>
 
-        <a href="#" class="btn btn-block btn-success roomCreateNew hidden">Create Room</a>
+        <a href="#" class="btn btn-block btn-success roomCreateNew hidden"><i class="glyphicon glyphicon-plus-sign"></i>&nbsp;{{t "player.create_room_button"}}</a>
     </div>
 
     <div id="spread-the-word" class="row">
-        <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-heart"></i>&nbsp;Spread the Word / Donate / Links</h4>
-        <p class="text-justify">
-        This game was developed with Node.js, Socket.io, Handlebars and <a target="_blank" href="https://nem.io" class="NEMifiedText">nem</a> and
-        started as a fork of <a href="https://github.com/dubzzz/js-pacman" target="_blank">this project</a>. This project aims to use
-        <a target="_blank" href="https://nem.io" class="NEMifiedText">nem</a> in as many ways as possible in order for me to collect experience
-        in the blockchain application development industry.
-        </p>
+        <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-heart"></i>&nbsp;{{t "donations.title"}}</h4>
+        <p class="text-justify">{{t "donations.description"}}</p>
+
         <p class="text-left">
-        I recommend following Links:
-            <ul class="text-left">
-                <li><a href="https://github.com/evias/pacNEM" target="_blank">Source Code</a></li>
-                <li><a href="https://nem.io" target="_blank" class="NEMifiedText">nem Official Website</a></li>
-                <li><a href="https://nem.io/install" target="_blank" class="NEMifiedText">nem Official Downloads Page</a></li>
-                <li><a href="https://blog.nem.io" target="_blank" class="NEMifiedText">nem Official Blog</a></li>
-                <li><a href="https://forum.nem.io" target="_blank" class="NEMifiedText">nem Official Forum</a></li>
-                <li><a href="https://rb2nem.github.io/nem-dev-guide/" target="_blank" class="NEMifiedText">nem Developer Guide</a></li>
-            </ul>
+            <span>{{t "donations.explain"}}:</span>
+            <pre>NB72EM6TTSX72O47T3GQFL345AB5WYKIDODKPPYW</pre>
         </p>
 
         <p class="text-left">
-        Following Links were useful during Development:
+            <span>{{t "links.intro"}}:</span>
             <ul class="text-left">
-                <li><a href="https://nem.io" target="_blank" class="NEMifiedText">nem Official Website</a></li>
-                <li><a href="https://github.com/NemProject/NanoWallet" target="_blank" class="NEMifiedText">nem NanoWallet Source Code</a></li>
-                <li><a href="https://github.com/QuantumMechanics/NEM-sdk" target="_blank" class="NEMifiedText">nem Library for Node.js</a></li>
-                <li><a href="https://blog.nem.io/nem-development-101/" target="_blank" class="NEMifiedText">nem Development 101</a></li>
-                <li><a href="http://bob.nem.ninja/docs/" target="_blank" class="NEMifiedText">nem NIS API Documentation</a></li>
-                <li><a href="https://rb2nem.github.io/nem-dev-guide/" target="_blank" class="NEMifiedText">nem Developer Guide</a></li>
-                <li><a href="https://forum.nem.io/t/easy-to-use-library-for-nem-in-node-js/3614" target="_blank" class="NEMifiedText">nem Node.js SDK Forum Post</a></li>
+                <li><a href="https://github.com/evias/pacNEM" target="_blank">{{t "links.source_code"}}</a></li>
+                <li><a href="https://nem.io" target="_blank" class="NEMifiedText">{{t "links.nem_website"}}</a></li>
+                <li><a href="https://nem.io/install" target="_blank" class="NEMifiedText">{{t "links.nem_downloads"}}</a></li>
+                <li><a href="https://blog.nem.io" target="_blank" class="NEMifiedText">{{t "links.nem_blog"}}</a></li>
+                <li><a href="https://forum.nem.io" target="_blank" class="NEMifiedText">{{t "links.nem_forum"}}</a></li>
+                <li><a href="http://bob.nem.ninja/docs/" target="_blank" class="NEMifiedText">{{t "links.nem_nis_doc"}}</a></li>
+                <li><a href="https://rb2nem.github.io/nem-dev-guide/" target="_blank" class="NEMifiedText">{{t "links.nem_dev_guide"}}</a></li>
+                <li><a href="https://github.com/NemProject/NanoWallet" target="_blank" class="NEMifiedText">{{t "links.nem_nanowallet_src"}}</a></li>
+                <li><a href="https://github.com/QuantumMechanics/NEM-sdk" target="_blank" class="NEMifiedText">{{t "links.nem_sdk"}}</a></li>
+                <li><a href="https://blog.nem.io/nem-development-101/" target="_blank" class="NEMifiedText">{{t "links.nem_dev_101"}}</a></li>
             </ul>
-        </p>
-        <p class="text-left">
-            If you feel like Donating, send XEM Donations to:
-            <pre>NB72EM6TTSX72O47T3GQFL345AB5WYKIDODKPPYW</pre>
         </p>
     </div>
 </div>
@@ -168,10 +159,10 @@
             </ul>
         </div>
         <div class="col-md-5 room-actions-wrapper">
-            <a href="#" class="btn btn-block btn-primary roomActionJoin hidden">Join Room</a>
-            <a href="#" class="btn btn-block btn-primary roomActionPlay hidden">Play</a>
-            <a href="#" class="btn btn-block btn-success roomActionCancel hidden">Starting.. (<span class="seconds-counter">10</span> sec to cancel)</a>
-            <a href="#" class="btn btn-block btn-danger roomActionLeave hidden">Leave Room</a>
+            <a href="#" class="btn btn-block btn-primary roomActionJoin hidden">{{t "player.room_join_button"}}</a>
+            <a href="#" class="btn btn-block btn-primary roomActionPlay hidden">{{t "player.room_play_button"}}</a>
+            <a href="#" class="btn btn-block btn-success roomActionCancel hidden">{{t "player.room_starting"}} (<span class="seconds-counter">10</span>{{t "player.room_seconds_label"}})</a>
+            <a href="#" class="btn btn-block btn-danger roomActionLeave hidden">{{t "player.room_leave_button"}}</a>
         </div>
     </div>
 </div>
