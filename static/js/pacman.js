@@ -990,6 +990,18 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 	 */
 	this.formValidate = function()
 	{
+		// first validate that a game mode is selected
+		var $selectedMode = $("input[type=radio][name=play_type]:checked");
+		if (! $selectedMode.length) {
+			// set error mode
+			$(".pacnem-game-mode-wrapper").first().addClass("panel").addClass("panel-danger");
+			return false;
+		}
+		else
+			// no error
+			$(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");
+
+		// now validate input fields
 		var validators = [
 			{
 				"selector": "#username",
@@ -1109,6 +1121,12 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 				$(".msgSelectRoom").show();
 				$("#pacnem-scores-wrapper").hide();
 			}
+		});
+
+		$(".pacnem-gamemode-trigger").on("click", function()
+		{
+			$("#pacnem-save-trigger").prop("disabled", false).removeClass("btn-disabled");
+			$(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");
 		});
 
 		this.initBackToPlayButtons();

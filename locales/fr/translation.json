@@ -25,8 +25,7 @@
         "title_blue_box": "Jeu de Pacman Multiplayer",
         "welcome_paragraph_1_1": "<span>Bienvenue sur le jeu </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>. Il s'agit d'un jeu gratuit &amp; Open Source pour votre Navigateur, développé à l'aide de Node.js et de la Blockchain </span><span class='NEMifiedText'>nem</span><span>.</span>",
         "welcome_paragraph_1_2": "<span>Ce projet utilise la Blockchain </span><span class='NEMifiedText'>nem</span><span> afin d'identifier les Joueurs ainsi que pour gérer le Sponsoring des sessions de Jeu et enfin pour sauvegarder les Records sur la Blockchain. Ce jeu propose un code source simple et à pour but de mettre en avant la facilité et la rapidité d'intégration que propose </span><span class='NEMifiedText'>nem</span><span> pour l'industrie du Gaming et des Applications Web ainsi que le potentiel marché de Sponsoring / Advertising en concordance avec la Blockchain </span><span class='NEMifiedText'>nem</span><span> et les paiements instantanés.</span>",
-        "welcome_paragraph_2_1": "<span>Veuillez entrer votre nom ainsi que l'adresse de votre Wallet XEM et cliquez sur 'Continuer' afin de joindre des sessions </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>.</span>",
-        "welcome_paragraph_2_2": "",
+        "enter_data_to_join": "<span>Veuillez entrer votre nom ainsi que l'adresse de votre Wallet XEM et cliquez sur 'Continuer' afin de joindre des sessions </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>.</span>",
         "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> ne vous demandera jamais de réveler des données sensibles tel votre Mot de Passe ou votre Clé Privé.</span>"
     },
     "forms": {
