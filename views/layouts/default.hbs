@@ -33,6 +33,8 @@
  *
  * Requires i18nextXHRBackend and i18nextJquery plugins
  * to function correctly.
+ *
+ * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  * @link    https://github.com/evias/pacNEM
  */
 window.i18next.use(window.i18nextXHRBackend).init({
@@ -41,7 +43,7 @@ window.i18next.use(window.i18nextXHRBackend).init({
     defaultNS: "translation",
     whitelist: ["en", "de", "fr"],
     nonExplicitWhitelist: true,
-    preload: ["en", "de", "fr"],
+    preload: ["{{currentLanguage}}"],
     backend: {
         loadPath: "/locales/\{\{lng\}\}"
     }
