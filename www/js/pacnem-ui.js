@@ -743,16 +743,17 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
     };
 
     /**
-     * Utility method called on DOM Ready from the view template.
+     * Add event listener for authentication button
      *
-     * @return Game UI
+     * @return GameUI
      */
-    this.initDOMListeners = function()
+    this.initAuthButton = function()
     {
-        var self   = this;
-        rooms_ctr_ = $("#rooms");
+        var self = this;
 
-        $("#pacnem-save-trigger").click(function() {
+        $("#pacnem-save-trigger").off("click");
+        $("#pacnem-save-trigger").click(function()
+        {
             $(".error-input").removeClass("error-input");
             $(".error-block").hide();
             $(".error-block .error").text("");
@@ -778,12 +779,36 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
             return false;
         });
 
+        return this;
+    };
+
+    /**
+     * Add event listener for purge button
+     *
+     * @return GameUI
+     */
+    this.initPurgeButton = function()
+    {
+        var self = this;
+
         $("#pacnem-purge-trigger").click(function()
         {
             session_.clear();
             window.location.href = "/";
             return false;
         });
+
+        return this;
+    };
+
+    /**
+     * Add event listener for High Scores button
+     *
+     * @return GameUI
+     */
+    this.initScoresButton = function()
+    {
+        var self = this;
 
         $("#pacnem-scores-trigger").on("click", function()
         {
@@ -806,6 +831,16 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
                 $("#pacnem-current-player-details").show();
             }
         });
+    };
+
+    /**
+     * Add event listener for game modes trigger.
+     *
+     * @return GameUI
+     */
+    this.initGameModes = function()
+    {
+        var self = this;
 
         $(".pacnem-gamemode-trigger").on("click", function()
         {
@@ -822,7 +857,22 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
             $(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");
             $("#username").focus();
         });
+    };
 
+    /**
+     * Utility method called on DOM Ready from the view template.
+     *
+     * @return Game UI
+     */
+    this.initDOMListeners = function()
+    {
+        var self   = this;
+        rooms_ctr_ = $("#rooms");
+
+        this.initAuthButton();
+        this.initPurgeButton();
+        this.initScoresButton();
+        this.initGameModes();
         this.initBackToPlayButtons();
 
         var session_ = new GameSession(API_);
