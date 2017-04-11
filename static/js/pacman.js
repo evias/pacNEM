@@ -304,6 +304,9 @@ var GameController = function(socket, nem, chainId)
 	var points_ = new Array();
 	var players_ = new Array();
 	var last_room_ack_ = null;
+	var play_modes_ = ["sponsored", "pay-per-play", "share-per-play"];
+	var play_mode_  = "pay-per-play";
+	var sponsor_ = undefined;
 
 	this.start = function()
 	{
@@ -429,6 +432,51 @@ var GameController = function(socket, nem, chainId)
 		var u = $("#username").val();
 		var a = $("#address").val();
 		return u.length > 0 && a.length > 0;
+	};
+
+	this.setPlayMode = function(mode)
+	{
+		var isValidMode = $.inArray(mode, play_modes_) != -1;
+		if (! isValidMode)
+			mode = "pay-per-play";
+
+		play_mode_ = mode;
+		return this;
+	};
+
+	this.getPlayMode = function()
+	{
+		return play_mode_;
+	};
+
+	this.isPlayMode = function(mode)
+	{
+		return play_mode_ == mode;
+	};
+
+	this.sponsorizeName = function(sponsor)
+	{
+		// little nem in here.. just for the fun of it.
+		var rBytes = nem_.crypto.nacl.randomBytes(2);
+		var rHex   = nem_.utils.convert.ua2hex(rBytes);
+		var uname  = $("#username").val();
+		var sName  = sponsor.slug + rHex + "." + uname;
+
+		$("#username").val(sName);
+	};
+
+	this.setSponsor = function(sponsor)
+	{
+		if (! sponsor.slug.length || ! sponsor.xem.length)
+			return this;
+
+		sponsor_ = sponsor;
+		return this;
+	};
+
+	this.getSponsor = function()
+	{
+		return sponsor_;
 	};
 
 	/**
@@ -1009,16 +1057,26 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 	{
 		API_.getRandomSponsor(function(sponsor)
 			{
+				// got a sponsor, now we'll have a valid address input for sure.
+				$(".error-input").removeClass("error-input");
+				$(".error-block").hide();
+				$(".error-block .error").text("");
+
 				$("#address").val(sponsor.xem);
 				$("#address").prop("disabled", true);
 				$("#address").attr("data-sponsor", "1");
+				$("#username").attr("data-sponsor", sponsor.slug);
+
+				ctrl_.setSponsor(sponsor);
 			});
 	};
 
 	this.hideSponsoredUI = function()
 	{
+		$("#address").val("");
 		$("#address").prop("disabled", false);
 		$("#address").attr("data-sponsor", "0");
+		$("#username").attr("data-sponsor", "");
 	};
 
 	/**
@@ -1128,6 +1186,9 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 			$(".error-block").hide();
 			$(".error-block .error").text("");
 
+			if (ctrl_.isPlayMode("sponsored"))
+				ctrl_.sponsorizeName(ctrl_.getSponsor());
+
 			if (self.formValidate()) {
 				self.emitUsername();
 				self.displayPlayerUI();
@@ -1169,14 +1230,13 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 		$(".pacnem-gamemode-trigger").on("click", function()
 		{
 			var thisMode = $(this).val();
-			var isSponsorAddr = $("#address").attr("data-sponsor") === "1";
+
+			ctrl_.setPlayMode(thisMode);
 
 			if ("sponsored" == thisMode)
 				self.displaySponsoredUI();
-			else if (isSponsorAddr) {
-				$("#address").val("");
+			else
 				self.hideSponsoredUI();
-			}
 
 			$("#pacnem-save-trigger").prop("disabled", false).removeClass("btn-disabled");
 			$(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");

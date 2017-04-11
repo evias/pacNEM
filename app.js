@@ -148,7 +148,7 @@ app.get('/resources/templates/:name', function(req, res)
 	{
 		res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
 	})
-	.get('/locales/:lang', function(req, res)
+.get('/locales/:lang', function(req, res)
 	{
 		var json = fs.readFileSync(__dirname + '/locales/' + req.params.lang + '/translation.json');
 
@@ -167,7 +167,7 @@ app.get('/css/3rdparty/:sheet.css', function(req, res)
 	{
 		res.sendfile(__dirname + '/static/css/3rdparty/' + req.params.sheet + '.css');
 	})
-	.get('/js/3rdparty/:source.js', function(req, res)
+.get('/js/3rdparty/:source.js', function(req, res)
 	{
 		res.sendfile(__dirname + '/static/js/3rdparty/' + req.params.source + '.js');
 	});
@@ -187,7 +187,7 @@ app.get("/:lang", function(req, res)
 
 		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage, translator: translator});
 	})
-	.get("/", function(req, res)
+.get("/", function(req, res)
 	{
 		var currentLanguage = i18n.language;
 		var currentNetwork  = chainDataLayer.getNetwork();
@@ -300,6 +300,7 @@ app.get("/api/v1/sponsors/random", function(req, res)
 
 		//XXX implement dataLayer.NEMSponsor features
 		var sponsor   = {};
+		var slugs 	  = ["easport", "atari", "nem", "evias"];
 		var addresses = [
 			"TD2WIZ-UPOHCE-65RJ72-ICJCAO-GGWX7S-NORJCD-2Y6J",
 			"TBY4WF-4LSRAI-7REVQP-P3MBD3-BN4IZE-EDMY7K-IYXV",
@@ -309,7 +310,7 @@ app.get("/api/v1/sponsors/random", function(req, res)
 		var rId = Math.floor(Math.random() * 99999);
 		var rAddr = Math.floor(Math.random() * 4);
 
-		sponsor.slug
+		sponsor.slug = slugs[rAddr];
 		sponsor.name = "PacNEM Sponsor #" + rId;
 		sponsor.xem  = addresses[rAddr];
 		sponsor.description = i18n.t("sponsors.example_description");
@@ -323,7 +324,8 @@ app.get("/api/v1/sponsors/random", function(req, res)
  * Socket.IO RoomManager implementation
  *
  * The following code block defines Socket.IO room
- * event listeners.
+ * event listeners and configures the WebSocket
+ * connections for Multiplayer features.
  *
  * Following Socket Events are implemented:
  * 	- disconnect
@@ -335,8 +337,10 @@ app.get("/api/v1/sponsors/random", function(req, res)
  * 	- cancel_game
  * 	- start
  * 	- keydown
+ * 	- notify
  *
  * @link https://github.com/dubzzz/js-pacman
+ * @link https://github.com/pacNEM/evias
  */
 var room_manager = new RoomManager(io);
 
@@ -432,6 +436,7 @@ io.sockets.on('connection', function(socket)
 		}
 	});
 
+	// notify about any in-room changes
 	socket.on("notify", function()
 	{
 		logger.info(__smartfilename, __line, '[' + socket.id + '] notify()');
