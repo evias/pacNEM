@@ -1,0 +1,24 @@
+
+<div class="modal fade pacnem-sponsor-modal" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">{{name}}</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row text-center"><img src="{{imageUrl}}" alt="{{name}}" title="{{name}}" /></div>
+                <div class="row text-left">{{description}}</div>
+                <div class="row text-left"><a href="{{websiteUrl}}" />{{t "sponsors.link_to_website"}}&nbsp;{{name}}</a></div>
+            </div>
+            <div class="modal-footer">
+                <div>
+                    <button id="pacnem-sponsor-close-trigger" class="btn btn-default" data-remaining="11" role="button">
+                        <span>{{t "sponsors.button_closing_in"}}</span>&nbsp;
+                        <span class="seconds">11</span>&nbsp;
+                        <span>{{t "sponsors.seconds_suffix"}}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

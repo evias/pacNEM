@@ -1055,6 +1055,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 	 */
 	this.displaySponsoredUI = function()
 	{
+		var self = this;
 		API_.getRandomSponsor(function(sponsor)
 			{
 				// got a sponsor, now we'll have a valid address input for sure.
@@ -1068,6 +1069,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 				$("#username").attr("data-sponsor", sponsor.slug);
 
 				ctrl_.setSponsor(sponsor);
+				self.prepareSponsoredJoin(sponsor);
 			});
 	};
 
@@ -1077,6 +1079,50 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 		$("#address").prop("disabled", false);
 		$("#address").attr("data-sponsor", "0");
 		$("#username").attr("data-sponsor", "");
+	};
+
+	this.prepareSponsoredJoin = function(sponsor)
+	{
+		template_.render("sponsor-box", function(compileWith)
+			{
+				// add server side generated sponsor HTML to a modal
+				// boxes wrapper.
+				$("#pacnem-modal-wrapper").html(compileWith(sponsor));
+			});
+	};
+
+	this.displaySponsorAdvertisement = function(callback)
+	{
+		$(".pacnem-sponsor-modal").first().modal();
+
+		var self = this;
+		var i = setInterval(function()
+			{
+				var secs = parseInt($("#pacnem-sponsor-close-trigger .seconds").first().text());
+				var n = secs - 1;
+
+				if (n < 0)
+					n = 0;
+
+				$("#pacnem-sponsor-close-trigger .seconds").first().text(""+n);
+				$("#pacnem-sponsor-close-trigger").attr("data-remaining", n);
+
+				//XXX SAVE TO LOCAL STORAGE IMPORTANT FOR PAGE RELOADS
+			}, 1000);
+
+		setTimeout(function()
+			{
+				clearInterval(i);
+				$(".pacnem-sponsor-modal").first().modal("hide");
+				$("#pacnem-sponsor-close-trigger").removeAttr("data-remaining");
+
+				callback(self);
+			}, 10000);
+	};
+
+	this.displayInvoice = function(callback)
+	{
+		alert("Not implemented yet!");
 	};
 
 	/**
@@ -1186,13 +1232,22 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 			$(".error-block").hide();
 			$(".error-block .error").text("");
 
-			if (ctrl_.isPlayMode("sponsored"))
-				ctrl_.sponsorizeName(ctrl_.getSponsor());
-
 			if (self.formValidate()) {
-				self.emitUsername();
-				self.displayPlayerUI();
-				$("#rooms").parent().show();
+
+				var postPaymentCallback = function(ui)
+					{
+						ui.emitUsername();
+						ui.displayPlayerUI();
+						$("#rooms").parent().show();
+					};
+
+				if (ctrl_.isPlayMode("sponsored")) {
+					ctrl_.sponsorizeName(ctrl_.getSponsor());
+					self.displaySponsorAdvertisement(postPaymentCallback);
+				}
+				else {
+					self.displayInvoice(postPaymentCallback);
+				}
 			}
 
 			return false;

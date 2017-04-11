@@ -314,7 +314,7 @@ app.get("/api/v1/sponsors/random", function(req, res)
 		sponsor.name = "PacNEM Sponsor #" + rId;
 		sponsor.xem  = addresses[rAddr];
 		sponsor.description = i18n.t("sponsors.example_description");
-		sponsor.imageUrl    = "http://www.evias.be/images/evias-logo-small-transparent.png";
+		sponsor.imageUrl    = "http://placehold.it/500x300";
 		sponsor.websiteUrl  = "https://github.com/evias";
 
 		res.send(JSON.stringify({item: sponsor}));
