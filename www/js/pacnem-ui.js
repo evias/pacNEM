@@ -103,7 +103,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
             var $data = $("#currentHearts-hearts").first();
 
             $wrap.show();
-            self.animateCounter($data, 0, data, " Credits");
+            self.animateHeartsCounter($data, 0, data, " Credits");
         });
 
         return this;
@@ -122,7 +122,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
      * @param  string suffix   [description]
      * @return GameUI
      */
-    this.animateCounter = function($element, start, end, suffix)
+    this.animateHeartsCounter = function($element, start, end, suffix)
     {
         jQuery({ Counter: start }).animate({ Counter: parseInt(end) }, {
             duration: 1000,
@@ -425,6 +425,13 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
         return this;
     }
 
+    /**
+     * Get a User Details dictionary built from the
+     * user details form.
+     *
+     * @param  GameSession session
+     * @return Object
+     */
     this.getPlayerDetails = function(session)
     {
         var username = $("#username").val();
@@ -439,6 +446,12 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
         return {"username": username, "address": address};
     };
 
+    /**
+     * Synchronize form input with Session content.
+     *
+     * @param  GameSession session
+     * @return GameUI
+     */
     this.updateUserFormWithSession = function(session)
     {
         var username = $("#username").val();
@@ -453,6 +466,8 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
             $("#address").val(session.getAddress());
             address = session.getAddress();
         }
+
+        return this;
     };
 
     /**
@@ -513,7 +528,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
      *
      * @return {[type]} [description]
      */
-    this.displaySponsoredUI = function()
+    this.setSponsoredUI = function()
     {
         var self = this;
         API_.getRandomSponsor(function(sponsor)
@@ -533,14 +548,36 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
             });
     };
 
-    this.hideSponsoredUI = function()
+    /**
+     * Unset the settings for the sponsored UI.
+     *
+     * This allows the user to enter an address and
+     * username again (username content not touched).
+     *
+     * @return GameUI
+     */
+    this.unsetSponsoredUI = function()
     {
         $("#address").val("");
         $("#address").prop("disabled", false);
         $("#address").attr("data-sponsor", "0");
         $("#username").attr("data-sponsor", "");
+
+        return this;
     };
 
+    /**
+     * Fetch the asynchronous template content for
+     * the randomly selected `sponsor`.
+     *
+     * This will load the HTML for the advertisement
+     * modal box of the given `sponsor`.
+     *
+     * The modal box is not opened here.
+     *
+     * @param  NEMSponsor sponsor
+     * @return GameUI
+     */
     this.prepareSponsoredJoin = function(sponsor)
     {
         template_.render("sponsor-box", function(compileWith)
@@ -549,8 +586,17 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
                 // boxes wrapper.
                 $("#pacnem-modal-wrapper").html(compileWith(sponsor));
             });
+
+        return this;
     };
 
+    /**
+     * Open the Advertisement modal box and execute
+     * `callback` when the delay is over.
+     *
+     * @param  Function callback
+     * @return GameUI
+     */
     this.displaySponsorAdvertisement = function(callback)
     {
         $(".pacnem-sponsor-modal").first().modal({
@@ -586,11 +632,22 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
         updateCounter();
         var i = setInterval(updateCounter, 1000);
         setTimeout(function() { closeSponsor(i); }, 10000);
+
+        return this;
     };
 
+    /**
+     * Open the Invoice modal box for the user to Pay
+     * per Play. This invoice will contain a Mosaic
+     * amount to defined.
+     *
+     * @param  Function callback
+     * @return GameUI
+     */
     this.displayInvoice = function(callback)
     {
         alert("Not implemented yet!");
+        return this;
     };
 
     /**
@@ -757,9 +814,9 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
             ctrl_.setPlayMode(thisMode);
 
             if ("sponsored" == thisMode)
-                self.displaySponsoredUI();
+                self.setSponsoredUI();
             else
-                self.hideSponsoredUI();
+                self.unsetSponsoredUI();
 
             $("#pacnem-save-trigger").prop("disabled", false).removeClass("btn-disabled");
             $(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");

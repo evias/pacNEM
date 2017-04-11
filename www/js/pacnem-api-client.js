@@ -49,7 +49,7 @@ var GameAPI = function(socket, controller, $, jQFileTemplate)
 					req.overrideMimeType("application/json;charset=UTF-8");
 			},
 			success: function(response) {
-				// player = (JSON.parse(response)).item
+				// var player = response.item
 			}
 		});
 	};
