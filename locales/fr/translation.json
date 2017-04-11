@@ -25,6 +25,10 @@
         "title_blue_box": "Jeu de Pacman Multiplayer",
         "welcome_paragraph_1_1": "<span>Bienvenue sur le jeu </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>. Il s'agit d'un jeu gratuit &amp; Open Source pour votre Navigateur, développé à l'aide de Node.js et de la Blockchain </span><span class='NEMifiedText'>nem</span><span>.</span>",
         "welcome_paragraph_1_2": "<span>Ce projet utilise la Blockchain </span><span class='NEMifiedText'>nem</span><span> afin d'identifier les Joueurs ainsi que pour gérer le Sponsoring des sessions de Jeu et enfin pour sauvegarder les Records sur la Blockchain. Ce jeu propose un code source simple et à pour but de mettre en avant la facilité et la rapidité d'intégration que propose </span><span class='NEMifiedText'>nem</span><span> pour l'industrie du Gaming et des Applications Web ainsi que le potentiel marché de Sponsoring / Advertising en concordance avec la Blockchain </span><span class='NEMifiedText'>nem</span><span> et les paiements instantanés.</span>",
+        "play_mode_explain": "PacNEM propose plusieurs type de Jeu: le Jeu Sponsorisé, le Jeu par Paiement et le Jeu par Partage. Le mode de Jeu Sponsorisé est gratuit et ne requiert que l'affichage pendant 10 secondes de la publicité de l'un de nos Sponsor. Vous pourrez ensuite jouer avec l'un de nos Comptes Sponsorisés! Le mode de Jeu par Paiement vous permet d'acheter des Crédits de Jeu <b>evias.pacnem:heart</b> pour votre Wallet XEM. Le mode de Jeu par Partage requiert le Partage de contenu de nos Sponsors sur l'un des réseaux sociaux proposés et vous permet de recevoir des Crédits de Jeu <b>evias.pacnem:heart</b>. Ces différents modes de Jeu montre la facilité que propose la Blockchain <span class='NEMifiedText'>nem</span> à être intégrée dans l'industrie des Jeux Vidéos.",
+        "play_type_sponsored": "<b>Sponsored Play</b>: Publicité en Paiement par Vue avec <span class='NEMifiedText'>nem</span>.",
+        "play_type_payperplay": "<b>Pay per Play</b>: Joue avec ton propre Wallet et <u>achète</u> des Crédits de Jeu <b>evias.pacnem:heart</b>!",
+        "play_type_shareperplay": "<b>Share per Play</b>: Joue avec ton propre Wallet et <u>gagne</u> de Crédits de Jeu <b>evias.pacnem:heart</b> grâce au Partage de contenu!",
         "enter_data_to_join": "<span>Veuillez entrer votre nom ainsi que l'adresse de votre Wallet XEM et cliquez sur 'Continuer' afin de joindre des sessions </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>.</span>",
         "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> ne vous demandera jamais de réveler des données sensibles tel votre Mot de Passe ou votre Clé Privé.</span>"
     },
@@ -77,5 +81,8 @@
         "date_label": "Date du Jeu",
         "hide_button": "Masquer",
         "empty_highscores": "Il n'y a actuellement encore aucun High Score de publié sur la blockchain."
+    },
+    "sponsors": {
+        "example_description": "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi."
     }
 }

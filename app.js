@@ -175,8 +175,7 @@ app.get('/css/3rdparty/:sheet.css', function(req, res)
 /**
  * Frontend Web Application Serving
  *
- * Following routes define several entry points
- * like / and /scores.
+ * This part of the game is where the end-user is active.
  */
 app.get("/:lang", function(req, res)
 	{
@@ -200,8 +199,8 @@ app.get("/:lang", function(req, res)
 /**
  * API Routes
  *
- * Following routes are used for handling the business
- * layer and managing the data layer.
+ * Following routes are used for handling the business/data
+ * layer.
  *
  * localStorage does not need any API requests to be
  * executed, only the database synchronization needs
@@ -275,6 +274,7 @@ app.get("/api/v1/scores", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
+		//XXX implement chainDataLayer.fetchScores
 		var scores = [];
 		for (var i = 0; i < 10; i++) {
 			var rScore = Math.floor(Math.random() * 20001);
@@ -292,6 +292,31 @@ app.get("/api/v1/scores", function(req, res)
 		}
 
 		res.send(JSON.stringify({data: scores}));
+	});
+
+app.get("/api/v1/sponsors/random", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		//XXX implement dataLayer.NEMSponsor features
+		var sponsor   = {};
+		var addresses = [
+			"TD2WIZ-UPOHCE-65RJ72-ICJCAO-GGWX7S-NORJCD-2Y6J",
+			"TBY4WF-4LSRAI-7REVQP-P3MBD3-BN4IZE-EDMY7K-IYXV",
+			"TAS5KA-R4WWIB-7JX64U-DPGMCX-ZGQ77U-ZIRY3D-BJB6",
+			"TBWZKN-LDTIVE-GBQ5OG-BGY3NI-JWLAHB-I2RS5B-YV7M"];
+
+		var rId = Math.floor(Math.random() * 99999);
+		var rAddr = Math.floor(Math.random() * 4);
+
+		sponsor.slug
+		sponsor.name = "PacNEM Sponsor #" + rId;
+		sponsor.xem  = addresses[rAddr];
+		sponsor.description = i18n.t("sponsors.example_description");
+		sponsor.imageUrl    = "http://www.evias.be/images/evias-logo-small-transparent.png";
+		sponsor.websiteUrl  = "https://github.com/evias";
+
+		res.send(JSON.stringify({item: sponsor}));
 	});
 
 /**

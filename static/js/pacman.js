@@ -144,6 +144,24 @@ var GameAPI = function(socket, controller, $, jQFileTemplate)
 			}
 		});
 	};
+
+	this.getRandomSponsor = function(callback)
+	{
+		var self = this;
+		self.jquery_.ajax({
+			url: "/api/v1/sponsors/random",
+			type: "GET",
+			dataType: "json",
+			beforeSend: function(req) {
+				if (req && req.overrideMimeType)
+					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(response) {
+				var sponsor = response.item;
+				callback(sponsor);
+			}
+		});
+	};
 };
 
 /**
@@ -957,7 +975,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 	 */
 	this.displayPlayerUI = function()
 	{
-		// view effects & modifications
+		// top navigation bar update
 		$("#currentUser-username").html("&nbsp;" + $("#username").val());
 		$("#currentUser").fadeIn("slow");
 		$("#pacnem-purge-trigger").parent().show();
@@ -978,6 +996,29 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 		$("#currentHearts").fadeIn("slow");
 
 		return this;
+	};
+
+	/**
+	 * Use the API to get a [not-so-] random Sponsor Wallet
+	 * and lock the XEM Address input field to that Sponsor's
+	 * Sub-Wallet.
+	 *
+	 * @return {[type]} [description]
+	 */
+	this.displaySponsoredUI = function()
+	{
+		API_.getRandomSponsor(function(sponsor)
+			{
+				$("#address").val(sponsor.xem);
+				$("#address").prop("disabled", true);
+				$("#address").attr("data-sponsor", "1");
+			});
+	};
+
+	this.hideSponsoredUI = function()
+	{
+		$("#address").prop("disabled", false);
+		$("#address").attr("data-sponsor", "0");
 	};
 
 	/**
@@ -1113,6 +1154,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 					{
 						self.initBackToPlayButtons();
 						$(".msgSelectRoom").hide();
+						$("#pacnem-current-player-details").hide();
 						$("#pacnem-scores-wrapper").show();
 					});
 			}
@@ -1120,13 +1162,25 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 				$(this).attr("data-display", "0");
 				$(".msgSelectRoom").show();
 				$("#pacnem-scores-wrapper").hide();
+				$("#pacnem-current-player-details").show();
 			}
 		});
 
 		$(".pacnem-gamemode-trigger").on("click", function()
 		{
+			var thisMode = $(this).val();
+			var isSponsorAddr = $("#address").attr("data-sponsor") === "1";
+
+			if ("sponsored" == thisMode)
+				self.displaySponsoredUI();
+			else if (isSponsorAddr) {
+				$("#address").val("");
+				self.hideSponsoredUI();
+			}
+
 			$("#pacnem-save-trigger").prop("disabled", false).removeClass("btn-disabled");
 			$(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");
+			$("#username").focus();
 		});
 
 		this.initBackToPlayButtons();
@@ -1182,6 +1236,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 		{
 			$("#pacnem-scores-trigger").attr("data-display", "0");
 			$("#pacnem-scores-wrapper").hide();
+			$("#pacnem-current-player-details").show();
 
 			var sess = new GameSession(API_);
 			if (sess.identified())
