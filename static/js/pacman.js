@@ -1093,31 +1093,39 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 
 	this.displaySponsorAdvertisement = function(callback)
 	{
-		$(".pacnem-sponsor-modal").first().modal();
+		$(".pacnem-sponsor-modal").first().modal({
+			backdrop: "static",
+			keyboard: false,
+			show: true
+		});
 
 		var self = this;
-		var i = setInterval(function()
-			{
-				var secs = parseInt($("#pacnem-sponsor-close-trigger .seconds").first().text());
-				var n = secs - 1;
+		var start = new Date().getTime();
 
-				if (n < 0)
-					n = 0;
+		var updateCounter = function()
+		{
+			var secs = parseInt($("#pacnem-sponsor-close-trigger .seconds").first().text());
+			var n = secs - 1;
 
-				$("#pacnem-sponsor-close-trigger .seconds").first().text(""+n);
-				$("#pacnem-sponsor-close-trigger").attr("data-remaining", n);
+			if (n < 0)
+				n = 0;
 
-				//XXX SAVE TO LOCAL STORAGE IMPORTANT FOR PAGE RELOADS
-			}, 1000);
+			$("#pacnem-sponsor-close-trigger .seconds").first().text(""+n);
+			$("#pacnem-sponsor-close-trigger").attr("data-remaining", n);
+		};
 
-		setTimeout(function()
-			{
-				clearInterval(i);
-				$(".pacnem-sponsor-modal").first().modal("hide");
-				$("#pacnem-sponsor-close-trigger").removeAttr("data-remaining");
+		var closeSponsor = function(i)
+		{
+			clearInterval(i);
+			$(".pacnem-sponsor-modal").first().modal("hide");
+			$("#pacnem-sponsor-close-trigger").removeAttr("data-remaining");
 
-				callback(self);
-			}, 10000);
+			callback(self);
+		};
+
+		updateCounter();
+		var i = setInterval(updateCounter, 1000);
+		setTimeout(function() { closeSponsor(i); }, 10000);
 	};
 
 	this.displayInvoice = function(callback)
