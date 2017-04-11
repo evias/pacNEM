@@ -118,7 +118,7 @@ handlebars.registerHelper('t', function(key, sub)
  */
 app.get('/favicon.ico', function(req, res)
 	{
-		res.sendfile(__dirname + '/static/favicon.ico');
+		res.sendfile(__dirname + '/www/favicon.ico');
 	})
 .get('/img/flags/:country.png', function(req, res)
 	{
@@ -130,11 +130,27 @@ app.get('/favicon.ico', function(req, res)
 	})
 .get('/css/:sheet.css', function(req, res)
 	{
-		res.sendfile(__dirname + '/static/css/' + req.params.sheet + '.css');
+		res.sendfile(__dirname + '/www/css/' + req.params.sheet + '.css');
 	})
 .get('/js/:source.js', function(req, res)
 	{
-		res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
+		res.sendfile(__dirname + '/www/js/' + req.params.source + '.js');
+	});
+
+/**
+ * Third Party assets Serving
+ * - Bootstrap
+ * - Handlebars
+ * - i18next
+ * - jQuery
+ */
+app.get('/css/3rdparty/:sheet.css', function(req, res)
+	{
+		res.sendfile(__dirname + '/www/css/3rdparty/' + req.params.sheet + '.css');
+	})
+.get('/js/3rdparty/:source.js', function(req, res)
+	{
+		res.sendfile(__dirname + '/www/js/3rdparty/' + req.params.source + '.js');
 	});
 
 /**
@@ -154,22 +170,6 @@ app.get('/resources/templates/:name', function(req, res)
 
 		res.setHeader("Content-Type", "application/json; charset=utf-8");
 		res.send(json);
-	});
-
-/**
- * Third Party assets Serving
- * - Bootstrap
- * - Handlebars
- * - i18next
- * - jQuery
- */
-app.get('/css/3rdparty/:sheet.css', function(req, res)
-	{
-		res.sendfile(__dirname + '/static/css/3rdparty/' + req.params.sheet + '.css');
-	})
-.get('/js/3rdparty/:source.js', function(req, res)
-	{
-		res.sendfile(__dirname + '/static/js/3rdparty/' + req.params.source + '.js');
 	});
 
 /**
@@ -270,6 +270,7 @@ app.post("/api/v1/sessions/store", function(req, res)
 		});
 	});
 
+//XXX implement actual model
 app.get("/api/v1/scores", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
@@ -294,6 +295,7 @@ app.get("/api/v1/scores", function(req, res)
 		res.send(JSON.stringify({data: scores}));
 	});
 
+//XXX implement actual model
 app.get("/api/v1/sponsors/random", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
@@ -301,6 +303,7 @@ app.get("/api/v1/sponsors/random", function(req, res)
 		//XXX implement dataLayer.NEMSponsor features
 		var sponsor   = {};
 		var slugs 	  = ["easport", "atari", "nem", "evias"];
+		var names     = ["EA Sports", "Atari", "nem", "eVias"];
 		var addresses = [
 			"TD2WIZ-UPOHCE-65RJ72-ICJCAO-GGWX7S-NORJCD-2Y6J",
 			"TBY4WF-4LSRAI-7REVQP-P3MBD3-BN4IZE-EDMY7K-IYXV",
@@ -311,7 +314,7 @@ app.get("/api/v1/sponsors/random", function(req, res)
 		var rAddr = Math.floor(Math.random() * 4);
 
 		sponsor.slug = slugs[rAddr];
-		sponsor.name = "PacNEM Sponsor #" + rId;
+		sponsor.name = names[rAddr];
 		sponsor.xem  = addresses[rAddr];
 		sponsor.description = i18n.t("sponsors.example_description");
 		sponsor.imageUrl    = "http://placehold.it/500x300";
