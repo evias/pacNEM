@@ -23,7 +23,11 @@
 
         <script src="/socket.io/socket.io.js"></script>
         <script src="/js/nem-sdk.js"></script>
-        <script src="/js/pacman.js"></script>
+
+        <script src="/js/pacnem-api-client.js"></script>
+        <script src="/js/pacnem-session.js"></script>
+        <script src="/js/pacnem-ui.js"></script>
+        <script src="/js/pacnem-controller.js"></script>
 
         <script type="text/javascript">
 /**
@@ -33,6 +37,8 @@
  *
  * Requires i18nextXHRBackend and i18nextJquery plugins
  * to function correctly.
+ *
+ * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  * @link    https://github.com/evias/pacNEM
  */
 window.i18next.use(window.i18nextXHRBackend).init({
@@ -41,7 +47,7 @@ window.i18next.use(window.i18nextXHRBackend).init({
     defaultNS: "translation",
     whitelist: ["en", "de", "fr"],
     nonExplicitWhitelist: true,
-    preload: ["en", "de", "fr"],
+    preload: ["{{currentLanguage}}"],
     backend: {
         loadPath: "/locales/\{\{lng\}\}"
     }
@@ -106,7 +112,6 @@ Handlebars.registerHelper('t', function(key, sub)
                                 <span class="caret"></span>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a href="#"><span class="glyphicon glyphicon-edit"></span>&nbsp;<span>{{t "menus.change_name"}}</span></a></li>
                                 <li><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-log-out"></span>&nbsp;<span>{{t "menus.purge"}}</span></a></li>
                             </ul>
                             <input type="hidden" id="pacNEM-sessionId" value="" />
