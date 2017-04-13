@@ -1,7 +1,8 @@
 {
     "hoster": {
-        "xem": "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ",
-        "private_key": "Your Private Key Here"
+        "business": "TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU",
+        "application": "TBPGYGLO4QMZLVR4TZF7GSL5IHJAUNPFXFNEEP4V",
+        "namespace": "evias-tests.pacnem"
     },
     "nem": {
         "isTestMode": true,
@@ -16,5 +17,8 @@
             {"host": "http://192.3.61.243", "port": 7890},
             {"host": "http://23.228.67.85", "port": 7890}
         ]
+    },
+    "prices": {
+        "heart": 0.75
     }
 }

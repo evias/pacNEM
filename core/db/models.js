@@ -54,6 +54,8 @@ var pacnem = function(io, chainDataLayer)
     this.NEMGameCredit_ = new mongoose.Schema({
         xem: String,
         countHearts: {type: Number, min: 0},
+        countPlayedHearts: {type: Number, min: 0},
+        countExchangedHearts: {type: Number, min: 0},
         lastRead: {type: Number, min: 0}
     });
 
@@ -61,6 +63,11 @@ var pacnem = function(io, chainDataLayer)
         getAddress: function()
         {
             return this.xem.replace(/-/g, "");
+        },
+
+        getCountRemaining: function()
+        {
+            return this.countHearts - this.countPlayedHearts;
         }
     };
 
@@ -86,7 +93,7 @@ var pacnem = function(io, chainDataLayer)
             return this.model("NEMGameCredit").findOne({xem: this.xem}, callback);
         },
 
-        updateCredits: function(countHearts)
+        updateCredits: function(creditObject)
         {
             var address = this.getAddress();
             mongoose.model("NEMGameCredit").findOne({xem: address}, function(err, credits)
@@ -94,7 +101,11 @@ var pacnem = function(io, chainDataLayer)
                 if (! err && credits) {
                     // update NEMGameCredit mode
                     credits.xem = address;
-                    credits.countHearts = parseInt(countHearts); // /!\ Divisibility of evias.pacnem:heart is 0
+                    credits.countHearts = parseInt(creditObject.countHearts); // /!\ Divisibility of evias.pacnem:heart is 0
+
+                    if (typeof creditObject.countExchangedHearts && creditObject.countExchangedHearts > 0)
+                        credits.countExchangedHearts = creditObject.countExchangedHearts;
+
                     credits.lastRead = new Date().valueOf();
                     credits.save();
                 }
@@ -103,14 +114,14 @@ var pacnem = function(io, chainDataLayer)
                     var NEMGameCredit = mongoose.model("NEMGameCredit");
                     var credits = new NEMGameCredit({
                         xem: address,
-                        countHearts: parseInt(countHearts),
+                        countHearts: parseInt(creditObject.countHearts),
+                        countPlayedHearts: 0,
+                        countExchangedHearts: 0,
                         lastRead: new Date().valueOf()
                     });
 
                     credits.save();
                 }
-                else
-                    console.log("ERROR: " + err);
 
                 socket_.emit("pacnem_heart_sync", credits.countHearts);
             });

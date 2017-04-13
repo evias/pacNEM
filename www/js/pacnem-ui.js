@@ -27,14 +27,15 @@
  *
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameUI = function(socket, controller, $, jQFileTemplate)
+var GameUI = function(config, socket, controller, $, jQFileTemplate)
 {
+    var config_ = config;
     var socket_ = socket;
     var ctrl_ = controller;
     var jquery_ = $;
     var rooms_ctr_ = undefined;
     var session = undefined;
-    var API_ = new GameAPI(socket, controller, $, jQFileTemplate);
+    var API_ = new GameAPI(config, socket, controller, $, jQFileTemplate);
     var template_ = jQFileTemplate;
 
     /**

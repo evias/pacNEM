@@ -25,8 +25,9 @@
  * database.
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameAPI = function(socket, controller, $, jQFileTemplate)
+var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 {
+    this.config_ = config;
 	this.socket_ = socket;
 	this.ctrl_   = controller;
 	this.jquery_ = $;
@@ -108,6 +109,29 @@ var GameAPI = function(socket, controller, $, jQFileTemplate)
 			success: function(response) {
 				var sponsor = response.item;
 				callback(sponsor);
+			}
+		});
+	};
+
+	this.createInvoice = function(callback)
+	{
+		var self = this;
+		self.jquery_.ajax({
+			url: "/api/v1/invoices/create",
+			type: "GET",
+			dataType: "json",
+			beforeSend: function(req) {
+				if (req && req.overrideMimeType)
+					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(response) {
+				var scores = response.data;
+
+				self.template_.render("scores-container", function(compileWith)
+				{
+					$("#pacnem-scores-wrapper").html(compileWith(response));
+					callback(scores);
+				});
 			}
 		});
 	};

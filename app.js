@@ -96,6 +96,12 @@ var chainDataLayer = new blockchain.service(io, nem);
 var models = require('./core/db/models.js');
 var dataLayer = new models.pacnem(io, chainDataLayer);
 
+var PacNEM_Frontend_Config = {
+	"business": chainDataLayer.getVendorWallet(),
+	"application": chainDataLayer.getPublicWallet(),
+	"namespace": chainDataLayer.getNamespace()
+};
+
 /**
  * View Engine Customization
  *
@@ -181,19 +187,29 @@ app.get("/:lang", function(req, res)
 	{
 		var currentLanguage = req.params.lang;
 		var currentNetwork  = chainDataLayer.getNetwork();
-		var translator 		= i18n;
 
 		i18n.changeLanguage(currentLanguage);
 
-		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage, translator: translator});
+		var viewData = {
+			currentNetwork: currentNetwork,
+			currentLanguage: currentLanguage,
+			PacNEM_Frontend_Config: PacNEM_Frontend_Config
+		};
+
+		res.render("play", viewData);
 	})
 .get("/", function(req, res)
 	{
 		var currentLanguage = i18n.language;
 		var currentNetwork  = chainDataLayer.getNetwork();
-		var translator 		= i18n;
 
-		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage, translator: translator});
+		var viewData = {
+			currentNetwork: currentNetwork,
+			currentLanguage: currentLanguage,
+			PacNEM_Frontend_Config: PacNEM_Frontend_Config
+		};
+
+		res.render("play", viewData);
 	});
 
 /**
@@ -365,6 +381,40 @@ app.get("/api/v1/sponsors/random", function(req, res)
 		res.send(JSON.stringify({item: sponsor}));
 	});
 
+app.get("/api/v1/credits/buy", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		var amount = req.query.amount ? parseInt(req.query.amount) : 15; // 15 XEM to Pay for Pay per Play.
+		if (isNaN(amount) || amount <= 0)
+			res.send(JSON.stringify({"status": "error", "message": "Mandatory field `amount` is invalid."}));
+
+		var heartPrice = parseFloat(config("prices.heart")); // in XEM
+		var receivingHearts = Math.ceil(amount * heartPrice); // XEM price * (1 Heart / x XEM)
+
+		// Invoice model for QR
+        var invoiceData = {
+            "v": chainDataLayer.getNetwork().isTest ? 1 : 2,
+            "type": 2,
+            "data": {
+                "addr": config.get("hoster.business"), // App Wallet
+                "amount": parseInt(req.query.amount) * 1000000, // convert amount to micro XEM
+                "msg": "",
+                "name": "PacNEM Pay per Play Invoice"
+            }
+        };
+
+        var qrCode = kjua({
+            size: 256,
+            text: JSON.stringify(invoiceData),
+            fill: '#000',
+            quiet: 0,
+            ratio: 2
+        });
+
+		res.send(JSON.stringify({item: qrCode}));
+	});
+
 /**
  * Socket.IO RoomManager implementation
  *
@@ -497,6 +547,24 @@ io.sockets.on('connection', function(socket)
  */
 var port = process.env['PORT'] = process.env.PORT || 2908;
 server.listen(port, function()
-    {
-        console.log("PacNEM Game Server listening on Port %d in %s mode", this.address().port, app.settings.env);
-    });
+	{
+		var network    = chainDataLayer.getNetwork();
+		var blockchain = network.isTest ? "Testnet Blockchain" : network.isMijin ? "Mijin Private Blockchain" : "NEM Mainnet Public Blockchain";
+		var vendor 		= chainDataLayer.getVendorWallet();
+		var application = chainDataLayer.getPublicWallet();
+		var namespace   = chainDataLayer.getNamespace();
+
+		console.log("------------------------------------------------------------------------");
+		console.log("--                       PacNEM Blockchain DAG                        --");
+		console.log("--                                                                    --");
+		console.log("--   Decentralized Autonomous Game project using the NEM Blockchain   --")
+		console.log("------------------------------------------------------------------------");
+		console.log("-");
+		console.log("- PacNEM Game Server listening on Port %d in %s mode", this.address().port, app.settings.env);
+		console.log("- PacNEM Game is using blockchain: " + blockchain);
+		console.log("- PacNEM Vendor Wallet is: " + vendor);
+		console.log("- PacNEM Application Wallet is: " + application);
+		console.log("- PacNEM is using Namespace: " + namespace);
+		console.log("-")
+		console.log("------------------------------------------------------------------------");
+	});
