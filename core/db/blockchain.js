@@ -80,16 +80,16 @@ var service = function(io, nemSDK)
     };
 
     /**
-     * This method fetches mosaics for the given NEMGamer.xem address.
+     * This method fetches mosaics for the given XEM address.
      *
      * If the mosaic evias.pacnem:heart can be found in the account, the
-     * NEMGamer.countHearts property will be updated accordingly.
+     * NEMGameCredit.countHearts property will be updated accordingly.
      *
      * @param  NEMGamer gamer
      */
     this.fetchHeartsByGamer = function(gamer)
     {
-        // read Mosaics owned by the given gamer's XEM wallet
+        // read Mosaics owned by the given address's XEM wallet
         nem_.com.requests.account.mosaics(node_, gamer.getAddress()).then(function(res)
         {
             if (! res.data || ! res.data.length)
@@ -101,12 +101,10 @@ var service = function(io, nemSDK)
                 var mosaic = res.data[i];
                 var slug   = mosaic.mosaicId.namespaceId + ":" + mosaic.mosaicId.name;
                 if ("evias.pacnem:heart" === slug) {
-                    // this account has some lives available.
-                    gamer.countHearts = parseInt(mosaic.quantity); // /!\ Divisibility of evias.pacnem:heart is 0
-                    gamer.lastRead = new Date().valueOf();
-                    gamer.save();
+                    // this account has some lives available as SAYS THE BLOCKCHAIN.
+                    // we can store this information in our NEMGameCredit model.
 
-                    socket_.emit("pacnem_heart_sync", gamer.countHearts);
+                    gamer.updateCredits(mosaic.quantity);
                 }
             }
         }, function(err) {

@@ -97,8 +97,8 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
         {
             var data = JSON.parse(rawdata);
 
-            // when session is stored, the Hearts blockchain request
-            // will be triggered by the underlying API endpoint.
+            // we will display the `data` (count of hearts available read from
+            // blockchain) in the top bar.
             var $wrap = $("#currentHearts").first();
             var $data = $("#currentHearts-hearts").first();
 

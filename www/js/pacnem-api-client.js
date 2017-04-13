@@ -58,7 +58,7 @@ var GameAPI = function(socket, controller, $, jQFileTemplate)
 	this.getSession = function(details, callback)
 	{
 		this.jquery_.ajax({
-			url: "/api/v1/sessions/get?address=" + details.xem.replace(/\-/g, ""),
+			url: "/api/v1/sessions/get?address=" + details.xem.replace(/\-/g, "") + "&username=" + encodeURIComponent(details.username),
 			type: "GET",
 			beforeSend: function(req) {
 				if (req && req.overrideMimeType)

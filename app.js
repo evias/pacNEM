@@ -217,18 +217,24 @@ app.get("/api/v1/sessions/get", function(req, res)
 			res.send(JSON.stringify({"status": "error", "message": "Mandatory field `address` is missing."}));
 
 		var input = {
-			"xem" : req.query.address.replace(/-/g, "")
+			"xem" : req.query.address.replace(/-/g, ""),
+			"username" : req.query.username
 		};
 
-		dataLayer.NEMGamer.findOne({"xem": input.xem}, function(err, player)
+		// fetch an existing NEMGamer entry by XEM address, this
+		dataLayer.NEMGamer.findOne({"xem": input.xem, "username": input.username}, function(err, player)
 		{
 			if (err) {
 				// error mode
-				var errorMessage = "Error occured on NEMGamer update: " + err;
+				var errorMessage = "Error occured on NEMGamer READ: " + err;
 
 				serverLog(req, errorMessage, "ERROR");
 				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
-				return true;
+				return false;
+			}
+			else if (! player) {
+				// gamer unknown to system.
+				return false;
 			}
 
 			// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
@@ -251,8 +257,8 @@ app.post("/api/v1/sessions/store", function(req, res)
 			"sid": req.body.sid.replace(/[^A-Za-z0-9\-_\.#~]/g, "")
 		};
 
-		// mongoDB model NEMGamer unique on xem address.
-		dataLayer.NEMGamer.findOne({"xem": input.xem}, function(err, player)
+		// mongoDB model NEMGamer unique on xem address + username pair.
+		dataLayer.NEMGamer.findOne({"xem": input.xem, "username": input.username}, function(err, player)
 		{
 			if (! err && player) {
 			// update mode
@@ -274,6 +280,9 @@ app.post("/api/v1/sessions/store", function(req, res)
 
 				player.save();
 
+				// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
+				chainDataLayer.fetchHeartsByGamer(player);
+
 				res.send(JSON.stringify({item: player}));
 			}
 			else if (! player) {
@@ -287,6 +296,9 @@ app.post("/api/v1/sessions/store", function(req, res)
 					countGames: 0
 				});
 				player.save();
+
+				// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
+				chainDataLayer.fetchHeartsByGamer(player);
 
 				res.send(JSON.stringify({item: player}));
 			}
