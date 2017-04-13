@@ -157,7 +157,7 @@ var service = function(io, nemSDK)
                     // of Available Lives! The user may have *Played* Hearts or *Sent Back*
                     // Hearts to the pacnem-business wallet.
 
-                    // computing the exact balance of the user
+                    // computing the exact balance of the user (we now know that the user owns hearts.)
                     self.fetchGameCreditsRealHistoryByGamer(gamer, mosaic);
                     hasHearts = true;
                 }
@@ -177,21 +177,11 @@ var service = function(io, nemSDK)
         var self = this;
         var heartsMosaicSlug = pacNEM_NS_ + ":heart";
 
-        if (typeof mosaic == 'undefined' || typeof mosaic.mosaicId == 'undefined' || typeof mosaic.mosaicId.namespaceId == 'undefined') {
-            // wrong mosaic provided
-            return ;
-        }
-
-        if (heartsMosaicSlug != (mosaic.mosaicId.namespaceId + ":" + mosaic.mosaicId.name)) {
-            // wrong mosaic provided
-            return ;
-        }
-
         // read all transactions of the account and check for the given mosaic to build a
         // blockchain-trust mosaic history.
         nem_.com.requests.account.allTransactions(node_, gamer.getAddress()).then(function(res)
         {
-            var transactions = res.data;
+            var transactions = res;
             var totalHeartsIncome = 0;
             var totalHeartsOutgo  = 0;
 
@@ -207,12 +197,19 @@ var service = function(io, nemSDK)
                     // change the evias.pacnem:heart balance of XEM address)
                     continue;
 
-                var cntMosaic = self.extractMosaic_(content, heartsMosaicSlug);
+                var mosaicStake = self.extractMosaic_(content, heartsMosaicSlug);
 
-                if (recipient == gamer.getAddress())
-                    totalHeartsIncome += cntMosaic;
-                else
-                    totalHeartsOutgo  += cntMosaic;
+                if (mosaicStake === false)
+                    continue;
+
+                if (mosaicStake.recipient == gamer.getAddress()) {
+                    // gamer's transaction (incoming for gamer)
+                    totalHeartsIncome += mosaicStake.totalMosaic;
+                }
+                else if (mosaicStake.recipient !== false) {
+                    // pacnem transaction (outgoing for gamer)
+                    totalHeartsOutgo  += mosaicStake.totalMosaic;
+                }
             }
 
             var totalRemaining = totalHeartsIncome > totalHeartsOutgo ? totalHeartsIncome - totalHeartsOutgo : 0;
@@ -227,7 +224,7 @@ var service = function(io, nemSDK)
     this.extractMosaic_ = function(trxContent, slugToExtract)
     {
         if (! trxContent || ! slugToExtract || ! slugToExtract.length)
-            return 0;
+            return {totalMosaic: 0, recipient: false};
 
         if (trxContent.type == nem_.model.transactionTypes.multisigTransaction) {
             // multisig transaction mode
@@ -237,11 +234,11 @@ var service = function(io, nemSDK)
 
             if (typeof trxContent.otherTrans == 'undefined')
                 // MultiSig transactions WITHOUT `otherTrans` CANNOT contain Mosaics.
-                continue;
+                return false;
 
             if (typeof trxContent.otherTrans.mosaics == 'undefined')
                 // No Mosaics in this one :()
-                continue;
+                return false;
 
             var trxMosaics = trxContent.otherTrans.mosaics;
             var recipient  = trxContent.otherTrans.recipient;
@@ -254,7 +251,7 @@ var service = function(io, nemSDK)
 
             if (typeof trxContent.mosaics == 'undefined' || ! trxContent.mosaics.length)
                 // we are interested only in Mosaic Transfer transactions
-                continue;
+                return false;
 
             var trxMosaics = trxContent.mosaics;
             var recipient  = trxContent.recipient;
@@ -264,12 +261,12 @@ var service = function(io, nemSDK)
         // now iterate through the found mosaics and check whether
         // this transaction contains evias.pacnem:heart mosaics.
         for (j in trxMosaics) {
-            var mosaic = trxMosaics[i];
+            var mosaic = trxMosaics[j];
             var slug   = mosaic.mosaicId.namespaceId + ":" + mosaic.mosaicId.name;
 
             if (slugToExtract != slug)
                 // mosaic filter
-                continue;
+                return false;
 
             // get the quantity, compute with transaction amount field in mosaic transfer
             // transaction, the amount field is in fact a QUANTITY. Whereas the `mosaic.quantity`
@@ -278,10 +275,12 @@ var service = function(io, nemSDK)
             var mosMultiply = trxAmount > 0 ? parseInt(trxAmount / 1000000) : 1; // multiplier field stored in micro XEM in transactions!
             var totalMosaic = mosMultiply * mosAmount;
 
-            return totalMosaic;
+            // found our mosaic in `trxContent`
+            return {totalMosaic: totalMosaic, recipient: recipient};
         }
 
-        return 0;
+        // didn't find our mosaic in `trxContent`
+        return {totalMosaic: 0, recipient: false};
     };
 };
 
