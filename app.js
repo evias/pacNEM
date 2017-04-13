@@ -209,6 +209,36 @@ app.get("/:lang", function(req, res)
  * The sponsoring feature will also be built using API
  * routes.
  */
+app.get("/api/v1/sessions/get", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		if (! req.query.address || ! req.query.address.length)
+			res.send(JSON.stringify({"status": "error", "message": "Mandatory field `address` is missing."}));
+
+		var input = {
+			"xem" : req.query.address.replace(/-/g, "")
+		};
+
+		dataLayer.NEMGamer.findOne({"xem": input.xem}, function(err, player)
+		{
+			if (err) {
+				// error mode
+				var errorMessage = "Error occured on NEMGamer update: " + err;
+
+				serverLog(req, errorMessage, "ERROR");
+				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+				return true;
+			}
+
+			// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
+			chainDataLayer.fetchHeartsByGamer(player);
+
+			// session retrieved.
+			res.send(JSON.stringify({item: player}));
+		});
+	});
+
 app.post("/api/v1/sessions/store", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
@@ -221,7 +251,7 @@ app.post("/api/v1/sessions/store", function(req, res)
 			"sid": req.body.sid.replace(/[^A-Za-z0-9\-_\.#~]/g, "")
 		};
 
-		// mongoDB model NEMGamer unique on username + xem address pair.
+		// mongoDB model NEMGamer unique on xem address.
 		dataLayer.NEMGamer.findOne({"xem": input.xem}, function(err, player)
 		{
 			if (! err && player) {

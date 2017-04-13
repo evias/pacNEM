@@ -37,7 +37,7 @@ var GameAPI = function(socket, controller, $, jQFileTemplate)
 		return this.socket_;
 	};
 
-	this.storeSession = function(details)
+	this.storeSession = function(details, callback)
 	{
 		this.jquery_.ajax({
 			url: "/api/v1/sessions/store",
@@ -50,6 +50,23 @@ var GameAPI = function(socket, controller, $, jQFileTemplate)
 			},
 			success: function(response) {
 				// var player = response.item
+				callback(response);
+			}
+		});
+	};
+
+	this.getSession = function(details, callback)
+	{
+		this.jquery_.ajax({
+			url: "/api/v1/sessions/get?address=" + details.xem.replace(/\-/g, ""),
+			type: "GET",
+			beforeSend: function(req) {
+				if (req && req.overrideMimeType)
+					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(response) {
+				// var session = response.item
+				callback(response);
 			}
 		});
 	};
