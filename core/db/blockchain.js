@@ -89,6 +89,7 @@ var service = function(io, nemSDK)
      */
     this.fetchHeartsByGamer = function(gamer)
     {
+        // read Mosaics owned by the given gamer's XEM wallet
         nem_.com.requests.account.mosaics(node_, gamer.getAddress()).then(function(res)
         {
             if (! res.data || ! res.data.length)

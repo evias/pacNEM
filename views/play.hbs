@@ -39,8 +39,32 @@
                 </div>
                 <p class="text-justify hide-on-auth">
                     <br />
-                    {{t "guest.welcome_paragraph_2_1"}}
-                    {{t "guest.welcome_paragraph_2_2"}}
+                    <span>{{t "guest.play_mode_explain"}}</span>
+                </p>
+                <div class="row hide-on-auth">
+                    <div class="col-md-12 text-left pacnem-game-mode-wrapper">
+                        <ul style="list-style: none; margin: 0; padding: 0;">
+                            <li class="text-left">
+                                <div class="radio">
+                                    <label><input type="radio" class="pacnem-gamemode-trigger" name="play_type" value="sponsored" />{{t "guest.play_type_sponsored"}}</label>
+                                </div>
+                            </li>
+                            <li class="text-left">
+                                <div class="radio">
+                                    <label><input type="radio" class="pacnem-gamemode-trigger" name="play_type" value="pay-per-play" />{{t "guest.play_type_payperplay"}}</label>
+                                </div>
+                            </li>
+                            <li class="text-left">
+                                <div class="radio">
+                                    <label><input type="radio" class="pacnem-gamemode-trigger" name="play_type" value="share-per-play" />{{t "guest.play_type_shareperplay"}}</label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="text-justify hide-on-auth">
+                    <br />
+                    {{t "guest.enter_data_to_join"}}
                 </p>
                 <div class="user-form form form-horizontal">
                     <div class="col-md-3">
@@ -64,7 +88,7 @@
                         </div>
                     </div>
                     <div id="create_my_room" class="col-md-2 text-left hide-on-auth">
-                        <a id="pacnem-save-trigger" class="btn btn-primary" role="button" href="#"><span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;{{t "forms.button_save"}}</a>
+                        <button id="pacnem-save-trigger" class="btn btn-primary" role="button" disabled="disabled"><span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;{{t "forms.button_save"}}</button>
                     </div>
                 </div>
             </div>
@@ -166,3 +190,5 @@
         </div>
     </div>
 </div>
+
+<div id="pacnem-modal-wrapper"></div>

@@ -118,7 +118,7 @@ handlebars.registerHelper('t', function(key, sub)
  */
 app.get('/favicon.ico', function(req, res)
 	{
-		res.sendfile(__dirname + '/static/favicon.ico');
+		res.sendfile(__dirname + '/www/favicon.ico');
 	})
 .get('/img/flags/:country.png', function(req, res)
 	{
@@ -130,11 +130,27 @@ app.get('/favicon.ico', function(req, res)
 	})
 .get('/css/:sheet.css', function(req, res)
 	{
-		res.sendfile(__dirname + '/static/css/' + req.params.sheet + '.css');
+		res.sendfile(__dirname + '/www/css/' + req.params.sheet + '.css');
 	})
 .get('/js/:source.js', function(req, res)
 	{
-		res.sendfile(__dirname + '/static/js/' + req.params.source + '.js');
+		res.sendfile(__dirname + '/www/js/' + req.params.source + '.js');
+	});
+
+/**
+ * Third Party assets Serving
+ * - Bootstrap
+ * - Handlebars
+ * - i18next
+ * - jQuery
+ */
+app.get('/css/3rdparty/:sheet.css', function(req, res)
+	{
+		res.sendfile(__dirname + '/www/css/3rdparty/' + req.params.sheet + '.css');
+	})
+.get('/js/3rdparty/:source.js', function(req, res)
+	{
+		res.sendfile(__dirname + '/www/js/3rdparty/' + req.params.source + '.js');
 	});
 
 /**
@@ -148,7 +164,7 @@ app.get('/resources/templates/:name', function(req, res)
 	{
 		res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
 	})
-	.get('/locales/:lang', function(req, res)
+.get('/locales/:lang', function(req, res)
 	{
 		var json = fs.readFileSync(__dirname + '/locales/' + req.params.lang + '/translation.json');
 
@@ -157,26 +173,9 @@ app.get('/resources/templates/:name', function(req, res)
 	});
 
 /**
- * Third Party assets Serving
- * - Bootstrap
- * - Handlebars
- * - i18next
- * - jQuery
- */
-app.get('/css/3rdparty/:sheet.css', function(req, res)
-	{
-		res.sendfile(__dirname + '/static/css/3rdparty/' + req.params.sheet + '.css');
-	})
-	.get('/js/3rdparty/:source.js', function(req, res)
-	{
-		res.sendfile(__dirname + '/static/js/3rdparty/' + req.params.source + '.js');
-	});
-
-/**
  * Frontend Web Application Serving
  *
- * Following routes define several entry points
- * like / and /scores.
+ * This part of the game is where the end-user is active.
  */
 app.get("/:lang", function(req, res)
 	{
@@ -188,7 +187,7 @@ app.get("/:lang", function(req, res)
 
 		res.render("play", {currentNetwork: currentNetwork, currentLanguage: currentLanguage, translator: translator});
 	})
-	.get("/", function(req, res)
+.get("/", function(req, res)
 	{
 		var currentLanguage = i18n.language;
 		var currentNetwork  = chainDataLayer.getNetwork();
@@ -200,8 +199,8 @@ app.get("/:lang", function(req, res)
 /**
  * API Routes
  *
- * Following routes are used for handling the business
- * layer and managing the data layer.
+ * Following routes are used for handling the business/data
+ * layer.
  *
  * localStorage does not need any API requests to be
  * executed, only the database synchronization needs
@@ -271,10 +270,12 @@ app.post("/api/v1/sessions/store", function(req, res)
 		});
 	});
 
+//XXX implement actual model
 app.get("/api/v1/scores", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
+		//XXX implement chainDataLayer.fetchScores
 		var scores = [];
 		for (var i = 0; i < 10; i++) {
 			var rScore = Math.floor(Math.random() * 20001);
@@ -294,11 +295,40 @@ app.get("/api/v1/scores", function(req, res)
 		res.send(JSON.stringify({data: scores}));
 	});
 
+//XXX implement actual model
+app.get("/api/v1/sponsors/random", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		//XXX implement dataLayer.NEMSponsor features
+		var sponsor   = {};
+		var slugs 	  = ["easport", "atari", "nem", "evias"];
+		var names     = ["EA Sports", "Atari", "nem", "eVias"];
+		var addresses = [
+			"TD2WIZ-UPOHCE-65RJ72-ICJCAO-GGWX7S-NORJCD-2Y6J",
+			"TBY4WF-4LSRAI-7REVQP-P3MBD3-BN4IZE-EDMY7K-IYXV",
+			"TAS5KA-R4WWIB-7JX64U-DPGMCX-ZGQ77U-ZIRY3D-BJB6",
+			"TBWZKN-LDTIVE-GBQ5OG-BGY3NI-JWLAHB-I2RS5B-YV7M"];
+
+		var rId = Math.floor(Math.random() * 99999);
+		var rAddr = Math.floor(Math.random() * 4);
+
+		sponsor.slug = slugs[rAddr];
+		sponsor.name = names[rAddr];
+		sponsor.xem  = addresses[rAddr];
+		sponsor.description = i18n.t("sponsors.example_description");
+		sponsor.imageUrl    = "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300";
+		sponsor.websiteUrl  = "https://github.com/evias";
+
+		res.send(JSON.stringify({item: sponsor}));
+	});
+
 /**
  * Socket.IO RoomManager implementation
  *
  * The following code block defines Socket.IO room
- * event listeners.
+ * event listeners and configures the WebSocket
+ * connections for Multiplayer features.
  *
  * Following Socket Events are implemented:
  * 	- disconnect
@@ -310,8 +340,10 @@ app.get("/api/v1/scores", function(req, res)
  * 	- cancel_game
  * 	- start
  * 	- keydown
+ * 	- notify
  *
  * @link https://github.com/dubzzz/js-pacman
+ * @link https://github.com/pacNEM/evias
  */
 var room_manager = new RoomManager(io);
 
@@ -407,6 +439,7 @@ io.sockets.on('connection', function(socket)
 		}
 	});
 
+	// notify about any in-room changes
 	socket.on("notify", function()
 	{
 		logger.info(__smartfilename, __line, '[' + socket.id + '] notify()');

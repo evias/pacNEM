@@ -25,8 +25,11 @@
         "title_blue_box": "Multiplayer Pacman Spiel",
         "welcome_paragraph_1_1": "<span>Willkommen zum </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Spiel. Dies ist ein kostenloses &amp; Open Source Browser-Spiel, entwickelt unter anderem mit Node.js und die </span><span class='NEMifiedText'>nem</span><span> Blockchain.</span>",
         "welcome_paragraph_1_2": "<span>Dieses Projekt benutzt die </span><span class='NEMifiedText'>nem</span><span> Blockchain, sowohl um Spieler zu Identifizieren, als auch für das Sponsern der Spiele und zum Speichern der Rekorde auf die Blockchain. Durch dieses Spiel möchte ich die Einfachheit der Entwicklung basierend auf die </span><span class='NEMifiedText'>nem</span><span> Blockchain zum Vordergrund bringen und sollte ein einfaches Beispiel dafür sein, wie man in der Gaming Industrie potentiel das Sponsoring / Advertising verwalten kann dank der </span><span class='NEMifiedText'>nem</span><span> Blockchain und den minuten schnellen Zahlungen.</span>",
-        "welcome_paragraph_2_1": "<span>Geben Sie bitte Ihr Name ein und Ihre XEM Wallet Adresse und klicken Sie auf 'Speichern' um </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Räume beitreten zu können.</span>",
-        "welcome_paragraph_2_2": "",
+        "play_mode_explain": "Sie können PacNEM im Sponsored Play-, Pay per Play- or Share per Play- Modus spielen. Im Sponsored Play Modus müssen Sie nichts bezahlen, Sie müssen sich nur für 10 Sekunden die Werbung unseres Sponsors anschauen und können dann mit einem unserer Sponsor Accounts spielen! Im Pay per Play Modus können Sie <b>evias.pacnem:heart</b> Game Credits kaufen um mit Ihr eigenes XEM Wallet zu spielen! Das Share per Play Modus wird Ihnen dazu auffordern, Content unserer Sponsoren auf verschiedene Soziale Netzwerke zu Teilen um dann <b>evias.pacnem:heart</b> Game Credits in Ihrem eigenen XEM Wallet zu erhalten und damit spielen zu können. Die <span class='NEMifiedText'>nem</span> Blockchain kann sehr einfach in die Gaming Industrie integriert werden und das möchte ich hiermit teilen.",
+        "play_type_sponsored": "<b>Sponsored Play</b>: Sponsor Pay per view Werbung mit <span class='NEMifiedText'>nem</span>.",
+        "play_type_payperplay": "<b>Pay per Play</b>: Spiele mit deinem eigenen Wallet und <u>kaufe</u> <b>evias.pacnem:heart</b> Game Credits!",
+        "play_type_shareperplay": "<b>Share per Play</b>: Spiele mit deinem eigenen Wallet und <u>verdiene</u> <b>evias.pacnem:heart</b> Game Credits indem du Content teilst!",
+        "enter_data_to_join": "<span>Geben Sie bitte Ihr Name ein und Ihre XEM Wallet Adresse und klicken Sie auf 'Speichern' um </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Räume beitreten zu können.</span>",
         "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> wird Ihnen nie nach Ihren privaten Daten fragen wie Ihr Passwort oder Ihr Private Key.</span>"
     },
     "forms": {
@@ -77,5 +80,11 @@
         "date_label": "Spieldatum",
         "hide_button": "Ausblenden",
         "empty_highscores": "Es wurden bisher noch keine High Scores auf die Blockchain veröffentlicht."
+    },
+    "sponsors": {
+        "example_description": "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.",
+        "link_to_website": "Link zur Webseite von",
+        "button_closing_in": "Noch",
+        "seconds_suffix": "Sekunden"
     }
 }

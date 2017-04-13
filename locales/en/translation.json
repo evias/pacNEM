@@ -25,14 +25,17 @@
         "title_blue_box": "Multiplayer Pacman Game",
         "welcome_paragraph_1_1": "<span>Welcome to the </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Game. This game is a Free &amp; Open Source Node.js Browser Game.</span>",
         "welcome_paragraph_1_2": "<span>This project uses the </span><span class='NEMifiedText'>nem</span><span> Blockchain to authenticate Players as well as for Managing Game Sponsors and it stores the High Scores on the blockchain. This game will reflect how easy it is to use </span><span class='NEMifiedText'>nem</span><span> in your applications or games business layers and will emphasize the easy Setup for sponsoring and advertising Software in the Gaming industry using the </span><span class='NEMifiedText'>nem</span><span> Blockchain and Instant Payments.</span>",
-        "welcome_paragraph_2_1": "<span>Please enter a username and XEM address below and hit the 'Save' button to join Multiplayer Rooms for </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>.</span>",
-        "welcome_paragraph_2_2": "",
+        "play_mode_explain": "PacNEM can be played in Sponsored Play, Pay per Play or Share per Play modes. In sponsored play mode you won't need to pay anything, you only need to watch the Sponsor Advertisement and will then be able to Play with one of our Sponsored Accounts! The Pay per Play mode lets you Buy <b>evias.pacnem:heart</b> Game Credits directly to your XEM Wallet. The Share per Play mode requires you to Share some of our Sponsor's content and you will then be rewarded some <b>evias.pacnem:heart</b> Game Credits. These different game modes were introduced to show the easiness of integration of the <span class='NEMifiedText'>nem</span> Blockchain in the Gaming Industry.",
+        "play_type_sponsored": "<b>Sponsored Play</b>: Sponsored Pay per view Advertising with <span class='NEMifiedText'>nem</span>.",
+        "play_type_payperplay": "<b>Pay per Play</b>: Play with your own Wallet and buy <b>evias.pacnem:heart</b> Game Credits!",
+        "play_type_shareperplay": "<b>Share per Play</b>: Play with your own Wallet and earn <b>evias.pacnem:heart</b> Game Credits for Sharing content!",
+        "enter_data_to_join": "<span>Please enter a username and XEM address below. Hit the 'Enter' button to join the </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> experience.</span>",
         "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> will never ask you to enter Sensitive information like your Password or your Private Key.</span>"
     },
     "forms": {
         "username_placeholder": "Your name",
         "address_placeholder": "XEM Wallet Address",
-        "button_save": "Save",
+        "button_save": "Enter",
         "error_format_address": "Invalid XEM address, please verify your input.",
         "error_network_address": "XEM address cannot be used on this blockchain"
     },
@@ -77,5 +80,11 @@
         "date_label": "Date of Game",
         "hide_button": "Hide",
         "empty_highscores": "Currently, no PacNEM high scores have been saved to the blockchain yet."
+    },
+    "sponsors": {
+        "example_description": "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.",
+        "link_to_website": "Link to the Website of",
+        "button_closing_in": "Closing in",
+        "seconds_suffix": "seconds"
     }
 }
