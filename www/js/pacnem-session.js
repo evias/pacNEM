@@ -23,11 +23,11 @@
  *
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameSession = function(API, userName, xemAddress)
+var GameSession = function(API, userName, xemAddress, gameMode)
 {
     this.details_ = {
         "username": userName,
-        "type": "pay-per-play",
+        "type": (typeof gameMode == 'undefined' ? "sponsored" : gameMode),
         "xem": xemAddress,
         "score": 0
     };
@@ -114,6 +114,14 @@ var GameSession = function(API, userName, xemAddress)
     this.getSocketId = function()
     {
         return this.API_.getSocket().id;
+    };
+
+    this.getGameMode = function()
+    {
+        if (typeof this.details_.type == 'undefined' || !this.details_.type)
+            return "sponsored";
+
+        return this.details_.type;
     };
 
     var self = this;

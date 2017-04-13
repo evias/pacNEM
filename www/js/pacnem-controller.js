@@ -111,6 +111,8 @@ var GameController = function(socket, nem, chainId)
     var play_modes_ = ["sponsored", "pay-per-play", "share-per-play"];
     var play_mode_  = "pay-per-play";
     var sponsor_ = undefined;
+    var advertised_ = false;
+    var player_session_ = null;
 
     this.start = function()
     {
@@ -238,6 +240,17 @@ var GameController = function(socket, nem, chainId)
         return u.length > 0 && a.length > 0;
     };
 
+    this.setSession = function(session)
+    {
+        player_session_ = session;
+
+        // auto sync on setSession (for subsequent hasSession calls)
+        $("#username").val(session.getPlayer());
+        $("#address").val(session.getAddress());
+
+        return this;
+    };
+
     this.setPlayMode = function(mode)
     {
         var isValidMode = $.inArray(mode, play_modes_) != -1;
@@ -250,12 +263,15 @@ var GameController = function(socket, nem, chainId)
 
     this.getPlayMode = function()
     {
-        return play_mode_;
+        var current_mode = player_session_ != null ? player_session_.getGameMode() : play_mode_;
+        return current_mode;
     };
 
     this.isPlayMode = function(mode)
     {
-        return play_mode_ == mode;
+        var current_mode = player_session_ != null ? player_session_.getGameMode() : play_mode_;
+
+        return current_mode == mode;
     };
 
     this.sponsorizeName = function(sponsor)
@@ -281,6 +297,17 @@ var GameController = function(socket, nem, chainId)
     this.getSponsor = function()
     {
         return sponsor_;
+    };
+
+    this.setAdvertised = function(flag)
+    {
+        advertised_ = flag === true;
+        return this;
+    };
+
+    this.isAdvertised = function()
+    {
+        return advertised_ === true;
     };
 
     /**

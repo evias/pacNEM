@@ -439,7 +439,7 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 
         if (!username.length || !address.length)
             if (typeof session == 'undefined' || !session.identified())
-                // emitUsername not possible, either user name or XEM
+                // createSession not possible, either user name or XEM
                 // address could not be retrieved.
                 return {"username": "", "address": ""};
 
@@ -475,14 +475,41 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.emitUsername = function(session)
+    this.createSession = function(session)
     {
+        var self = this;
         var details = this.getPlayerDetails();
 
-        // save the game session details
-        session_ = new GameSession(API_, details.username, details.address);
+        if (typeof session != 'undefined')
+            // use saved session
+            session_ = session;
+        else
+            // save the game session details
+            session_ = new GameSession(API_, details.username, details.address, ctrl_.getPlayMode());
 
-        // Socket IO emit username change and notify others.
+        ctrl_.setSession(session_);
+
+        if (ctrl_.isPlayMode("sponsored") && ! ctrl_.isAdvertised()) {
+            // this is a page reload! show the Sponsor modal box because
+            // advertising has not been done for this socket id!
+
+            ctrl_.setAdvertised(true);
+            self.setSponsoredUI(function(ui, sponsor)
+                {
+                    // now display the advertisement
+                    ui.displaySponsorAdvertisement(function(ui)
+                    {
+                        // and finally, emit the session creation
+                        socket_.emit('change_username', details.username);
+                        socket_.emit("notify");
+                    });
+                });
+
+            return this;
+        }
+
+        // we can safely emit the session creation, this user is
+        // either a pay-per-play or share-per-play (not yet implemented)
         socket_.emit('change_username', details.username);
         socket_.emit("notify");
         return this;
@@ -528,9 +555,10 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
      *
      * @return {[type]} [description]
      */
-    this.setSponsoredUI = function()
+    this.setSponsoredUI = function(callback)
     {
         var self = this;
+
         API_.getRandomSponsor(function(sponsor)
             {
                 // got a sponsor, now we'll have a valid address input for sure.
@@ -544,7 +572,8 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
                 $("#username").attr("data-sponsor", sponsor.slug);
 
                 ctrl_.setSponsor(sponsor);
-                self.prepareSponsoredJoin(sponsor);
+                self.prepareSponsoredJoin(sponsor, function(ui)
+                    { callback(ui); });
             });
     };
 
@@ -578,13 +607,17 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
      * @param  NEMSponsor sponsor
      * @return GameUI
      */
-    this.prepareSponsoredJoin = function(sponsor)
+    this.prepareSponsoredJoin = function(sponsor, callback)
     {
+        var self = this;
         template_.render("sponsor-box", function(compileWith)
             {
                 // add server side generated sponsor HTML to a modal
                 // boxes wrapper.
                 $("#pacnem-modal-wrapper").html(compileWith(sponsor));
+
+                if (callback)
+                    callback(self);
             });
 
         return this;
@@ -646,7 +679,25 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
      */
     this.displayInvoice = function(callback)
     {
-        alert("Not implemented yet!");
+        alert("Invoice not implemented yet!");
+
+        callback(this);
+        return this;
+    };
+
+    /**
+     * Open the Share Engine modal box for the user to Share
+     * per Play. This box should contain Sponsor's content
+     * to be shared on Facebook, Twitter, LinkedIn, etc.
+     *
+     * @param  Function callback
+     * @return GameUI
+     */
+    this.displayShareEngine = function(callback)
+    {
+        alert("Invoice not implemented yet!");
+
+        callback(this);
         return this;
     };
 
@@ -762,17 +813,22 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
 
                 var postPaymentCallback = function(ui)
                     {
-                        ui.emitUsername();
+                        ui.createSession();
                         ui.displayPlayerUI();
                         $("#rooms").parent().show();
                     };
 
                 if (ctrl_.isPlayMode("sponsored")) {
                     ctrl_.sponsorizeName(ctrl_.getSponsor());
+                    ctrl_.setAdvertised(true);
+
                     self.displaySponsorAdvertisement(postPaymentCallback);
                 }
-                else {
+                else if (ctrl_.isPlayMode("pay-per-play")) {
                     self.displayInvoice(postPaymentCallback);
+                }
+                else {
+                    self.displayShareEngine(postPaymentCallback);
                 }
             }
 
@@ -849,10 +905,11 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
             ctrl_.setPlayMode(thisMode);
 
             if ("sponsored" == thisMode)
-                self.setSponsoredUI();
+                self.setSponsoredUI(function(ui) {});
             else
                 self.unsetSponsoredUI();
 
+            // game mode choice has been done now, next is username and address.
             $("#pacnem-save-trigger").prop("disabled", false).removeClass("btn-disabled");
             $(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");
             $("#username").focus();
@@ -879,8 +936,9 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
         if (session_.identified()) {
             // post page-load reload from localStorage
             self.updateUserFormWithSession(session_);
-            self.emitUsername();
+            self.createSession(session_);
             self.displayPlayerUI();
+
             $("#rooms").parent().show();
         }
         else

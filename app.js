@@ -317,7 +317,7 @@ app.get("/api/v1/sponsors/random", function(req, res)
 		sponsor.name = names[rAddr];
 		sponsor.xem  = addresses[rAddr];
 		sponsor.description = i18n.t("sponsors.example_description");
-		sponsor.imageUrl    = "http://placehold.it/500x300";
+		sponsor.imageUrl    = "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300";
 		sponsor.websiteUrl  = "https://github.com/evias";
 
 		res.send(JSON.stringify({item: sponsor}));
