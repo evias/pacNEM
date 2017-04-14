@@ -94,8 +94,9 @@ var DisplayPoints = function(x, y, color, value)
  * @author  Nicolas Dubien (https://github.com/dubzzz)
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameController = function(socket, nem, chainId)
+var GameController = function(config, socket, nem, chainId)
 {
+    var config_ = config;
     var socket_  = socket;
     var nem_     = nem;
     var chainId_ = chainId;
