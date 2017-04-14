@@ -33,9 +33,11 @@ var GameSession = function(API, userName, xemAddress, gameMode)
     };
 
     this.API_  = API;
+    this.model = null;
 
     this.sync = function()
     {
+        var self = this;
         var storage = window.localStorage;
 
         if (! storage)
@@ -46,37 +48,54 @@ var GameSession = function(API, userName, xemAddress, gameMode)
         if (json && json.length)
             this.details_ = JSON.parse(json);
 
+        if (this.getAddress().length && this.model == null) {
+            // fetch the session data from db, and read blockchain
+            // for remaining evias.pacnem:heart mosaics.
+            this.API_.getSession(this.details_, function(response)
+                {
+                    self.model = response.item;
+                });
+        }
+
         return this;
     };
 
     this.store = function()
     {
+        var self = this;
         var storage = window.localStorage;
 
-        this.details_.sid = $("#pacNEM-sessionId").val();
+        self.details_.sid = $("#pacNEM-sessionId").val();
 
         if (! storage)
             //XXX display error message
-            return this;
+            return self;
         else
             // save to localStorage
-            storage.setItem("evias.pacnem:player", JSON.stringify(this.details_));
+            storage.setItem("evias.pacnem:player", JSON.stringify(self.details_));
 
         // save to database
-        if (this.details_.sid.length)
+        if (self.details_.sid.length) {
             // save now
-            this.API_.storeSession(this.details_);
+            self.API_.storeSession(self.details_, function(response)
+                {
+                    self.model = response.item;
+                });
+        }
         else {
             // issue db save in 3 seconds because rooms_update event
             // was not emitted yet.
-            var self = this;
             setTimeout(function()
             {
                 self.details_.sid = $("#pacNEM-sessionId").val();
-                self.API_.storeSession(self.details_);
+                self.API_.storeSession(self.details_, function(response)
+                    {
+                        self.model = response.item;
+                    });
             }, 3000);
         }
-        return this;
+
+        return self;
     };
 
     this.clear = function()

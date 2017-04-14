@@ -27,14 +27,15 @@
  *
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameUI = function(socket, controller, $, jQFileTemplate)
+var GameUI = function(config, socket, controller, $, jQFileTemplate)
 {
+    var config_ = config;
     var socket_ = socket;
     var ctrl_ = controller;
     var jquery_ = $;
     var rooms_ctr_ = undefined;
     var session = undefined;
-    var API_ = new GameAPI(socket, controller, $, jQFileTemplate);
+    var API_ = new GameAPI(config, socket, controller, $, jQFileTemplate);
     var template_ = jQFileTemplate;
 
     /**
@@ -97,8 +98,8 @@ var GameUI = function(socket, controller, $, jQFileTemplate)
         {
             var data = JSON.parse(rawdata);
 
-            // when session is stored, the Hearts blockchain request
-            // will be triggered by the underlying API endpoint.
+            // we will display the `data` (count of hearts available read from
+            // blockchain) in the top bar.
             var $wrap = $("#currentHearts").first();
             var $data = $("#currentHearts-hearts").first();
 

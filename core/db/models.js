@@ -51,6 +51,26 @@ var pacnem = function(io, chainDataLayer)
         });
 
     // Schema definition
+    this.NEMGameCredit_ = new mongoose.Schema({
+        xem: String,
+        countHearts: {type: Number, min: 0},
+        countPlayedHearts: {type: Number, min: 0},
+        countExchangedHearts: {type: Number, min: 0},
+        lastRead: {type: Number, min: 0}
+    });
+
+    this.NEMGameCredit_.methods = {
+        getAddress: function()
+        {
+            return this.xem.replace(/-/g, "");
+        },
+
+        getCountRemaining: function()
+        {
+            return this.countHearts - this.countPlayedHearts;
+        }
+    };
+
     this.NEMGamer_ = new mongoose.Schema({
         xem: String,
         username: String,
@@ -58,32 +78,55 @@ var pacnem = function(io, chainDataLayer)
         lastScore: {type: Number, min: 0},
         highScore: {type: Number, min: 0},
         countGames: {type: Number, min: 0},
-        countHearts: {type: Number, min: 0},
-        lastRead: {type: Number, min: 0}
+        createdAt: {type: Number, min: 0},
+        updatedAt: {type: Number, min: 0}
     });
 
     this.NEMGamer_.methods = {
         getAddress: function()
         {
             return this.xem.replace(/-/g, "");
+        },
+
+        credits: function(callback)
+        {
+            return this.model("NEMGameCredit").findOne({xem: this.xem}, callback);
+        },
+
+        updateCredits: function(creditObject)
+        {
+            var address = this.getAddress();
+            mongoose.model("NEMGameCredit").findOne({xem: address}, function(err, credits)
+            {
+                if (! err && credits) {
+                    // update NEMGameCredit mode
+                    credits.xem = address;
+                    credits.countHearts = parseInt(creditObject.countHearts); // /!\ Divisibility of evias.pacnem:heart is 0
+
+                    if (typeof creditObject.countExchangedHearts && creditObject.countExchangedHearts > 0)
+                        credits.countExchangedHearts = creditObject.countExchangedHearts;
+
+                    credits.lastRead = new Date().valueOf();
+                    credits.save();
+                }
+                else if (! credits) {
+                    // create NEMGameCredit mode
+                    var NEMGameCredit = mongoose.model("NEMGameCredit");
+                    var credits = new NEMGameCredit({
+                        xem: address,
+                        countHearts: parseInt(creditObject.countHearts),
+                        countPlayedHearts: 0,
+                        countExchangedHearts: 0,
+                        lastRead: new Date().valueOf()
+                    });
+
+                    credits.save();
+                }
+
+                socket_.emit("pacnem_heart_sync", credits.countHearts);
+            });
         }
     };
-
-    this.NEMGamer_.post("save", function(gamer, next)
-    {
-        // check whether the blockchain must be read or if we
-        // have data for the given gamer.
-
-        // blockchain timing check
-        var currentTime  = new Date().valueOf();
-        var threeSeconds = 3 * 1000;
-        if (! this.lastRead || currentTime >= this.lastRead + threeSeconds) {
-            chainDataLayer_.fetchHeartsByGamer(gamer);
-        }
-
-        // next middleware
-        next();
-    });
 
     this.pacNEMSponsor_ = new mongoose.Schema({
         slug: String,
@@ -94,13 +137,15 @@ var pacnem = function(io, chainDataLayer)
         websiteUrl: String
     });
 
-    // Models classes
-    this.NEMGamer = mongoose.model("NEMGamer", this.NEMGamer_);
-    this.NEMSponsor = mongoose.model("NEMSponsor", this.pacNEMSponsor_);
+    // bind our Models classes
+    this.NEMGameCredit = mongoose.model("NEMGameCredit", this.NEMGameCredit_);
+    this.NEMGamer      = mongoose.model("NEMGamer", this.NEMGamer_);
+    this.NEMSponsor    = mongoose.model("NEMSponsor", this.pacNEMSponsor_);
 };
 
 module.exports.pacnem = pacnem;
-module.exports.NEMGamer = pacnem.NEMGamer;
-module.exports.NEMSponsor = pacnem.NEMSponsor;
+module.exports.NEMGameCredit = pacnem.NEMGameCredit;
+module.exports.NEMGamer      = pacnem.NEMGamer;
+module.exports.NEMSponsor    = pacnem.NEMSponsor;
 }());
 

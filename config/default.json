@@ -1,20 +1,28 @@
 {
     "hoster": {
-        "xem": "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ",
-        "private_key": "Your Private Key Here"
+        "business": "TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU",
+        "application": "TBPGYGLO4QMZLVR4TZF7GSL5IHJAUNPFXFNEEP4V",
+        "namespace": "evias-tests.pacnem"
     },
     "nem": {
         "isTestMode": true,
         "isMijin": false,
         "nodes": [
+            {"host": "http://alice6.nem.ninja", "port": 7890},
+            {"host": "http://alice7.nem.ninja", "port": 7890},
+            {"host": "http://san.nem.ninja", "port": 7890},
             {"host": "http://62.75.171.41", "port": 7890},
             {"host": "http://185.53.131.101", "port": 7890},
             {"host": "http://104.251.212.131", "port": 7890}
         ],
         "nodes_test": [
+            {"host": "http://bob.nem.ninja", "port": 7890},
             {"host": "http://bigalice2.nem.ninja", "port": 7890},
             {"host": "http://192.3.61.243", "port": 7890},
             {"host": "http://23.228.67.85", "port": 7890}
         ]
+    },
+    "prices": {
+        "heart": 0.75
     }
 }
