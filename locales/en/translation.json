@@ -86,5 +86,18 @@
         "link_to_website": "Link to the Website of",
         "button_closing_in": "Closing in",
         "seconds_suffix": "seconds"
+    },
+    "invoices": {
+        "buy_hearts_title": "Buy PacNEM Hearts &hearts;",
+        "button_close": "Close",
+        "placeholder_recipient": "PacNEM XEM Address will appear here",
+        "label_recipient": "Send XEM to",
+        "label_network": "Current Blockchain (Network)",
+        "label_amount": "Amount",
+        "buy_hearts_explain": "Howdy dear nember! You selected the Pay per Play mode and will now need to buy Game Credits. Game Credits for the PacNEM game are published to the NEM blockchain in the form of evias.pacnem:heart Mosaics. 1 of our Hearts mosaic is the equivalent of 1 Multiplayer Pacman Game Session.",
+        "buy_hearts_qrcode_title": "Scan this QR Code",
+        "label_receiving": "You will receive: ",
+        "label_message": "Message: ",
+        "buy_hearts_manual_title": "or Send XEM manually"
     }
 }

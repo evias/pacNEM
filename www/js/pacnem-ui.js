@@ -55,7 +55,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     {
         var self = this;
 
-        socket_.on('ready', function(rawdata) {
+        socket_.on('ready', function(rawdata)
+        {
             $(".msgSelectRoom").hide();
             $("#game").show();
             self.displayUserDetails(rawdata);
@@ -438,11 +439,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         var username = $("#username").val();
         var address  = $("#address").val();
 
-        if (!username.length || !address.length)
-            if (typeof session == 'undefined' || !session.identified())
-                // createSession not possible, either user name or XEM
-                // address could not be retrieved.
-                return {"username": "", "address": ""};
+        if (!username.length && session && session.getPlayer().length)
+            username = session.getPlayer();
+
+        if (!address.length && session && session.getAddress().length)
+            address = session.getAddress();
+
+        if (!username.length || !address.length) {
+            // createSession not possible, either user name or XEM
+            // address could not be retrieved.
+            return {"username": "", "address": ""};
+        }
 
         return {"username": username, "address": address};
     };
@@ -611,11 +618,62 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     this.prepareSponsoredJoin = function(sponsor, callback)
     {
         var self = this;
+
+        if ($(".pacnem-sponsor-modal[data-sponsor='" + sponsor.slug  + "']").length)
+            // sponsor window already available
+            return this;
+
         template_.render("sponsor-box", function(compileWith)
             {
                 // add server side generated sponsor HTML to a modal
                 // boxes wrapper.
-                $("#pacnem-modal-wrapper").html(compileWith(sponsor));
+                var html = $("#pacnem-modal-wrapper").html();
+                $("#pacnem-modal-wrapper").html(html + compileWith(sponsor));
+
+                if (callback)
+                    callback(self);
+            });
+
+        return this;
+    };
+
+    /**
+     * Fetch the asynchronous template content for
+     * the invoice. This payment is to receive
+     * evias.pacnem:heart mosaic.
+     *
+     * The modal box is not opened here.
+     *
+     * @param  NEMSponsor sponsor
+     * @return GameUI
+     */
+    this.prepareInvoiceBox = function(callback)
+    {
+        var self = this;
+
+        if ($(".pacnem-invoice-modal").length)
+            // always create a new invoice
+            $(".pacnem-invoice-modal").remove();
+
+        template_.render("invoice-box", function(compileWith)
+            {
+                // i know.. come on, just using nem :D
+                var rBytes = ctrl_.nem().crypto.nacl.randomBytes(8);
+                var seed   = ctrl_.nem().crypto.nacl.randomBytes(4);
+
+                var unsafe = ctrl_.nem().utils.convert.ua2hex(rBytes);
+                var seed   = ctrl_.nem().utils.convert.ua2hex(seed);
+
+                var token  = unsafe + seed;
+                var prefix = "pacnem-invoice-" + token.substr(0, 6);
+
+                // add server side generated invoice HTML to a modal
+                // boxes wrapper.
+                var html = $("#pacnem-modal-wrapper").html();
+                $("#pacnem-modal-wrapper").html(html + compileWith({
+                    invoicePrefix: prefix,
+                    token_: token
+                }));
 
                 if (callback)
                     callback(self);
@@ -680,7 +738,65 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      */
     this.displayInvoice = function(callback)
     {
-        alert("Invoice not implemented yet!");
+        var self = this;
+
+        // Callback function filling the dynamic invoice fields
+        var fillInvoiceData = function(player)
+            {
+                $.ajax({
+                    url: "/api/v1/credits/buy?payer=" + player.address,
+                    type: "GET",
+                    success: function(res)
+                    {
+                        if (res.status == "error") {
+                            console.log("Error occured on Invoice creation: " + res.message);
+                            return false;
+                        }
+
+                        var prefix = $("#pacnem-invoice-prefix").val();
+                        var $number = $("#" + prefix + "-id");
+                        var $recipient = $("#" + prefix + "-recipient");
+                        var $amount    = $("#" + prefix + "-amount");
+                        var $message   = $("#" + prefix + "-message");
+                        var $receiving = $("#" + prefix + "-receiving ");
+                        var fmtAmount  = (res.item.invoice.amount / 1000000) + " XEM";
+
+                        $number.html(res.item.invoice.number);
+                        $recipient.html(res.item.invoice.recipientXEM);
+                        $amount.html(fmtAmount);
+                        $message.html(res.item.invoice.number);
+                        $receiving.html(res.item.invoice.countHearts + "&nbsp;<b>&hearts;&nbsp;evias.pacnem:heart</b>");
+
+                        var qrHtml = kjua({
+                            size: 256,
+                            text: JSON.stringify(res.item.qrData),
+                            fill: '#000',
+                            quiet: 0,
+                            ratio: 2
+                        });
+                        $("#" + prefix + "-qrcode-wrapper").html(qrHtml);
+                    }
+                });
+            };
+
+        // pre-show event should trigger an ajax request to load the
+        // dynamic invoice fields.
+        var $invoiceBox = $(".pacnem-invoice-modal").first();
+        $invoiceBox.on("show.bs.modal", function()
+            {
+                var player  = self.getPlayerDetails();
+
+                // update info of the invoice now that we will display it because
+                // we now have an address and username.
+                fillInvoiceData(player);
+            });
+
+        // all configured, show.
+        $invoiceBox.modal({
+            backdrop: "static",
+            keyboard: false,
+            show: true
+        });
 
         callback(this);
         return this;
@@ -909,6 +1025,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 self.setSponsoredUI(function(ui) {});
             else
                 self.unsetSponsoredUI();
+
+            if ("pay-per-play" == thisMode)
+                self.prepareInvoiceBox(function(ui) {});
 
             // game mode choice has been done now, next is username and address.
             $("#pacnem-save-trigger").prop("disabled", false).removeClass("btn-disabled");

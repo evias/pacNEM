@@ -1,8 +1,9 @@
 {
-    "hoster": {
+    "pacnem": {
         "business": "TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU",
         "application": "TBPGYGLO4QMZLVR4TZF7GSL5IHJAUNPFXFNEEP4V",
-        "namespace": "evias-tests.pacnem"
+        "namespace": "evias-tests.pacnem",
+        "invoicePrefix": "PACNEM-T-"
     },
     "nem": {
         "isTestMode": true,

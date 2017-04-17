@@ -1,0 +1,69 @@
+
+<div class="modal fade pacnem-invoice-modal" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">{{t "invoices.buy_hearts_title"}}</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <p class="col-md-10 col-md-offset-1 text-justify">{{t "invoices.buy_hearts_explain"}}</p>
+                </div>
+
+                <hr />
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-vertical">
+                            <div class="form-group row">
+                                <label class="control-label">{{t "invoices.buy_hearts_qrcode_title"}}</label>
+                                <div class="col-md-12">
+                                    <div id="{{invoicePrefix}}-qrcode-wrapper"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-horizontal">
+                            <div class="form-group row">
+                                <label class="control-label col-md-12 text-center">{{t "invoices.buy_hearts_manual_title"}} - <span id="{{invoicePrefix}}-id"></span></label>
+                            </div>
+                            <div class="form-group row">
+                                <label class="control-label col-md-3" for="{{invoicePrefix}}-recipient">{{t "invoices.label_recipient"}}</label>
+                                <div class="col-md-9">
+                                    <pre id="{{invoicePrefix}}-recipient" style="font-weight: 700;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="control-label col-md-3" for="{{invoicePrefix}}-amount">{{t "invoices.label_amount"}}</label>
+                                <div class="col-md-9">
+                                    <pre id="{{invoicePrefix}}-amount" style="font-weight: 700;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="control-label col-md-3" for="{{invoicePrefix}}-message">{{t "invoices.label_message"}}</label>
+                                <div class="col-md-9">
+                                    <pre id="{{invoicePrefix}}-message" style="font-weight: 700;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="control-label col-md-3" for="{{invoicePrefix}}-receiving">{{t "invoices.label_receiving"}}</label>
+                                <div class="col-md-9 text-left" style="padding-top: 7px;">
+                                    <span id="{{invoicePrefix}}-receiving"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <div class="row text-center">
+                    <input type="hidden" id="{{invoicePrefix}}-token_" value="{{token_}}" />
+                    <input type="hidden" id="pacnem-invoice-prefix" value="{{invoicePrefix}}" />
+                    <button id="pacnem-invoice-close-trigger" class="btn btn-default" role="button">
+                        <span>{{t "invoices.button_close"}}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
