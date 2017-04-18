@@ -146,19 +146,29 @@ var pacnem = function(io, chainDataLayer)
         }
     };
 
-    this.NEMInvoice_ = new mongoose.Schema({
+    this.NEMBot_ = new mongoose.Schema({
+        slug: String,
+        apiUrl: String,
+        createdAt: {type: Number, min: 0},
+        updatedAt: {type: Number, min: 0}
+    });
+
+    this.NEMPaymentChannel_ = new mongoose.Schema({
         payerXEM: String,
         recipientXEM: String,
         amount: {type: Number, min: 0},
         countHearts: {type: Number, min: 1},
         message: String,
+        isBroadcast: {type: Boolean, default: false},
         isPaid: {type: Boolean, default: false},
+        isExpired: {type: Boolean, default: false},
         paidAt: {type: Number, min: 0},
+        expiredAt: {type: Number, min: 0},
         createdAt: {type: Number, min: 0},
         updatedAt: {type: Number, min: 0}
     });
 
-    this.NEMInvoice_.methods = {
+    this.NEMPaymentChannel_.methods = {
         getPayer: function()
         {
             return this.payerXEM.replace(/-/g, "");
@@ -186,8 +196,8 @@ var pacnem = function(io, chainDataLayer)
     };
 
     // configure invoice auto increment
-    this.NEMInvoice_.plugin(increment, {
-        modelName: "NEMInvoice",
+    this.NEMPaymentChannel_.plugin(increment, {
+        modelName: "NEMPaymentChannel",
         fieldName: "number",
         prefix: config.get("pacnem.invoicePrefix")
     });
@@ -205,12 +215,15 @@ var pacnem = function(io, chainDataLayer)
     this.NEMGameCredit = mongoose.model("NEMGameCredit", this.NEMGameCredit_);
     this.NEMGamer      = mongoose.model("NEMGamer", this.NEMGamer_);
     this.NEMSponsor    = mongoose.model("NEMSponsor", this.pacNEMSponsor_);
-    this.NEMInvoice    = mongoose.model("NEMInvoice", this.NEMInvoice_);
+    this.NEMPaymentChannel = mongoose.model("NEMPaymentChannel", this.NEMPaymentChannel_);
+    this.NEMBot = mongoose.model("NEMBot", this.NEMBot_);
 };
 
 module.exports.pacnem = pacnem;
 module.exports.NEMGameCredit = pacnem.NEMGameCredit;
 module.exports.NEMGamer      = pacnem.NEMGamer;
 module.exports.NEMSponsor    = pacnem.NEMSponsor;
+module.exports.NEMPaymentChannel = pacnem.NEMPaymentChannel;
+module.exports.NEMBot = pacnem.NEMBot;
 }());
 

@@ -3,7 +3,11 @@
         "business": "TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU",
         "application": "TBPGYGLO4QMZLVR4TZF7GSL5IHJAUNPFXFNEEP4V",
         "namespace": "evias-tests.pacnem",
-        "invoicePrefix": "PACNEM-T-"
+        "invoicePrefix": "PACNEM-T-",
+        "bots": {
+            "paymentChannel": {"url": "http://localhost:29081/api/v1"},
+            "coSigner": {"url": "http://localhost:29082/api/v1"}
+        }
     },
     "nem": {
         "isTestMode": true,

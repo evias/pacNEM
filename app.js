@@ -89,7 +89,7 @@ app.use(auth.connect(basicAuth));
  */
 
 // configure blockchain layer
-var blockchain = require('./core/db/blockchain.js');
+var blockchain = require('./core/blockchain/service.js');
 var chainDataLayer = new blockchain.service(io, nem);
 
 // configure database layer
@@ -401,17 +401,18 @@ app.get("/api/v1/credits/buy", function(req, res)
 		var invoiceAmount   = amount * 1000000; // convert amount to micro XEM
 		var currentNetwork  = chainDataLayer.getNetwork();
 
-		// mongoDB model NEMInvoice unique on xem address + message pair.
-		dataLayer.NEMInvoice.findOne({
+		// mongoDB model NEMPaymentChannel unique on xem address + message pair.
+		dataLayer.NEMPaymentChannel.findOne({
 			"payerXEM": payer,
 			"recipientXEM": recipient,
-			"isPaid": false
+			"isPaid": false,
+			"isExpired": false
 		}, function(err, invoice)
 		{
 			if (!err && ! invoice) {
 				// creation mode
 
-				var invoice = new dataLayer.NEMInvoice({
+				var invoice = new dataLayer.NEMPaymentChannel({
 					recipientXEM: recipient,
 					payerXEM: payer,
 					amount: invoiceAmount,
@@ -434,7 +435,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 			}
 			else if (err) {
 				// error mode
-				var errorMessage = "Error occured on NEMInvoice update: " + err;
+				var errorMessage = "Error occured on NEMPaymentChannel update: " + err;
 
 				serverLog(req, errorMessage, "ERROR");
 				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
