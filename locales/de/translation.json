@@ -98,6 +98,9 @@
         "buy_hearts_qrcode_title": "Scanne diesen QR Code",
         "label_receiving": "Du erhälst: ",
         "label_message": "Nachricht: ",
-        "buy_hearts_manual_title": "oder Sende XEM manuell"
+        "buy_hearts_manual_title": "oder Sende XEM manuell",
+        "buy_hearts_warning_game_autonomous": "Dieses Spiel arbeitet autonom, Bitte verstehe dass wir XEMs, die ohne Nachricht an PacNEM versendet werden, nicht zurück transferieren können.",
+        "buy_hearts_warning_message": "<b>Bitte, vergesse nicht die Nachricht in deine Transaktion an PacNEM!</b>",
+        "buy_hearts_manual_invoice_label": "Rechnung"
     }
 }

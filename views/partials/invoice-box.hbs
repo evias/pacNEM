@@ -26,7 +26,21 @@
                     <div class="col-md-8">
                         <div class="form-horizontal">
                             <div class="form-group row">
-                                <label class="control-label col-md-12 text-center">{{t "invoices.buy_hearts_manual_title"}} - <span id="{{invoicePrefix}}-id"></span></label>
+                                <label class="control-label">{{t "invoices.buy_hearts_manual_title"}} - {{t "invoices.buy_hearts_manual_invoice_label"}}: <span id="{{invoicePrefix}}-id"></span></label>
+                            </div>
+                            <div class="form-group row">
+                                <div class="panel col-md-12" style="padding: 10px; margin-bottom: 0;">
+                                    <ul class="text-danger text-justify" style="margin: 0; padding:0; list-style: none;">
+                                        <li style="padding-left: 10px;">
+                                            <span class="glyphicon glyphicon-warning-sign"></span>&nbsp;
+                                            <span>{{t "invoices.buy_hearts_warning_game_autonomous"}}</span>
+                                        </li>
+                                        <li style="padding-left: 10px;">
+                                            <span class="glyphicon glyphicon-warning-sign"></span>&nbsp;
+                                            <span>{{t "invoices.buy_hearts_warning_message"}}</span>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="form-group row">
                                 <label class="control-label col-md-3" for="{{invoicePrefix}}-recipient">{{t "invoices.label_recipient"}}</label>
