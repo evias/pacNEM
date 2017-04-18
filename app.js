@@ -89,7 +89,7 @@ app.use(auth.connect(basicAuth));
  */
 
 // configure blockchain layer
-var blockchain = require('./core/db/blockchain.js');
+var blockchain = require('./core/blockchain/service.js');
 var chainDataLayer = new blockchain.service(io, nem);
 
 // configure database layer
@@ -240,17 +240,12 @@ app.get("/api/v1/sessions/get", function(req, res)
 		// fetch an existing NEMGamer entry by XEM address, this
 		dataLayer.NEMGamer.findOne({"xem": input.xem, "username": input.username}, function(err, player)
 		{
-			if (err) {
+			if (err || ! player) {
 				// error mode
 				var errorMessage = "Error occured on NEMGamer READ: " + err;
 
 				serverLog(req, errorMessage, "ERROR");
 				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
-				return false;
-			}
-			else if (! player) {
-				// gamer unknown to system.
-				return false;
 			}
 
 			// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
@@ -284,6 +279,7 @@ app.post("/api/v1/sessions/store", function(req, res)
 				player.xem 		 = input.xem;
 				player.lastScore = input.score;
 				player.highScore = highScore;
+				player.updatedAt = new Date().valueOf();
 
 				if (! player.socketIds || ! player.socketIds.length)
 					player.socketIds = [input.sid];
@@ -309,7 +305,8 @@ app.post("/api/v1/sessions/store", function(req, res)
 					lastScore: input.score,
 					highScore: input.score,
 					socketIds: [input.sid],
-					countGames: 0
+					countGames: 0,
+					createdAt: new Date().valueOf()
 				});
 				player.save();
 
@@ -385,34 +382,77 @@ app.get("/api/v1/credits/buy", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		var amount = req.query.amount ? parseInt(req.query.amount) : 15; // 15 XEM to Pay for Pay per Play.
+		var amount = req.query.amount ? parseInt(req.query.amount) : 13; // 13 XEM to Pay for Pay per Play.
 		if (isNaN(amount) || amount <= 0)
 			res.send(JSON.stringify({"status": "error", "message": "Mandatory field `amount` is invalid."}));
 
-		var heartPrice = parseFloat(config("prices.heart")); // in XEM
+		var payer = req.query.payer ? req.query.payer : undefined;
+		if (! payer.length || dataLayer.isApplicationWallet(payer))
+			// cannot be one of the application wallets
+			res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
+
+		var recipient = req.query.recipient ? req.query.recipient : config.get("pacnem.business"); // the App's MultiSig wallet
+		if (! recipient.length || !dataLayer.isApplicationWallet(recipient))
+			// must be one of the application wallets
+			res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `recipient`."}));
+
+		var heartPrice = parseFloat(config.get("prices.heart")); // in XEM
 		var receivingHearts = Math.ceil(amount * heartPrice); // XEM price * (1 Heart / x XEM)
+		var invoiceAmount   = amount * 1000000; // convert amount to micro XEM
+		var currentNetwork  = chainDataLayer.getNetwork();
 
-		// Invoice model for QR
-        var invoiceData = {
-            "v": chainDataLayer.getNetwork().isTest ? 1 : 2,
-            "type": 2,
-            "data": {
-                "addr": config.get("hoster.business"), // App Wallet
-                "amount": parseInt(req.query.amount) * 1000000, // convert amount to micro XEM
-                "msg": "",
-                "name": "PacNEM Pay per Play Invoice"
-            }
-        };
+		// mongoDB model NEMPaymentChannel unique on xem address + message pair.
+		dataLayer.NEMPaymentChannel.findOne({
+			"payerXEM": payer,
+			"recipientXEM": recipient,
+			"isPaid": false,
+			"isExpired": false
+		}, function(err, invoice)
+		{
+			if (!err && ! invoice) {
+				// creation mode
 
-        var qrCode = kjua({
-            size: 256,
-            text: JSON.stringify(invoiceData),
-            fill: '#000',
-            quiet: 0,
-            ratio: 2
-        });
+				var invoice = new dataLayer.NEMPaymentChannel({
+					recipientXEM: recipient,
+					payerXEM: payer,
+					amount: invoiceAmount,
+					countHearts: receivingHearts,
+					createdAt: new Date().valueOf()
+				});
+				invoice.save(function(err, invoice)
+					{
+						// send invoice data
+						res.send(JSON.stringify({
+							item: {
+								network: currentNetwork,
+								qrData: invoice.getQRData(),
+								invoice: invoice
+							}
+						}));
+					});
 
-		res.send(JSON.stringify({item: qrCode}));
+				return false;
+			}
+			else if (err) {
+				// error mode
+				var errorMessage = "Error occured on NEMPaymentChannel update: " + err;
+
+				serverLog(req, errorMessage, "ERROR");
+				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+				return false;
+			}
+
+			// invoice for this payerXEM already exists and is not paid,
+			// simply send the invoice data for display.
+
+			res.send(JSON.stringify({
+				item: {
+					network: currentNetwork,
+					qrData: invoice.getQRData(),
+					invoice: invoice
+				}
+			}));
+		});
 	});
 
 /**

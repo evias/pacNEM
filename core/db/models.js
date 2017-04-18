@@ -18,7 +18,9 @@
 
 (function() {
 
-var mongoose = require('mongoose');
+var config    = require("config");
+var mongoose  = require('mongoose');
+var increment = require("mongoose-increment");
 
 /**
  * class pacnem connects to a mongoDB database
@@ -49,6 +51,22 @@ var pacnem = function(io, chainDataLayer)
             else
                 console.log("PacNEM Database connection is now up with " + host);
         });
+
+    this.isApplicationWallet = function(xem)
+    {
+        //XXX should fetch NEMSponsor entries too.
+
+        var applicationWallets = [
+            config.get("pacnem.business"),
+            config.get("pacnem.application"),
+        ];
+
+        for (var i = 0; i < applicationWallets.length; i++)
+            if (xem == applicationWallets[i])
+                return true;
+
+        return false;
+    };
 
     // Schema definition
     this.NEMGameCredit_ = new mongoose.Schema({
@@ -128,6 +146,62 @@ var pacnem = function(io, chainDataLayer)
         }
     };
 
+    this.NEMBot_ = new mongoose.Schema({
+        slug: String,
+        apiUrl: String,
+        createdAt: {type: Number, min: 0},
+        updatedAt: {type: Number, min: 0}
+    });
+
+    this.NEMPaymentChannel_ = new mongoose.Schema({
+        payerXEM: String,
+        recipientXEM: String,
+        amount: {type: Number, min: 0},
+        countHearts: {type: Number, min: 1},
+        message: String,
+        isBroadcast: {type: Boolean, default: false},
+        isPaid: {type: Boolean, default: false},
+        isExpired: {type: Boolean, default: false},
+        paidAt: {type: Number, min: 0},
+        expiredAt: {type: Number, min: 0},
+        createdAt: {type: Number, min: 0},
+        updatedAt: {type: Number, min: 0}
+    });
+
+    this.NEMPaymentChannel_.methods = {
+        getPayer: function()
+        {
+            return this.payerXEM.replace(/-/g, "");
+        },
+        getRecipient: function()
+        {
+            return this.recipientXEM.replace(/-/g, "");
+        },
+        getQRData: function()
+        {
+            // data for QR code generation
+            var invoiceData = {
+                "v": chainDataLayer_.getNetwork().isTest ? 1 : 2,
+                "type": 2,
+                "data": {
+                    "addr": this.recipientXEM,
+                    "amount": this.amount,
+                    "msg": this.number,
+                    "name": "PacNEM Game Credits Invoice " + this.number
+                }
+            };
+
+            return invoiceData;
+        }
+    };
+
+    // configure invoice auto increment
+    this.NEMPaymentChannel_.plugin(increment, {
+        modelName: "NEMPaymentChannel",
+        fieldName: "number",
+        prefix: config.get("pacnem.invoicePrefix")
+    });
+
     this.pacNEMSponsor_ = new mongoose.Schema({
         slug: String,
         name: String,
@@ -141,11 +215,15 @@ var pacnem = function(io, chainDataLayer)
     this.NEMGameCredit = mongoose.model("NEMGameCredit", this.NEMGameCredit_);
     this.NEMGamer      = mongoose.model("NEMGamer", this.NEMGamer_);
     this.NEMSponsor    = mongoose.model("NEMSponsor", this.pacNEMSponsor_);
+    this.NEMPaymentChannel = mongoose.model("NEMPaymentChannel", this.NEMPaymentChannel_);
+    this.NEMBot = mongoose.model("NEMBot", this.NEMBot_);
 };
 
 module.exports.pacnem = pacnem;
 module.exports.NEMGameCredit = pacnem.NEMGameCredit;
 module.exports.NEMGamer      = pacnem.NEMGamer;
 module.exports.NEMSponsor    = pacnem.NEMSponsor;
+module.exports.NEMPaymentChannel = pacnem.NEMPaymentChannel;
+module.exports.NEMBot = pacnem.NEMBot;
 }());
 

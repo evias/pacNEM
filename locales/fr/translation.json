@@ -87,5 +87,21 @@
         "link_to_website": "Lien vers le Site web de",
         "button_closing_in": "Il reste",
         "seconds_suffix": "secondes"
+    },
+    "invoices": {
+        "buy_hearts_title": "Achète des Coeurs &hearts; PacNEM",
+        "button_close": "Fermer",
+        "placeholder_recipient": "L'adresse XEM de PacNEM s'affichera ici",
+        "label_recipient": "Envoie des XEM à",
+        "label_network": "Réseau actuel",
+        "label_amount": "Montant",
+        "buy_hearts_explain": "Bonjour chèr(e) nember! Tu as choisi le mode Pay per Play et dois donc acheter des crédits de Jeu. Les crédits de Jeu pour PacNEM sont publié sur la blockchain NEM en tant que Mosaic evias.pacnem:heart. Un evias.pacnem:heart équivaut à 1 session de jeu Pacman multi-joueurs.",
+        "buy_hearts_qrcode_title": "Scan ce code QR",
+        "label_receiving": "Tu recevras:",
+        "label_message": "Message:",
+        "buy_hearts_manual_title": "ou envoie des XEM manuellement",
+        "buy_hearts_warning_game_autonomous": "Ce jeu est entièrement autonome, sois averti qu'il nous est impossible de renvoyer des XEMs envoyés à PacNEM sans le message ci-dessous.",
+        "buy_hearts_warning_message": "<b>Pensez à inclure le message ci-dessous dans votre Transaction à PacNEM!</b>",
+        "buy_hearts_manual_invoice_label": "Facture"
     }
 }
