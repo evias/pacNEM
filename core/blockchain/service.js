@@ -49,11 +49,11 @@ var service = function(io, nemSDK)
     // following XEM Accounts are used for all blockchain requests.
     // - vendor_ : The Vendor Wallet is the Multi Signature account containing all Mosaics!
     // - pacNEM_ : The Cosignatory Wallet is one of the 2 cosignatories of vendor_ (the public one, not the sign-bot..).
-    var vendor_  = (process.env["APP_VENDOR"] || config.get("hoster.business")).replace(/-/g, "");
-    var pacNEM_  = (process.env["APP_PUBLIC"] || config.get("hoster.application") || config.get("hoster.business")).replace(/-/g, "");
+    var vendor_  = (process.env["APP_VENDOR"] || config.get("pacnem.business")).replace(/-/g, "");
+    var pacNEM_  = (process.env["APP_PUBLIC"] || config.get("pacnem.application") || config.get("pacnem.business")).replace(/-/g, "");
 
     // Configure the mosaics namespace to be used
-    var pacNEM_NS_ = (process.env["APP_NAMESPACE"] || config.get("hoster.namespace"));
+    var pacNEM_NS_ = (process.env["APP_NAMESPACE"] || config.get("pacnem.namespace"));
 
     /**
      * Get the NEM Namespace used for this application.
@@ -125,8 +125,12 @@ var service = function(io, nemSDK)
     /**
      * This method fetches mosaics for the given XEM address.
      *
-     * If the mosaic evias.pacnem:heart can be found in the account, the
-     * NEMGameCredit.countHearts property will be updated accordingly.
+     * If the mosaic evias.pacnem:heart can be found in the account, a call
+     * to `fetchGameCreditsRealHistoryByGamer` will be issued in order
+     * to fetch `allTransactions` of the account.
+     *
+     * We will fetch all transactions only for accounts which we know they
+     * own evias.pacnem:heart Mosaics.
      *
      * @param  NEMGamer gamer
      */
@@ -166,12 +170,25 @@ var service = function(io, nemSDK)
             if (! hasHearts)
                 gamer.updateCredits({countHearts: 0});
         }, function(err) {
-            // NO Mosaics available / wrong Network for address / General Request Error
+            // NO Mosaics available / wrong Network for address / Unresolved Promise Errors
 
             gamer.updateCredits({countHearts: 0});
         });
     };
 
+    /**
+     * This method fetches allTransactions of a given XEM account
+     * and updates the `gamer` object's credits (`updateCredits`)
+     * with what can be computed from the Transaction History of the
+     * account.
+     *
+     * Only Transfer Transactions and Multi Signature Transaction are
+     * taken into account as those are ones which can change the
+     * evias.pacnem:heart balance of given XEM accounts.
+     *
+     * @param  {NEMGamer} gamer
+     * @param  {nem.objects.mosaicAttachment} mosaic
+     */
     this.fetchGameCreditsRealHistoryByGamer = function(gamer, mosaic)
     {
         var self = this;
@@ -193,8 +210,8 @@ var service = function(io, nemSDK)
                 if (content.type != nem_.model.transactionTypes.transfer
                     && content.type != nem_.model.transactionTypes.multisigTransaction)
                     // we are interested only in transfer transactions
-                    // and multisig transactions (because only those might
-                    // change the evias.pacnem:heart balance of XEM address)
+                    // and multisig transactions because only those might
+                    // change the evias.pacnem:heart balance of XEM address
                     continue;
 
                 var mosaicStake = self.extractMosaic_(content, heartsMosaicSlug);
@@ -215,7 +232,7 @@ var service = function(io, nemSDK)
             var totalRemaining = totalHeartsIncome > totalHeartsOutgo ? totalHeartsIncome - totalHeartsOutgo : 0;
             gamer.updateCredits({countHearts: totalRemaining, countExchangedHearts: totalHeartsOutgo});
         }, function(err) {
-            // NO Mosaics available / wrong Network for address / General Request Error
+            // NO Transactions available / wrong Network for address / Unresolved Promise Errors
 
             gamer.updateCredits({countHearts: 0});
         });
