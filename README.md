@@ -21,7 +21,7 @@ $ cd /path/to/this/clone
 $ npm install
 ```
 
-### Run the Game server localle
+### Run the Game server locally
 
 First install all dependencies, then run following command from the Terminal:
 

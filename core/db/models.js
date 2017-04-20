@@ -156,14 +156,13 @@ var pacnem = function(io, chainDataLayer)
     this.NEMPaymentChannel_ = new mongoose.Schema({
         payerXEM: String,
         recipientXEM: String,
+        socketIds: [String],
         amount: {type: Number, min: 0},
         countHearts: {type: Number, min: 1},
         message: String,
-        isBroadcast: {type: Boolean, default: false},
+        status: String,
         isPaid: {type: Boolean, default: false},
-        isExpired: {type: Boolean, default: false},
         paidAt: {type: Number, min: 0},
-        expiredAt: {type: Number, min: 0},
         createdAt: {type: Number, min: 0},
         updatedAt: {type: Number, min: 0}
     });

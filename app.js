@@ -102,6 +102,11 @@ var PacNEM_Frontend_Config = {
 	"namespace": chainDataLayer.getNamespace()
 };
 
+var NEMBot_for_pacNEM = {
+	"paymentBot": {host: process.env["PAYMENT_BOT_HOST"] || config.get("pacnem.bots.paymentBot")},
+	"signerBot": {host: process.env["SIGNER_BOT_HOST"] || config.get("pacnem.bots.signerBot")}
+};
+
 /**
  * View Engine Customization
  *
@@ -378,6 +383,57 @@ app.get("/api/v1/sponsors/random", function(req, res)
 		res.send(JSON.stringify({item: sponsor}));
 	});
 
+var startPaymentChannel = function(invoice, clientSocketId, callback)
+{
+	// Now the BACKEND will subscribe to a direct channel to the NEMBot responsible
+	// for Payment Reception Listening. Here we will link the BACKEND SOCKET ID
+	// with the CLIENT SOCKET ID. The client should never request directly to the
+	// NEMBot, so we proxy the whole event chain to avoid this.
+
+	// First we emit a `nembot_open_payment_channel` with the given invoice NUMBER and payer XEM address.
+	// Then we register a listener on `nembot_payment_status_update` which will be triggered when a
+	// Transaction with MESSAGE being the invoiceNumber, is received (/unconfirmed). When the transaction
+	// is included in a block, another `nembot_payment_status_update` will be triggered with status `done`.
+
+	var socket = require("socket.io-client");
+	var channelSocket = socket.connect(NEMBot_for_pacNEM.paymentBot.host);
+	channelSocket.emit("nembot_open_payment_channel", JSON.stringify({number: invoice.number, payer: invoice.payerXEM, recipient: invoice.recipientXEM}));
+
+	// configure Payment Channel Websocket event propagation (back to Client)
+	channelSocket.on("nembot_payment_status_update", function(rawdata)
+		{
+			var data = JSON.parse(rawdata);
+
+			// forward to client..
+			io.sockets.to(clientSocketId)
+			  .emit("pacnem_payment_status_update", JSON.stringify({"status": data.status, "realData": rawdata}));
+
+			// and update invoice status in db
+			dataLayer.NEMPaymentChannel.findOne({number: data.invoice}, function(err, invoice)
+			{
+				if (! err && invoice) {
+					invoice.status = data.status;
+					invoice.save();
+				}
+			});
+		});
+
+	// save new backend socket ID to invoice.
+	if (! invoice.socketIds || ! invoice.socketIds.length)
+		invoice.socketIds = [channelSocket.id];
+	else {
+		var sockets = invoice.socketIds;
+		sockets.push(channelSocket.id);
+
+		invoice.socketIds = sockets;
+	}
+
+	invoice.save(function(err, invoice)
+		{
+			callback(invoice);
+		});
+};
+
 app.get("/api/v1/credits/buy", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
@@ -385,6 +441,10 @@ app.get("/api/v1/credits/buy", function(req, res)
 		var amount = req.query.amount ? parseInt(req.query.amount) : 13; // 13 XEM to Pay for Pay per Play.
 		if (isNaN(amount) || amount <= 0)
 			res.send(JSON.stringify({"status": "error", "message": "Mandatory field `amount` is invalid."}));
+
+		var clientSocketId = req.query.usid ? req.query.usid : null;
+		if (! clientSocketId || ! clientSocketId.length)
+			res.send(JSON.stringify({"status": "error", "message": "Mandatory field `Client Socket ID` is invalid."}));
 
 		var payer = req.query.payer ? req.query.payer : undefined;
 		if (! payer.length || dataLayer.isApplicationWallet(payer))
@@ -405,8 +465,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 		dataLayer.NEMPaymentChannel.findOne({
 			"payerXEM": payer,
 			"recipientXEM": recipient,
-			"isPaid": false,
-			"isExpired": false
+			"status": "unpaid"
 		}, function(err, invoice)
 		{
 			if (!err && ! invoice) {
@@ -416,19 +475,22 @@ app.get("/api/v1/credits/buy", function(req, res)
 					recipientXEM: recipient,
 					payerXEM: payer,
 					amount: invoiceAmount,
+					status: "not_paid",
 					countHearts: receivingHearts,
 					createdAt: new Date().valueOf()
 				});
 				invoice.save(function(err, invoice)
 					{
-						// send invoice data
-						res.send(JSON.stringify({
-							item: {
-								network: currentNetwork,
-								qrData: invoice.getQRData(),
-								invoice: invoice
-							}
-						}));
+						startPaymentChannel(invoice, clientSocketId, function(invoice)
+							{
+								res.send(JSON.stringify({
+									item: {
+										network: currentNetwork,
+										qrData: invoice.getQRData(),
+										invoice: invoice
+									}
+								}));
+							});
 					});
 
 				return false;
@@ -442,16 +504,18 @@ app.get("/api/v1/credits/buy", function(req, res)
 				return false;
 			}
 
-			// invoice for this payerXEM already exists and is not paid,
-			// simply send the invoice data for display.
+			// update mode, invoice already exists, create payment channel proxy
 
-			res.send(JSON.stringify({
-				item: {
-					network: currentNetwork,
-					qrData: invoice.getQRData(),
-					invoice: invoice
-				}
-			}));
+			startPaymentChannel(invoice, clientSocketId, function(invoice)
+				{
+					res.send(JSON.stringify({
+						item: {
+							network: currentNetwork,
+							qrData: invoice.getQRData(),
+							invoice: invoice
+						}
+					}));
+				});
 		});
 	});
 

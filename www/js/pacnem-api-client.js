@@ -117,7 +117,7 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 	{
 		var self = this;
 		self.jquery_.ajax({
-			url: "/api/v1/invoices/create",
+			url: "/api/v1/credits/buy?usid=" + this.socket_.id,
 			type: "GET",
 			dataType: "json",
 			beforeSend: function(req) {

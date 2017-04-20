@@ -744,7 +744,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         var fillInvoiceData = function(player)
             {
                 $.ajax({
-                    url: "/api/v1/credits/buy?payer=" + player.address,
+                    url: "/api/v1/credits/buy?payer=" + player.address + "&usid=" + socket_.id,
                     type: "GET",
                     success: function(res)
                     {
@@ -759,6 +759,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                         var $amount    = $("#" + prefix + "-amount");
                         var $message   = $("#" + prefix + "-message");
                         var $receiving = $("#" + prefix + "-receiving ");
+                        var $status    = $("#" + prefix + "-status ");
                         var fmtAmount  = (res.item.invoice.amount / 1000000) + " XEM";
 
                         $number.html(res.item.invoice.number);
@@ -766,6 +767,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                         $amount.html(fmtAmount);
                         $message.html(res.item.invoice.number);
                         $receiving.html(res.item.invoice.countHearts + "&nbsp;<b>&hearts;&nbsp;evias.pacnem:heart</b>");
+                        $status.text(res.item.invoice.status).addClass("text-danger");
+
+                        // subscribe to payment status updates from the NEMBot responsible for payment channels.
+                        socket_.on("pacnem_payment_status_update", function(rawdata)
+                        {
+                            var data = JSON.parse(rawdata);
+                            var statusClass = data.status == 'unconfirmed' ? "info" : "success";
+                            var $status     = $("#" + prefix + "-status ");
+
+                            $status.text(data.status).removeClass("text-danger").addClass(statusClass);
+                        });
 
                         var qrHtml = kjua({
                             size: 256,
