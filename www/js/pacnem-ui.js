@@ -740,42 +740,71 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     {
         var self = this;
 
+        var registerInvoiceStatusUpdateListener = function()
+            {
+                socket_.on("pacnem_payment_status_update", function(rawdata)
+                {
+                    var data = JSON.parse(rawdata);
+
+                    var statusClass  = data.status == 'unconfirmed' ? "info" : "success";
+                    var statusIcon   = data.status == 'unconfirmed' ? "glyphicon-time" : "glyphicon-check";
+
+                    var prefix = $("#pacnem-invoice-prefix").val();
+                    var $status      = $("#" + prefix + "-status");
+                    var $paid        = $("#" + prefix + "-amountPaid .amount");
+                    var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
+
+                    $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + data.status + "</span>")
+                           .removeClass("text-danger").addClass("text-" + statusClass);
+
+                    if (data.paymentData.amountPaid) {
+                        $paid.text(data.paymentData.amountPaid);
+                        $paid.parents(".wrap-amount").first().show();
+                    }
+                    else
+                        $paid.parents(".wrap-amount").first().hide();
+
+                    if (data.paymentData.amountUnconfirmed) {
+                        $unconfirmed.text(data.paymentData.amountUnconfirmed);
+                        $unconfirmed.parents(".wrap-amount").first().show();
+                    }
+                    else
+                        $unconfirmed.parents(".wrap-amount").first().hide();
+                });
+            };
+
         // Callback function filling the dynamic invoice fields
         var fillInvoiceData = function(player)
             {
-                $.ajax({
-                    url: "/api/v1/credits/buy?payer=" + player.address,
-                    type: "GET",
-                    success: function(res)
-                    {
-                        if (res.status == "error") {
-                            console.log("Error occured on Invoice creation: " + res.message);
-                            return false;
-                        }
+                API_.createInvoice(player, socket_.id, function(data)
+                {
+                    var prefix = $("#pacnem-invoice-prefix").val();
+                    var $number = $("#" + prefix + "-id");
+                    var $recipient = $("#" + prefix + "-recipient");
+                    var $amount    = $("#" + prefix + "-amount");
+                    var $message   = $("#" + prefix + "-message");
+                    var $receiving = $("#" + prefix + "-receiving ");
+                    var $status    = $("#" + prefix + "-status ");
+                    var fmtAmount  = (data.invoice.amount / 1000000) + " XEM";
 
-                        var prefix = $("#pacnem-invoice-prefix").val();
-                        var $number = $("#" + prefix + "-id");
-                        var $recipient = $("#" + prefix + "-recipient");
-                        var $amount    = $("#" + prefix + "-amount");
-                        var $message   = $("#" + prefix + "-message");
-                        var $receiving = $("#" + prefix + "-receiving ");
-                        var fmtAmount  = (res.item.invoice.amount / 1000000) + " XEM";
+                    $number.html(data.invoice.number);
+                    $recipient.html(data.invoice.recipientXEM);
+                    $amount.html(fmtAmount);
+                    $message.html(data.invoice.number);
+                    $receiving.html(data.invoice.countHearts + "&nbsp;<b>&hearts;&nbsp;evias.pacnem:heart</b>");
+                    $status.text(data.invoice.status).addClass("text-danger");
 
-                        $number.html(res.item.invoice.number);
-                        $recipient.html(res.item.invoice.recipientXEM);
-                        $amount.html(fmtAmount);
-                        $message.html(res.item.invoice.number);
-                        $receiving.html(res.item.invoice.countHearts + "&nbsp;<b>&hearts;&nbsp;evias.pacnem:heart</b>");
+                    // subscribe to payment status updates from the NEMBot responsible for payment channels.
+                    registerInvoiceStatusUpdateListener();
 
-                        var qrHtml = kjua({
-                            size: 256,
-                            text: JSON.stringify(res.item.qrData),
-                            fill: '#000',
-                            quiet: 0,
-                            ratio: 2
-                        });
-                        $("#" + prefix + "-qrcode-wrapper").html(qrHtml);
-                    }
+                    var qrHtml = kjua({
+                        size: 256,
+                        text: JSON.stringify(data.qrData),
+                        fill: '#000',
+                        quiet: 0,
+                        ratio: 2
+                    });
+                    $("#" + prefix + "-qrcode-wrapper").html(qrHtml);
                 });
             };
 

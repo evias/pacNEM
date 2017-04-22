@@ -5,8 +5,8 @@
         "namespace": "evias-tests.pacnem",
         "invoicePrefix": "PACNEM-T-",
         "bots": {
-            "paymentChannel": {"url": "http://localhost:29081/api/v1"},
-            "coSigner": {"url": "http://localhost:29082/api/v1"}
+            "paymentBot": "ws://localhost:29081",
+            "signerBot": "ws://localhost:29082"
         }
     },
     "nem": {

@@ -66,6 +66,14 @@
                                     <span id="{{invoicePrefix}}-receiving"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
                                 </div>
                             </div>
+                            <div id="{{invoicePrefix}}-status-wrapper" class="form-group row">
+                                <label class="control-label col-md-3" for="{{invoicePrefix}}-receiving">{{t "invoices.label_payment_status"}}</label>
+                                <div class="col-md-9 text-left" style="padding-top: 7px;">
+                                    <span id="{{invoicePrefix}}-status"></span>
+                                    <span id="{{invoicePrefix}}-amountPaid" class="text-success wrap-amount" style="display: none;">{{t "invoices.label_amount_paid"}} <span class="amount"></span> XEM</span>
+                                    <span id="{{invoicePrefix}}-amountUnconfirmed" class="text-warning wrap-amount" style="display: none;">{{t "invoices.label_amount_unconfirmed"}} <span class="amount"></span> XEM</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
             </div>
