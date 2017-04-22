@@ -235,7 +235,7 @@ app.get("/api/v1/sessions/get", function(req, res)
 		res.setHeader('Content-Type', 'application/json');
 
 		if (! req.query.address || ! req.query.address.length)
-			res.send(JSON.stringify({"status": "error", "message": "Mandatory field `address` is missing."}));
+			return res.send(JSON.stringify({"status": "error", "message": "Mandatory field `address` is missing."}));
 
 		var input = {
 			"xem" : req.query.address.replace(/-/g, ""),
@@ -250,14 +250,14 @@ app.get("/api/v1/sessions/get", function(req, res)
 				var errorMessage = "Error occured on NEMGamer READ: " + err;
 
 				serverLog(req, errorMessage, "ERROR");
-				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
 			}
 
 			// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
 			chainDataLayer.fetchHeartsByGamer(player);
 
 			// session retrieved.
-			res.send(JSON.stringify({item: player}));
+			return res.send(JSON.stringify({item: player}));
 		});
 	});
 
@@ -300,7 +300,7 @@ app.post("/api/v1/sessions/store", function(req, res)
 				// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
 				chainDataLayer.fetchHeartsByGamer(player);
 
-				res.send(JSON.stringify({item: player}));
+				return res.send(JSON.stringify({item: player}));
 			}
 			else if (! player) {
 			// creation mode
@@ -318,14 +318,14 @@ app.post("/api/v1/sessions/store", function(req, res)
 				// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
 				chainDataLayer.fetchHeartsByGamer(player);
 
-				res.send(JSON.stringify({item: player}));
+				return res.send(JSON.stringify({item: player}));
 			}
 			else {
 			// error mode
 				var errorMessage = "Error occured on NEMGamer update: " + err;
 
 				serverLog(req, errorMessage, "ERROR");
-				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
 			}
 		});
 	});
@@ -383,6 +383,35 @@ app.get("/api/v1/sponsors/random", function(req, res)
 		res.send(JSON.stringify({item: sponsor}));
 	});
 
+var updateInvoiceStatus = function(data)
+{
+	var invoiceQuery = {};
+
+	if (typeof data.invoice != 'undefined' && data.invoice.length) {
+		// Player sent message along with transaction.
+		invoiceQuery["number"] = data.invoice;
+	}
+	else if (typeof data.sender != 'undefined' && data.sender.length) {
+		// Player didn't send a Message with the transaction..
+		invoiceQuery["payerXEM"] = data.sender;
+	}
+
+	// find invoice and update status and amounts
+	dataLayer.NEMPaymentChannel.findOne(invoiceQuery, function(err, invoice)
+	{
+		if (! err && invoice) {
+			invoice.status = data.status;
+
+			if (data.status == "unconfirmed")
+				invoice.amountUnconfirmed = data.amountUnconfirmed;
+			else if (data.amountPaid)
+				invoice.amountPaid = data.amountPaid;
+
+			invoice.save();
+		}
+	});
+}
+
 var startPaymentChannel = function(invoice, clientSocketId, callback)
 {
 	// Now the BACKEND will subscribe to a direct channel to the NEMBot responsible
@@ -392,12 +421,19 @@ var startPaymentChannel = function(invoice, clientSocketId, callback)
 
 	// First we emit a `nembot_open_payment_channel` with the given invoice NUMBER and payer XEM address.
 	// Then we register a listener on `nembot_payment_status_update` which will be triggered when a
-	// Transaction with MESSAGE being the invoiceNumber, is received (/unconfirmed). When the transaction
-	// is included in a block, another `nembot_payment_status_update` will be triggered with status `done`.
+	// Transaction with MESSAGE being the invoiceNumber OR SENDER PUBLIC KEY being the payerXEM, is received
+	// (/unconfirmed). When the transaction is included in a block, another `nembot_payment_status_update`
+	// will be triggered with status `completed`.
 
 	var socket = require("socket.io-client");
 	var channelSocket = socket.connect(NEMBot_for_pacNEM.paymentBot.host);
-	channelSocket.emit("nembot_open_payment_channel", JSON.stringify({number: invoice.number, payer: invoice.payerXEM, recipient: invoice.recipientXEM}));
+	var channelParams = {
+		message: invoice.number,
+		sender: invoice.payerXEM,
+		recipient: invoice.recipientXEM,
+		amount: invoice.amount
+	};
+	channelSocket.emit("nembot_open_payment_channel", JSON.stringify(channelParams));
 
 	// configure Payment Channel Websocket event propagation (back to Client)
 	channelSocket.on("nembot_payment_status_update", function(rawdata)
@@ -405,17 +441,14 @@ var startPaymentChannel = function(invoice, clientSocketId, callback)
 			var data = JSON.parse(rawdata);
 
 			// forward to client..
+			var clientData = {
+				status: data.status,
+				paymentData: data
+			};
 			io.sockets.to(clientSocketId)
-			  .emit("pacnem_payment_status_update", JSON.stringify({"status": data.status, "realData": rawdata}));
+			  .emit("pacnem_payment_status_update", JSON.stringify(clientData));
 
-			// and update invoice status in db
-			dataLayer.NEMPaymentChannel.findOne({number: data.invoice}, function(err, invoice)
-			{
-				if (! err && invoice) {
-					invoice.status = data.status;
-					invoice.save();
-				}
-			});
+			updateInvoiceStatus(data);
 		});
 
 	// save new backend socket ID to invoice.
@@ -440,21 +473,21 @@ app.get("/api/v1/credits/buy", function(req, res)
 
 		var amount = req.query.amount ? parseInt(req.query.amount) : 13; // 13 XEM to Pay for Pay per Play.
 		if (isNaN(amount) || amount <= 0)
-			res.send(JSON.stringify({"status": "error", "message": "Mandatory field `amount` is invalid."}));
+			return res.send(JSON.stringify({"status": "error", "message": "Mandatory field `amount` is invalid."}));
 
 		var clientSocketId = req.query.usid ? req.query.usid : null;
 		if (! clientSocketId || ! clientSocketId.length)
-			res.send(JSON.stringify({"status": "error", "message": "Mandatory field `Client Socket ID` is invalid."}));
+			return res.send(JSON.stringify({"status": "error", "message": "Mandatory field `Client Socket ID` is invalid."}));
 
 		var payer = req.query.payer ? req.query.payer : undefined;
 		if (! payer.length || dataLayer.isApplicationWallet(payer))
 			// cannot be one of the application wallets
-			res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
+			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
 
 		var recipient = req.query.recipient ? req.query.recipient : config.get("pacnem.business"); // the App's MultiSig wallet
 		if (! recipient.length || !dataLayer.isApplicationWallet(recipient))
 			// must be one of the application wallets
-			res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `recipient`."}));
+			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `recipient`."}));
 
 		var heartPrice = parseFloat(config.get("prices.heart")); // in XEM
 		var receivingHearts = Math.ceil(amount * heartPrice); // XEM price * (1 Heart / x XEM)
@@ -465,7 +498,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 		dataLayer.NEMPaymentChannel.findOne({
 			"payerXEM": payer,
 			"recipientXEM": recipient,
-			"status": "unpaid"
+			"status": {$in: ["not_paid", "unconfirmed"]}
 		}, function(err, invoice)
 		{
 			if (!err && ! invoice) {
@@ -475,6 +508,8 @@ app.get("/api/v1/credits/buy", function(req, res)
 					recipientXEM: recipient,
 					payerXEM: payer,
 					amount: invoiceAmount,
+					amountPaid: 0,
+					amountUnconfirmed: 0,
 					status: "not_paid",
 					countHearts: receivingHearts,
 					createdAt: new Date().valueOf()
@@ -484,6 +519,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 						startPaymentChannel(invoice, clientSocketId, function(invoice)
 							{
 								res.send(JSON.stringify({
+									status: "ok",
 									item: {
 										network: currentNetwork,
 										qrData: invoice.getQRData(),
@@ -500,8 +536,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 				var errorMessage = "Error occured on NEMPaymentChannel update: " + err;
 
 				serverLog(req, errorMessage, "ERROR");
-				res.send(JSON.stringify({"status": "error", "message": errorMessage}));
-				return false;
+				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
 			}
 
 			// update mode, invoice already exists, create payment channel proxy
@@ -509,6 +544,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 			startPaymentChannel(invoice, clientSocketId, function(invoice)
 				{
 					res.send(JSON.stringify({
+						status: "ok",
 						item: {
 							network: currentNetwork,
 							qrData: invoice.getQRData(),

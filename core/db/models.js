@@ -158,6 +158,8 @@ var pacnem = function(io, chainDataLayer)
         recipientXEM: String,
         socketIds: [String],
         amount: {type: Number, min: 0},
+        amountPaid: {type: Number, min: 0},
+        amountUnconfirmed: {type: Number, min: 0},
         countHearts: {type: Number, min: 1},
         message: String,
         status: String,

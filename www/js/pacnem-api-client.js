@@ -113,26 +113,21 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		});
 	};
 
-	this.createInvoice = function(callback)
+	this.createInvoice = function(player, socketId, callback)
 	{
-		var self = this;
-		self.jquery_.ajax({
-			url: "/api/v1/credits/buy?usid=" + this.socket_.id,
-			type: "GET",
-			dataType: "json",
-			beforeSend: function(req) {
-				if (req && req.overrideMimeType)
-					req.overrideMimeType("application/json;charset=UTF-8");
-			},
-			success: function(response) {
-				var scores = response.data;
-
-				self.template_.render("scores-container", function(compileWith)
-				{
-					$("#pacnem-scores-wrapper").html(compileWith(response));
-					callback(scores);
-				});
-			}
-		});
+		$.ajax({
+	        url: "/api/v1/credits/buy?payer=" + player.address + "&usid=" + socketId,
+	        type: "GET",
+	        success: function(res)
+	        {
+	            if (res.status == "error") {
+	                console.log("Error occured on Invoice creation: " + res.message);
+	                return false;
+	            }
+	            else if (res.status == "ok") {
+	            	return callback(res.item);
+	            }
+	        }
+	    });
 	};
 };
