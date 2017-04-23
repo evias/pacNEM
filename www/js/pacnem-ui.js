@@ -758,14 +758,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                            .removeClass("text-danger").addClass("text-" + statusClass);
 
                     if (data.paymentData.amountPaid) {
-                        $paid.text(data.paymentData.amountPaid);
+                        $paid.text(data.paymentData.amountPaid / 1000000);
                         $paid.parents(".wrap-amount").first().show();
                     }
                     else
                         $paid.parents(".wrap-amount").first().hide();
 
                     if (data.paymentData.amountUnconfirmed) {
-                        $unconfirmed.text(data.paymentData.amountUnconfirmed);
+                        $unconfirmed.text(data.paymentData.amountUnconfirmed / 1000000);
                         $unconfirmed.parents(".wrap-amount").first().show();
                     }
                     else

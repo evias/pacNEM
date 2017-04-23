@@ -431,7 +431,8 @@ var startPaymentChannel = function(invoice, clientSocketId, callback)
 		message: invoice.number,
 		sender: invoice.payerXEM,
 		recipient: invoice.recipientXEM,
-		amount: invoice.amount
+		amount: invoice.amount,
+		maxDuration: 5 * 60 * 1000
 	};
 	channelSocket.emit("nembot_open_payment_channel", JSON.stringify(channelParams));
 
