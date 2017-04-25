@@ -407,6 +407,11 @@ var updateInvoiceStatus = function(data)
 			else if (data.amountPaid)
 				invoice.amountPaid = data.amountPaid;
 
+			if (data.status == "paid") {
+				invoice.isPaid = true;
+				invoice.paidAt = new Date().valueOf();
+			}
+
 			invoice.save();
 		}
 	});
@@ -436,9 +441,11 @@ var startPaymentChannel = function(invoice, clientSocketId, callback)
 	};
 	channelSocket.emit("nembot_open_payment_channel", JSON.stringify(channelParams));
 
-	// configure Payment Channel Websocket event propagation (back to Client)
+	// configure payment status update event FORWARDING (comes from NEMBot and forwards to Frontend)
 	channelSocket.on("nembot_payment_status_update", function(rawdata)
 		{
+			logger.info(__smartfilename, __line, '[' + channelSocket.id + '] nembot_payment_status_update(' + rawdata + ')');
+
 			var data = JSON.parse(rawdata);
 
 			// forward to client..
@@ -449,6 +456,7 @@ var startPaymentChannel = function(invoice, clientSocketId, callback)
 			io.sockets.to(clientSocketId)
 			  .emit("pacnem_payment_status_update", JSON.stringify(clientData));
 
+			// do the UI magic
 			updateInvoiceStatus(data);
 		});
 
@@ -499,7 +507,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 		dataLayer.NEMPaymentChannel.findOne({
 			"payerXEM": payer,
 			"recipientXEM": recipient,
-			"status": {$in: ["not_paid", "unconfirmed"]}
+			"status": {$in: ["not_paid", "unconfirmed", "paid_partly"]}
 		}, function(err, invoice)
 		{
 			if (!err && ! invoice) {

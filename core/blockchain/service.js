@@ -202,7 +202,7 @@ var service = function(io, nemSDK)
             var totalHeartsIncome = 0;
             var totalHeartsOutgo  = 0;
 
-            for (i in transactions) {
+            for (var i in transactions) {
                 var content    = transactions[i].transaction;
                 var meta       = transactions[i].meta;
                 var recipient  = null;
