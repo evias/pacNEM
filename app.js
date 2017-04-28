@@ -439,12 +439,13 @@ var startPaymentChannel = function(invoice, clientSocketId, callback)
 		amount: invoice.amount,
 		maxDuration: 5 * 60 * 1000
 	};
+	logger.info(__smartfilename, __line, '[BOT] open_channel(' + JSON.stringify(channelParams) + ') with NEMBot host: ' + NEMBot_for_pacNEM.paymentBot.host);
 	channelSocket.emit("nembot_open_payment_channel", JSON.stringify(channelParams));
 
 	// configure payment status update event FORWARDING (comes from NEMBot and forwards to Frontend)
 	channelSocket.on("nembot_payment_status_update", function(rawdata)
 		{
-			logger.info(__smartfilename, __line, '[' + channelSocket.id + '] nembot_payment_status_update(' + rawdata + ')');
+			logger.info(__smartfilename, __line, '[' + channelSocket.id + '] [BOT] nembot_payment_status_update(' + rawdata + ')');
 
 			var data = JSON.parse(rawdata);
 
