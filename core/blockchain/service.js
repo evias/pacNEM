@@ -26,7 +26,7 @@ var config = require("config");
  *
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var service = function(io, nemSDK)
+var service = function(io, nemSDK, logger)
 {
     var socket_ = io;
 
@@ -35,6 +35,7 @@ var service = function(io, nemSDK)
     // network and port (testnet, mainnet, mijin) and will then initialize
     // a common object using the configured private key.
     var nem_    = nemSDK;
+    var logger_ = logger;
 
     var isTestMode   = config.get("nem.isTestMode");
 
@@ -89,6 +90,24 @@ var service = function(io, nemSDK)
     this.getPublicWallet = function()
     {
         return pacNEM_;
+    };
+
+    /**
+     * This returns the `pacnem.application` account's private key and is
+     * used for creating mosaic transfer multisig transactions for the
+     * account `pacnem.business`.
+     *
+     * Only this private key is public, the other accounts are NEMBots and
+     * no informations about those will be saved in this application.
+     *
+     * Only Co-Signatory NEMBots are private, the Payment Processor Bot
+     * can publish read operations to track current invoices, etc.
+     *
+     * @return {[type]} [description]
+     */
+    this.getSecretKey = function()
+    {
+        return (process.env["APP_SECRET"] || config.get("pacnem.applicationSecret");
     };
 
     /**
@@ -214,7 +233,7 @@ var service = function(io, nemSDK)
                     // change the evias.pacnem:heart balance of XEM address
                     continue;
 
-                var mosaicStake = self.extractMosaic_(content, heartsMosaicSlug);
+                var mosaicStake = self.extractMosaicFromTransactionData_(content, heartsMosaicSlug);
 
                 if (mosaicStake === false)
                     continue;
@@ -238,7 +257,119 @@ var service = function(io, nemSDK)
         });
     };
 
-    this.extractMosaic_ = function(trxContent, slugToExtract)
+    /**
+     * This method is used when an invoice is PAID (confirmed). It will
+     * send evias.pacnem:heart Mosaics as described in `paymentChannel.countHearts`
+     * and save the blockchain transaction hash to `paymentChannel.heartsTransactionHash`.
+     *
+     * @param  {NEMPaymentChannel} paymentChannel
+     * @param  {Function} callbackSuccess
+     * @return {void}
+     */
+    this.sendHeartsForPayment = function(paymentChannel, callbackSuccess)
+    {
+        var gamerXEM  = paymentChannel.getPayer();
+        var countHearts = paymentChannel.countHearts;
+        var privStore = nem_.model.objects.create("common")("", this.getSecretKey());
+        var mosaicDefPair = nem_.model.objects.get("mosaicDefinitionMetaDataPair");
+        var hasBetaMosaic = config.get("pacnem.isBeta");
+
+        // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
+        var message = paymentChannel + " - Thank you! Greg.";
+        var transferTransaction = nem_.model.objects.create("transferTransaction")(gamerXEM, 1, paymentChannel.number); // Amount 1 is "one time x Mosaic Attachments"
+        transferTransaction.isMultisig = true;
+        transferTransaction.multisigAccount = vendor_;
+
+        var mosaicAttachHearts = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "heart", countHearts);
+        var mosaicAttachPlayer  = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "player", 1);
+        var mosaicAttachBPlayer = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "beta-player", 1);
+
+        // always receive evias.pacnem:heart and evias.pacnem:player
+        transferTransaction.mosaics.push(mosaicAttachHearts);
+        transferTransaction.mosaics.push(mosaicAttachPlayer);
+
+        if (hasBetaMosaic)
+            // in beta mode, give evias.pacnem:beta-player too
+            transferTransaction.mosaics.push(mosaicAttachBPlayer);
+
+        // Need mosaic definition of evias.pacnem:heart to calculate adequate fees, so we get it from network.
+        nem_.com.requests.namespace
+            .mosaicDefinitions(node_, mosaicAttachment.mosaicId.namespaceId).then(
+        function(res) {
+            var heartsDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["heart"]);
+            var playerDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["player"]);
+            var bPlayerDef = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["beta-player"]);
+            var heartsSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachHearts.mosaicId);
+            var playerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachPlayer.mosaicId);
+            var bPlayerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachBPlayer.mosaicId);
+
+            if (undefined === heartsDef[heartsSlug] || undefined === playerDef[playerSlug] || undefined === bPlayerDef[bPlayerSlug])
+                return logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition for " + heartsSlug + " - Obligatory for the game, Please fix!");
+
+            mosaicDefPair[heartsSlug] = {};
+            mosaicDefPair[playerSlug] = {};
+
+            mosaicDefPair[heartsSlug].mosaicDefinition = heartsDef[heartsSlug];
+            mosaicDefPair[playerSlug].mosaicDefinition = playerDef[playerSlug];
+
+            if (hasBetaMosaic) {
+                mosaicDefPair[bPlayerSlug]= {};
+                mosaicDefPair[bPlayerSlug].mosaicDefinition = bPlayerDef[bPlayerSlug];
+            }
+
+            // Prepare the multisig mosaic transfer transaction object and broadcast
+            var transactionEntity = nem_.model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, this.getNetwork().config.id);
+            nem_.model.transactions.send(privStore, transactionEntity, node_).then(
+            function(res) {
+                delete privStore;
+
+                // If code >= 2, it's an error
+                if (res.code >= 2) {
+                    logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + vendor_ + " to " + gamerXEM + ": " + err);
+                    return false;
+                }
+
+                var trxHash = res.transactionHash.data;
+                logger_.info(
+                    "[NEM] [PAYMENT]", "[CREATED]",
+                    "Created a multi-signature Mosaic transfer transaction for " + countHearts + " " + heartsSlug
+                    + " sent to " + gamerXEM + " for invoice " + paymentChannel.number);
+
+                // update `paymentChannel` to contain the transaction hash too and make sure history is kept.
+                paymentChannel.hasSentHearts = true;
+                paymentChannel.heartsTransactionHash = trxHash;
+                paymentChannel.save(function(err)
+                    {
+                        if (! err) {
+                            callbackSuccess(paymentChannel);
+                        }
+                    });
+            },
+            function(err) {
+                logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + vendor_ + " to " + gamerXEM + " in " + paymentChannel.number + ": " + err);
+            });
+
+            delete privStore;
+        },
+        function(err) {
+            logger_.error("[NEM] [ERROR]", __line, "Could not read mosaics defintion for namespace: " + mosaicAttachment.mosaicId.namespaceId + ": " + err);
+        });
+    };
+
+    /**
+     * This will read `slugToExtract` Mosaic amounts from the given Transaction
+     * data `trxContent`.
+     *
+     * This method can be used to retrieve **one** Mosaic's total Amount in the
+     * given Transaction Data using either the array in `trxContent.mosaics` or
+     * the array in `trxContent.otherTrans.mosaics` in case of a multi signature
+     * transaction.
+     *
+     * @param  {object} trxContent    - should be `TransactionMetaDataPair.transaction`
+     * @param  {string} slugToExtract - Which mosaic ID to extract (i.e.: evias.pacnem:heart)
+     * @return {object}
+     */
+    this.extractMosaicFromTransactionData_ = function(trxContent, slugToExtract)
     {
         if (! trxContent || ! slugToExtract || ! slugToExtract.length)
             return {totalMosaic: 0, recipient: false};

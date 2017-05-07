@@ -108,6 +108,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             self.animateHeartsCounter($data, 0, data, " Credits");
         });
 
+        socket_.on("pacnem_payment_success", function(rawdata)
+        {
+            var data = JSON.parse(rawdata);
+            var sess = ctrl_.getSession();
+
+            // get session call will also trigger a "pacnem_heart_sync" event
+            // to update the credits.
+            API_.getSession(sess, function(response) {});
+        });
+
         return this;
     };
 

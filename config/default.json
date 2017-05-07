@@ -2,12 +2,13 @@
     "pacnem": {
         "business": "TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU",
         "application": "TBPGYGLO4QMZLVR4TZF7GSL5IHJAUNPFXFNEEP4V",
+        "applicationSecret": "",
         "namespace": "evias-tests.pacnem",
         "invoicePrefix": "PACNEM-T-",
         "bots": {
-            "paymentBot": "ws://localhost:29081",
-            "signerBot": "ws://localhost:29082"
-        }
+            "paymentBot": "ws://localhost:29081"
+        },
+        "isBeta": true
     },
     "nem": {
         "isTestMode": true,
