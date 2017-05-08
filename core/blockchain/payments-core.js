@@ -80,6 +80,7 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
             amount: invoice.amount,
             maxDuration: 5 * 60 * 1000
         };
+
         self.logger_.info(__smartfilename, __line, '[BOT] open_channel(' + JSON.stringify(channelParams) + ') with NEMBot host: ' + NEMBot_for_pacNEM.paymentBot.host);
         channelSocket.emit("nembot_open_payment_channel", JSON.stringify(channelParams));
 
@@ -95,7 +96,7 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
                     status: data.status,
                     paymentData: data
                 };
-                io.sockets.in(invoice.number)
+                io.sockets.to(clientSocketId)
                   .emit("pacnem_payment_status_update", JSON.stringify(clientData));
 
                 // do the UI magic
@@ -182,6 +183,7 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
 
     this.closePaymentChannel = function(paymentChannel)
     {
+        var self = this;
         self.blockchain_.sendHeartsForPayment(paymentChannel, function(paymentChannel)
         {
             // forward "DONE PAYMENT" to client..
@@ -192,9 +194,11 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
 
             if (botChannelSockets_.hasOwnProperty(paymentChannel.number)) {
                 //var clientSocketId = botChannelSockets_[paymentChannel.number].clientId;
+                var socketsForPayment = botChannelSockets_[paymentChannel.number];
 
-                io.sockets.in(paymentChannel.number)
-                  .emit("pacnem_payment_success", JSON.stringify(clientData));
+                for (var i in socketsForPayment)
+                    self.socketIO_.sockets.to(socketsForPayments[i].clientId)
+                        .emit("pacnem_payment_success", JSON.stringify(clientData));
             }
         });
     };

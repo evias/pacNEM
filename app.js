@@ -101,6 +101,9 @@ var dataLayer = new models.pacnem(io, chainDataLayer);
 var PaymentsCore = require("./core/blockchain/payments-core.js").PaymentsCore;
 var PaymentsProtocol = new PaymentsCore(io, logger, chainDataLayer, dataLayer);
 
+var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
+var PacNEM_Crons  = new JobsScheduler(logger, chainDataLayer, dataLayer);
+
 var PacNEM_Frontend_Config = {
 	"business": chainDataLayer.getVendorWallet(),
 	"application": chainDataLayer.getPublicWallet(),

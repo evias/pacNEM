@@ -20,22 +20,22 @@
 
 var config = require("config");
 
-var pacNEM_mosaics = [
-    "heart",
-    "beta-player",
-    "player",
-    "nember",
-    "n00b",
-    "afficionado",
-    "great-supporter",
-    "multikill",
-    "rampage",
-    "ghostbuster",
-    "godlike-101010"
-}
+var pacNEM_mosaics = {
+    "heart": true,
+    "beta-player": true,
+    "player": true,
+    "nember": true,
+    "n00b": true,
+    "afficionado": true,
+    "great-supporter": true,
+    "multikill": true,
+    "rampage": true,
+    "ghostbuster": true,
+    "godlike-101010": true
+};
 
 /**
- * class service provide a business layer for
+ * class service provides a business layer for
  * blockchain data queries used in the pacNEM game.
  *
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
@@ -292,7 +292,7 @@ var service = function(io, nemSDK, logger)
 
         // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
         var message = paymentChannel + " - Thank you! Greg.";
-        var transferTransaction = nem_.model.objects.create("transferTransaction")(gamerXEM, 1, paymentChannel.number); // Amount 1 is "one time x Mosaic Attachments"
+        var transferTransaction = nem_.model.objects.create("transferTransaction")(gamerXEM, 1, message); // Amount 1 is "one time x Mosaic Attachments"
         transferTransaction.isMultisig = true;
         transferTransaction.multisigAccount = vendor_;
 
