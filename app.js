@@ -96,14 +96,15 @@ var chainDataLayer = new blockchain.service(io, nem, logger);
 var models = require('./core/db/models.js');
 var dataLayer = new models.pacnem(io, chainDataLayer);
 
+// configure our PaymentsCore implementation, handling payment
+// processor NEMBot communication
+var PaymentsCore = require("./core/blockchain/payments-core.js").PaymentsCore;
+var PaymentsProtocol = new PaymentsCore(io, logger, chainDataLayer, dataLayer);
+
 var PacNEM_Frontend_Config = {
 	"business": chainDataLayer.getVendorWallet(),
 	"application": chainDataLayer.getPublicWallet(),
 	"namespace": chainDataLayer.getNamespace()
-};
-
-var NEMBot_for_pacNEM = {
-	"paymentBot": {host: process.env["PAYMENT_BOT_HOST"] || config.get("pacnem.bots.paymentBot")}
 };
 
 /**
@@ -382,151 +383,6 @@ app.get("/api/v1/sponsors/random", function(req, res)
 		res.send(JSON.stringify({item: sponsor}));
 	});
 
-/**
- * The startPaymentChannel function is used to open the communication
- * channel between this backend and the NEMBot responsible for Payment
- * Processing of the pacNEM game invoices.
- *
- * This function will emit `pacnem_payment_status_update` to `clientSocketId`
- * in case the NEMBot sends a payment update to this backend (through
- * the previously created communication channel).
- *
- * @param  {NEMPaymentChannel}   invoice
- * @param  {string}   clientSocketId  - Frontend SocketIO socket ID (Frontend to Backend communication)
- * @param  {Function} callback       [description]
- * @return {void}
- */
-var startPaymentChannel = function(invoice, clientSocketId, callback)
-{
-	// Now the BACKEND will subscribe to a direct channel to the NEMBot responsible
-	// for Payment Reception Listening. Here we will link the BACKEND SOCKET ID
-	// with the CLIENT SOCKET ID. The client should never request directly to the
-	// NEMBot, so we proxy the whole event chain to avoid this.
-
-	// First we emit a `nembot_open_payment_channel` with the given invoice NUMBER and payer XEM address.
-	// Then we register a listener on `nembot_payment_status_update` which will be triggered when a
-	// Transaction with MESSAGE being the invoiceNumber OR SENDER PUBLIC KEY being the payerXEM, is received
-	// (/unconfirmed &  /transactions). When the transaction is included in a block, another event will be
-	// will be triggered (`nembot_payment_status_update` again) with status `completed`, this time.
-	// Only the second call with completed status should be trusted as a paid amount for the invoice.
-
-	var socket = require("socket.io-client");
-	var channelSocket = socket.connect(NEMBot_for_pacNEM.paymentBot.host);
-	var channelParams = {
-		message: invoice.number,
-		sender: invoice.payerXEM,
-		recipient: invoice.recipientXEM,
-		amount: invoice.amount,
-		maxDuration: 5 * 60 * 1000
-	};
-	logger.info(__smartfilename, __line, '[BOT] open_channel(' + JSON.stringify(channelParams) + ') with NEMBot host: ' + NEMBot_for_pacNEM.paymentBot.host);
-	channelSocket.emit("nembot_open_payment_channel", JSON.stringify(channelParams));
-
-	// configure payment status update event FORWARDING (comes from NEMBot and forwards to Frontend)
-	channelSocket.on("nembot_payment_status_update", function(rawdata)
-		{
-			logger.info(__smartfilename, __line, '[' + channelSocket.id + '] [BOT] nembot_payment_status_update(' + rawdata + ')');
-
-			var data = JSON.parse(rawdata);
-
-			// forward to client..
-			var clientData = {
-				status: data.status,
-				paymentData: data
-			};
-			io.sockets.to(clientSocketId)
-			  .emit("pacnem_payment_status_update", JSON.stringify(clientData));
-
-			// do the UI magic
-			storeInvoiceStatusUpdate(data);
-		});
-
-	// save new backend socket ID to invoice.
-	if (! invoice.socketIds || ! invoice.socketIds.length)
-		invoice.socketIds = [channelSocket.id];
-	else {
-		var sockets = invoice.socketIds;
-		sockets.push(channelSocket.id);
-
-		invoice.socketIds = sockets;
-	}
-
-	invoice.save(function(err)
-		{
-			callback(invoice);
-		});
-};
-
-/**
- * This function saves an invoice status update to the
- * database. It helps keeping track of the payment states.
- *
- * When the data is saved to the database, a custom callback
- * will be executed to send a transaction using our pacNEM
- * Multi Signature Account so that the the buyer receives
- * the bought evias.pacnem:heart Mosaics.
- *
- * @param  {object} data
- * @return {void}
- */
-var storeInvoiceStatusUpdate = function(data)
-{
-	var invoiceQuery = {};
-
-	if (typeof data.invoice != 'undefined' && data.invoice.length) {
-		// Player sent message along with transaction.
-		invoiceQuery["number"] = data.invoice;
-	}
-	else if (typeof data.sender != 'undefined' && data.sender.length) {
-		// Player didn't send a Message with the transaction..
-		invoiceQuery["payerXEM"] = data.sender;
-	}
-
-	// find invoice and update status and amounts
-	dataLayer.NEMPaymentChannel.findOne(invoiceQuery, function(err, invoice)
-	{
-		if (! err && invoice) {
-			invoice.status = data.status;
-
-			if (data.status == "unconfirmed")
-				invoice.amountUnconfirmed = data.amountUnconfirmed;
-			else if (data.amountPaid)
-				invoice.amountPaid = data.amountPaid;
-
-			if (data.status == "paid") {
-				invoice.isPaid = true;
-				invoice.paidAt = new Date().valueOf();
-			}
-
-			invoice.save(function(err)
-			{
-				if (err) {
-					logger.error(__smartfilename, __line, '[ERROR] Invoice status update error: ' + err);
-					return false;
-				}
-
-				if (data.status == "paid" && invoice.isPaid === true) {
-					closePaymentChannel(invoice);
-				}
-			});
-		}
-	});
-}
-
-var closePaymentChannel = function(paymentChannel)
-{
-	chainDataLayer.sendHeartsForPayment(invoice, function(paymentChannel)
-	{
-		// forward "DONE PAYMENT" to client..
-		var clientData = {
-			status: data.status,
-			number: paymentChannel.number
-		};
-		io.sockets.to(clientSocketId)
-		  .emit("pacnem_payment_success", JSON.stringify(clientData));
-	});
-};
-
 app.get("/api/v1/credits/buy", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
@@ -558,8 +414,8 @@ app.get("/api/v1/credits/buy", function(req, res)
 		dataLayer.NEMPaymentChannel.findOne({
 			payerXEM: payer,
 			recipientXEM: recipient,
-			status: {$in: ["not_paid", "unconfirmed", "paid_partly"]},
-			isPaid: false
+			status: {$in: ["not_paid", "unconfirmed", "paid_partly", "paid"]},
+			sentHearts: false
 		}, function(err, invoice)
 		{
 			if (!err && ! invoice) {
@@ -577,7 +433,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 				});
 				invoice.save(function(err)
 					{
-						startPaymentChannel(invoice, clientSocketId, function(invoice)
+						PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice)
 							{
 								// payment channel created, end create-invoice response.
 
@@ -604,7 +460,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 
 			// update mode, invoice already exists, create payment channel proxy
 
-			startPaymentChannel(invoice, clientSocketId, function(invoice)
+			PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice)
 				{
 					// payment channel created, end create-invoice response.
 

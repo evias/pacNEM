@@ -113,6 +113,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             var data = JSON.parse(rawdata);
             var sess = ctrl_.getSession();
 
+            // close modal
+            var $invoiceBox = $(".pacnem-invoice-modal").first();
+            $invoiceBox.modal("hide");
+
             // get session call will also trigger a "pacnem_heart_sync" event
             // to update the credits.
             API_.getSession(sess, function(response) {});

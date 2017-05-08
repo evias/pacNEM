@@ -20,6 +20,20 @@
 
 var config = require("config");
 
+var pacNEM_mosaics = [
+    "heart",
+    "beta-player",
+    "player",
+    "nember",
+    "n00b",
+    "afficionado",
+    "great-supporter",
+    "multikill",
+    "rampage",
+    "ghostbuster",
+    "godlike-101010"
+}
+
 /**
  * class service provide a business layer for
  * blockchain data queries used in the pacNEM game.
@@ -107,7 +121,7 @@ var service = function(io, nemSDK, logger)
      */
     this.getSecretKey = function()
     {
-        return (process.env["APP_SECRET"] || config.get("pacnem.applicationSecret");
+        return process.env["APP_SECRET"] || config.get("pacnem.applicationSecret");
     };
 
     /**
@@ -130,6 +144,8 @@ var service = function(io, nemSDK, logger)
             "isMijin": isMijin
         };
     };
+
+    var network_ = this.getNetwork();
 
     /**
      * Get the status of the currently select NEM blockchain node.
@@ -294,7 +310,7 @@ var service = function(io, nemSDK, logger)
 
         // Need mosaic definition of evias.pacnem:heart to calculate adequate fees, so we get it from network.
         nem_.com.requests.namespace
-            .mosaicDefinitions(node_, mosaicAttachment.mosaicId.namespaceId).then(
+            .mosaicDefinitions(node_, pacNEM_NS_).then(
         function(res) {
             var heartsDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["heart"]);
             var playerDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["player"]);
@@ -318,7 +334,7 @@ var service = function(io, nemSDK, logger)
             }
 
             // Prepare the multisig mosaic transfer transaction object and broadcast
-            var transactionEntity = nem_.model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, this.getNetwork().config.id);
+            var transactionEntity = nem_.model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
             nem_.model.transactions.send(privStore, transactionEntity, node_).then(
             function(res) {
                 delete privStore;
