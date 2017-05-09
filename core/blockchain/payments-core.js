@@ -199,7 +199,7 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
                 var socketsForPayment = botChannelSockets_[paymentChannel.number];
 
                 for (var i in socketsForPayment)
-                    self.socketIO_.sockets.to(socketsForPayments[i].clientId)
+                    self.socketIO_.sockets.to(socketsForPayment[i].clientId)
                         .emit("pacnem_payment_success", JSON.stringify(clientData));
             }
         });
