@@ -49,6 +49,10 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
     font-family: Roboto;
 }
 
+.page-header {
+    margin-bottom: 0;
+}
+
 .page-header .NEMified img {
     max-height: 40px;
 }
@@ -96,6 +100,38 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
 
 footer {
     font-size: 9pt;
+}
+
+.row.page-header { border-bottom: 0px; }
+
+.navbar {
+    margin-bottom: 0;
+}
+.navbar-brand {
+    width: 100%;
+    margin: auto;
+    padding: 0;
+    height: 70px;
+    float: none;
+}
+
+.custom-navbar {
+    text-align: center;
+}
+
+.custom-navbar .nav.navbar-nav {
+    float: none;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    /* IE */
+    zoom: 1;
+    *display: inline;
+}
+
+.custom-navbar .nav.navbar-nav li {
+    float: left;
+    padding: 2px 5px;
 }
 
 @media (min-width: 768px) {
