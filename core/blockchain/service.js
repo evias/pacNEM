@@ -273,6 +273,12 @@ var service = function(io, nemSDK, logger)
         });
     };
 
+    //XXX
+    this.sendAuthCode = function()
+    {
+
+    };
+
     /**
      * This method is used when an invoice is PAID (confirmed). It will
      * send evias.pacnem:heart Mosaics as described in `paymentChannel.countHearts`
@@ -290,15 +296,25 @@ var service = function(io, nemSDK, logger)
         var mosaicDefPair = nem_.model.objects.get("mosaicDefinitionMetaDataPair");
         var hasBetaMosaic = config.get("pacnem.isBeta");
 
+        //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]",
+        //DEBUG            "Now sending " + paymentChannel.countHearts + " hearts for invoice " + paymentChannel.number
+        //DEBUG            + " sent to " + paymentChannel.getPayer() + " paid by " + vendor_ + " signed with " + pacNEM_);
+
         // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
-        var message = paymentChannel + " - Thank you! Greg.";
+        var message = paymentChannel.number + " - Thank you! Greg.";
         var transferTransaction = nem_.model.objects.create("transferTransaction")(gamerXEM, 1, message); // Amount 1 is "one time x Mosaic Attachments"
         transferTransaction.isMultisig = true;
-        transferTransaction.multisigAccount = vendor_;
+        transferTransaction.multisigAccount = {publicKey: config.get("pacnem.businessPublic")};
 
         var mosaicAttachHearts = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "heart", countHearts);
         var mosaicAttachPlayer  = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "player", 1);
         var mosaicAttachBPlayer = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "beta-player", 1);
+
+        var heartsSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachHearts.mosaicId);
+        var playerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachPlayer.mosaicId);
+        var bPlayerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachBPlayer.mosaicId);
+
+        logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Using Mosaics: " + heartsSlug + ", " + playerSlug + ", " + bPlayerSlug);
 
         // always receive evias.pacnem:heart and evias.pacnem:player
         transferTransaction.mosaics.push(mosaicAttachHearts);
@@ -308,6 +324,8 @@ var service = function(io, nemSDK, logger)
             // in beta mode, give evias.pacnem:beta-player too
             transferTransaction.mosaics.push(mosaicAttachBPlayer);
 
+        //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Reading Mosaic Definitions for namespace: " + pacNEM_NS_);
+
         // Need mosaic definition of evias.pacnem:heart to calculate adequate fees, so we get it from network.
         nem_.com.requests.namespace
             .mosaicDefinitions(node_, pacNEM_NS_).then(
@@ -315,9 +333,6 @@ var service = function(io, nemSDK, logger)
             var heartsDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["heart"]);
             var playerDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["player"]);
             var bPlayerDef = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["beta-player"]);
-            var heartsSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachHearts.mosaicId);
-            var playerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachPlayer.mosaicId);
-            var bPlayerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachBPlayer.mosaicId);
 
             if (undefined === heartsDef[heartsSlug] || undefined === playerDef[playerSlug] || undefined === bPlayerDef[bPlayerSlug])
                 return logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition for " + heartsSlug + " - Obligatory for the game, Please fix!");
@@ -335,13 +350,16 @@ var service = function(io, nemSDK, logger)
 
             // Prepare the multisig mosaic transfer transaction object and broadcast
             var transactionEntity = nem_.model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
+
+            logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Now sending Multisig Transaction to " + gamerXEM + " for invoice " + paymentChannel.number + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
+
             nem_.model.transactions.send(privStore, transactionEntity, node_).then(
             function(res) {
                 delete privStore;
 
                 // If code >= 2, it's an error
                 if (res.code >= 2) {
-                    logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + vendor_ + " to " + gamerXEM + ": " + err);
+                    logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + vendor_ + " to " + gamerXEM + ": " + JSON.stringify(res));
                     return false;
                 }
 
@@ -362,13 +380,13 @@ var service = function(io, nemSDK, logger)
                     });
             },
             function(err) {
-                logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + vendor_ + " to " + gamerXEM + " in " + paymentChannel.number + ": " + err);
+                logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + vendor_ + " to " + gamerXEM + " in channel " + paymentChannel + " with error: " + err);
             });
 
             delete privStore;
         },
         function(err) {
-            logger_.error("[NEM] [ERROR]", __line, "Could not read mosaics defintion for namespace: " + mosaicAttachment.mosaicId.namespaceId + ": " + err);
+            logger_.error("[NEM] [ERROR]", "[MOSAIC-GET]", "Could not read mosaics definition for namespace: " + pacNEM_NS_ + ": " + err);
         });
     };
 

@@ -141,14 +141,16 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
         var self = this;
         var invoiceQuery = {};
 
-        if (typeof data.invoice != 'undefined' && data.invoice.length) {
+        if (typeof data.message != 'undefined' && data.message.length) {
             // Player sent message along with transaction.
-            invoiceQuery["number"] = data.invoice;
+            invoiceQuery["number"] = data.message;
         }
         else if (typeof data.sender != 'undefined' && data.sender.length) {
             // Player didn't send a Message with the transaction..
             invoiceQuery["payerXEM"] = data.sender;
         }
+
+        //DEBUG self.logger_.info("[PACNEM] [INVOICE]", "[DEBUG]", 'Fetching invoice with: ' + JSON.stringify(data));
 
         // find invoice and update status and amounts
         self.db_.NEMPaymentChannel.findOne(invoiceQuery, function(err, invoice)
@@ -188,7 +190,7 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
         {
             // forward "DONE PAYMENT" to client..
             var clientData = {
-                status: data.status,
+                status: paymentChannel.status,
                 number: paymentChannel.number
             };
 
