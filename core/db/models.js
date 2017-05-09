@@ -161,6 +161,8 @@ var pacnem = function(io, chainDataLayer)
         amountPaid: {type: Number, min: 0},
         amountUnconfirmed: {type: Number, min: 0},
         countHearts: {type: Number, min: 1},
+        hasSentHearts: {type: Boolean, default: false},
+        heartsTransactionHash: String,
         message: String,
         status: String,
         isPaid: {type: Boolean, default: false},
@@ -172,11 +174,11 @@ var pacnem = function(io, chainDataLayer)
     this.NEMPaymentChannel_.methods = {
         getPayer: function()
         {
-            return this.payerXEM.replace(/-/g, "");
+            return this.payerXEM.toUpperCase().replace(/-/g, "");
         },
         getRecipient: function()
         {
-            return this.recipientXEM.replace(/-/g, "");
+            return this.recipientXEM.toUpperCase().replace(/-/g, "");
         },
         getQRData: function()
         {

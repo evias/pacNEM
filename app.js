@@ -90,21 +90,24 @@ app.use(auth.connect(basicAuth));
 
 // configure blockchain layer
 var blockchain = require('./core/blockchain/service.js');
-var chainDataLayer = new blockchain.service(io, nem);
+var chainDataLayer = new blockchain.service(io, nem, logger);
 
 // configure database layer
 var models = require('./core/db/models.js');
 var dataLayer = new models.pacnem(io, chainDataLayer);
 
+// configure our PaymentsCore implementation, handling payment
+// processor NEMBot communication
+var PaymentsCore = require("./core/blockchain/payments-core.js").PaymentsCore;
+var PaymentsProtocol = new PaymentsCore(io, logger, chainDataLayer, dataLayer);
+
+var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
+var PacNEM_Crons  = new JobsScheduler(logger, chainDataLayer, dataLayer);
+
 var PacNEM_Frontend_Config = {
 	"business": chainDataLayer.getVendorWallet(),
 	"application": chainDataLayer.getPublicWallet(),
 	"namespace": chainDataLayer.getNamespace()
-};
-
-var NEMBot_for_pacNEM = {
-	"paymentBot": {host: process.env["PAYMENT_BOT_HOST"] || config.get("pacnem.bots.paymentBot")},
-	"signerBot": {host: process.env["SIGNER_BOT_HOST"] || config.get("pacnem.bots.signerBot")}
 };
 
 /**
@@ -383,96 +386,11 @@ app.get("/api/v1/sponsors/random", function(req, res)
 		res.send(JSON.stringify({item: sponsor}));
 	});
 
-var updateInvoiceStatus = function(data)
-{
-	var invoiceQuery = {};
-
-	if (typeof data.invoice != 'undefined' && data.invoice.length) {
-		// Player sent message along with transaction.
-		invoiceQuery["number"] = data.invoice;
-	}
-	else if (typeof data.sender != 'undefined' && data.sender.length) {
-		// Player didn't send a Message with the transaction..
-		invoiceQuery["payerXEM"] = data.sender;
-	}
-
-	// find invoice and update status and amounts
-	dataLayer.NEMPaymentChannel.findOne(invoiceQuery, function(err, invoice)
-	{
-		if (! err && invoice) {
-			invoice.status = data.status;
-
-			if (data.status == "unconfirmed")
-				invoice.amountUnconfirmed = data.amountUnconfirmed;
-			else if (data.amountPaid)
-				invoice.amountPaid = data.amountPaid;
-
-			invoice.save();
-		}
-	});
-}
-
-var startPaymentChannel = function(invoice, clientSocketId, callback)
-{
-	// Now the BACKEND will subscribe to a direct channel to the NEMBot responsible
-	// for Payment Reception Listening. Here we will link the BACKEND SOCKET ID
-	// with the CLIENT SOCKET ID. The client should never request directly to the
-	// NEMBot, so we proxy the whole event chain to avoid this.
-
-	// First we emit a `nembot_open_payment_channel` with the given invoice NUMBER and payer XEM address.
-	// Then we register a listener on `nembot_payment_status_update` which will be triggered when a
-	// Transaction with MESSAGE being the invoiceNumber OR SENDER PUBLIC KEY being the payerXEM, is received
-	// (/unconfirmed). When the transaction is included in a block, another `nembot_payment_status_update`
-	// will be triggered with status `completed`.
-
-	var socket = require("socket.io-client");
-	var channelSocket = socket.connect(NEMBot_for_pacNEM.paymentBot.host);
-	var channelParams = {
-		message: invoice.number,
-		sender: invoice.payerXEM,
-		recipient: invoice.recipientXEM,
-		amount: invoice.amount,
-		maxDuration: 5 * 60 * 1000
-	};
-	channelSocket.emit("nembot_open_payment_channel", JSON.stringify(channelParams));
-
-	// configure Payment Channel Websocket event propagation (back to Client)
-	channelSocket.on("nembot_payment_status_update", function(rawdata)
-		{
-			var data = JSON.parse(rawdata);
-
-			// forward to client..
-			var clientData = {
-				status: data.status,
-				paymentData: data
-			};
-			io.sockets.to(clientSocketId)
-			  .emit("pacnem_payment_status_update", JSON.stringify(clientData));
-
-			updateInvoiceStatus(data);
-		});
-
-	// save new backend socket ID to invoice.
-	if (! invoice.socketIds || ! invoice.socketIds.length)
-		invoice.socketIds = [channelSocket.id];
-	else {
-		var sockets = invoice.socketIds;
-		sockets.push(channelSocket.id);
-
-		invoice.socketIds = sockets;
-	}
-
-	invoice.save(function(err, invoice)
-		{
-			callback(invoice);
-		});
-};
-
 app.get("/api/v1/credits/buy", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		var amount = req.query.amount ? parseInt(req.query.amount) : 13; // 13 XEM to Pay for Pay per Play.
+		var amount = req.query.amount ? parseInt(req.query.amount) : 16; // 16 XEM to Pay for Pay per Play.
 		if (isNaN(amount) || amount <= 0)
 			return res.send(JSON.stringify({"status": "error", "message": "Mandatory field `amount` is invalid."}));
 
@@ -497,9 +415,10 @@ app.get("/api/v1/credits/buy", function(req, res)
 
 		// mongoDB model NEMPaymentChannel unique on xem address + message pair.
 		dataLayer.NEMPaymentChannel.findOne({
-			"payerXEM": payer,
-			"recipientXEM": recipient,
-			"status": {$in: ["not_paid", "unconfirmed"]}
+			payerXEM: payer,
+			recipientXEM: recipient,
+			status: {$in: ["not_paid", "unconfirmed", "paid_partly", "paid"]},
+			sentHearts: false
 		}, function(err, invoice)
 		{
 			if (!err && ! invoice) {
@@ -515,10 +434,12 @@ app.get("/api/v1/credits/buy", function(req, res)
 					countHearts: receivingHearts,
 					createdAt: new Date().valueOf()
 				});
-				invoice.save(function(err, invoice)
+				invoice.save(function(err)
 					{
-						startPaymentChannel(invoice, clientSocketId, function(invoice)
+						PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice)
 							{
+								// payment channel created, end create-invoice response.
+
 								res.send(JSON.stringify({
 									status: "ok",
 									item: {
@@ -542,8 +463,10 @@ app.get("/api/v1/credits/buy", function(req, res)
 
 			// update mode, invoice already exists, create payment channel proxy
 
-			startPaymentChannel(invoice, clientSocketId, function(invoice)
+			PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice)
 				{
+					// payment channel created, end create-invoice response.
+
 					res.send(JSON.stringify({
 						status: "ok",
 						item: {

@@ -252,6 +252,11 @@ var GameController = function(config, socket, nem, chainId)
         return this;
     };
 
+    this.getSession = function()
+    {
+        return player_session_;
+    };
+
     this.setPlayMode = function(mode)
     {
         var isValidMode = $.inArray(mode, play_modes_) != -1;
