@@ -82,8 +82,32 @@ Handlebars.registerHelper('t', function(key, sub)
 
                 <div class="navbar" role="navigation">
 
-                    <div class="navbar-brand">
-                        <img src="/img/pacnem_logo.png" alt="PacNEM" title="PacNEM"/>
+                    <div class="navbar-brand row">
+                        <div class="col-md-12">
+                            <img src="/img/pacnem_logo.png" alt="PacNEM" title="PacNEM"/>
+                        </div>
+                    </div>
+
+                    <div class="custom-navbar">
+                        <ul class="nav navbar-nav">
+                            <li id="currentHearts" style="display: none;">
+                                <a href="#">
+                                    <span class="glyphicon glyphicon-heart"></span>&nbsp;
+                                    <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
+                                </a>
+                            </li>
+                            <li id="currentUser" class="dropdown" style="display: none;">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <span class="glyphicon glyphicon-user"></span>&nbsp;
+                                    <span id="currentUser-username"></span>&nbsp;
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-log-out"></span>&nbsp;<span>{{t "menus.purge"}}</span></a></li>
+                                </ul>
+                                <input type="hidden" id="pacNEM-sessionId" value="" />
+                            </li>
+                        </ul>
                     </div>
 
                     <div class="custom-navbar">
@@ -107,23 +131,6 @@ Handlebars.registerHelper('t', function(key, sub)
                                     <span class="glyphicon glyphicon-globe"></span>&nbsp;
                                     <span id="currentBlockchain-network"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
                                 </a>
-                            </li>
-                            <li id="currentHearts" style="display: none;">
-                                <a href="#">
-                                    <span class="glyphicon glyphicon-heart"></span>&nbsp;
-                                    <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
-                                </a>
-                            </li>
-                            <li id="currentUser" class="dropdown" style="display: none;">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <span class="glyphicon glyphicon-user"></span>&nbsp;
-                                    <span id="currentUser-username"></span>&nbsp;
-                                    <span class="caret"></span>
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-log-out"></span>&nbsp;<span>{{t "menus.purge"}}</span></a></li>
-                                </ul>
-                                <input type="hidden" id="pacNEM-sessionId" value="" />
                             </li>
                         </ul>
                     </div>

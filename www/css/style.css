@@ -134,11 +134,24 @@ footer {
     padding: 2px 5px;
 }
 
-@media (min-width: 768px) {
+@media (max-device-width: 767px) {
+    .custom-navbar .nav.navbar-nav li {
+        font-size: 1.3em;
+    }
+    p, table, span, a, ins, del, blockquote, textarea, input, select, button {
+        font-size: 1.1em;
+    }
+}
+
+@media (min-device-width: 768px) {
     .navbar-nav>li {
         font-size: 14px;
     }
+    .navbar-nav>li>a {
+        padding: 3px;
+    }
 }
+
 
 .xem-address {
     text-transform: uppercase;
