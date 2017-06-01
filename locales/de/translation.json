@@ -30,7 +30,7 @@
         "play_type_payperplay": "<b>Pay per Play</b>: Spiele mit deinem eigenen Wallet und <u>kaufe</u> <b>evias.pacnem:heart</b> Game Credits!",
         "play_type_shareperplay": "<b>Share per Play</b>: Spiele mit deinem eigenen Wallet und <u>verdiene</u> <b>evias.pacnem:heart</b> Game Credits indem du Content teilst!",
         "enter_data_to_join": "<span>Geben Sie bitte Ihr Name ein und Ihre XEM Wallet Adresse und klicken Sie auf 'Speichern' um </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Räume beitreten zu können.</span>",
-        "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> wird Ihnen nie nach Ihren privaten Daten fragen wie Ihr Passwort oder Ihr Private Key.</span>"
+        "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> wird Ihnen nie nach Ihren privaten Daten fragen wie Ihr Wallet Passwort oder Ihr Wallet Private Key.</span>"
     },
     "forms": {
         "username_placeholder": "Name eingeben",

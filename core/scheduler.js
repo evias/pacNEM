@@ -42,9 +42,18 @@ var JobsScheduler = function(logger, chainDataLayer, dataLayer)
     this.hourly = function()
     {
         var self = this;
+
+        self.logger.info("[JOBS]", "[SCHEDULE]", "Scheduling hourly PaymentExpiration Job execution");
+
         var hourly_PaymentExpiration = new CronJob('00 00 * * * *',
             function() {
-                self._processPaymentsExpiration();
+                self._processPaymentsExpiration(function(result, err)
+                    {
+                        if (! err)
+                            self.logger.info("[NEM] [PAYMENT]", "[EXPIRE]", "Expired " + result + "Payment Channels");
+                        else
+                            self.logger.error("[NEM] [PAYMENT]", "[EXPIRE]", "Error on Payments Expiration: " + err);
+                    });
             },
             function () {
                 //XXX print results with logger.
@@ -61,9 +70,50 @@ var JobsScheduler = function(logger, chainDataLayer, dataLayer)
 
     };
 
-    this._processPaymentsExpiration = function()
+    /**
+     * This cron is destined to expire invoices which are 2 days old
+     * and have received 0 XEM. Expiring such invoices will make sure
+     * that Players can't keep invoices standing for months while the
+     * Entry Price of the Game changes (Rate Security).
+     *
+     * @param  {Function} callback
+     * @return boolean
+     */
+    this._processPaymentsExpiration = function(callback)
     {
         var self = this;
+
+        // must only expire 0 amounts invoices!
+        self.db_.NEMPaymentChannel.find({"amountPaid": 0, "amountUnconfirmed": 0}, function(err, invoices)
+        {
+            if (err || ! invoices) {
+                // error mode
+                var errorMessage = "Error occured on NEMPaymentChannel READ: " + err;
+
+                serverLog(req, errorMessage, "ERROR");
+                return callback(0, errorMessage);
+            }
+
+            if (! invoices.length)
+                return callback(0);
+
+            var cntExpired = 0;
+            for (var i = 0; i < invoices.length; i++) {
+                var invoice = invoices[i];
+                var twoDaysAgo = new Date().valueOf() - (48 * 60 * 60 * 1000);
+
+                if (invoice.createdAt < oneHourAgo) {
+                    // invoice is more than 2 days old without paid amount - expiration here.
+                    invoice.status = "expired";
+                    invoice.save();
+                    cntExpired++;
+                }
+            }
+
+            return callback(cntExpired);
+        });
+
+        return true;
     };
 };
 

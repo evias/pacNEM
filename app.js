@@ -103,6 +103,7 @@ var PaymentsProtocol = new PaymentsCore(io, logger, chainDataLayer, dataLayer);
 
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
 var PacNEM_Crons  = new JobsScheduler(logger, chainDataLayer, dataLayer);
+PacNEM_Crons.hourly();
 
 var PacNEM_Frontend_Config = {
 	"business": chainDataLayer.getVendorWallet(),
