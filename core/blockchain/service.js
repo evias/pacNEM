@@ -70,6 +70,8 @@ var service = function(io, nemSDK, logger)
     // Configure the mosaics namespace to be used
     var pacNEM_NS_ = (process.env["APP_NAMESPACE"] || config.get("pacnem.namespace"));
 
+    var gameCreditsHistory_ = {};
+
     /**
      * Get the NEM Namespace used for this application.
      *
@@ -182,6 +184,8 @@ var service = function(io, nemSDK, logger)
                 return null;
             }
 
+            logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.mosaics: " + JSON.stringify(res));
+
             // this accounts owns mosaics, check if he has evias.pacnem:heart
             // mosaic so that he can play.
             var hasHearts = false;
@@ -197,7 +201,11 @@ var service = function(io, nemSDK, logger)
                     // Hearts to the pacnem-business wallet.
 
                     // computing the exact balance of the user (we now know that the user owns hearts.)
-                    self.fetchGameCreditsRealHistoryByGamer(gamer, mosaic);
+                    self.fetchGameCreditsRealHistoryByGamer(gamer, mosaic, null, function(creditsData)
+                        {
+                            logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Total of " + creditsData.countHearts + " " + heartsMosaicSlug + " found for " + gamer.getAddress());
+                            gamer.updateCredits(creditsData);
+                        });
                     hasHearts = true;
                 }
             }
@@ -224,53 +232,99 @@ var service = function(io, nemSDK, logger)
      * @param  {NEMGamer} gamer
      * @param  {nem.objects.mosaicAttachment} mosaic
      */
-    this.fetchGameCreditsRealHistoryByGamer = function(gamer, mosaic)
+    this.fetchGameCreditsRealHistoryByGamer = function(gamer, mosaic, lastTrxRead, callback)
     {
         var self = this;
         var heartsMosaicSlug = pacNEM_NS_ + ":heart";
 
+        if (! gameCreditsHistory_.hasOwnProperty(gamer.getAddress())) {
+            gameCreditsHistory_[gamer.getAddress()] = {
+                countHearts: 0,
+                countExchangedHearts: 0,
+                trxIdList: []
+            };
+        }
+
         // read all transactions of the account and check for the given mosaic to build a
         // blockchain-trust mosaic history.
-        nem_.com.requests.account.allTransactions(node_, gamer.getAddress()).then(function(res)
-        {
-            var transactions = res;
-            var totalHeartsIncome = 0;
-            var totalHeartsOutgo  = 0;
 
-            for (var i in transactions) {
-                var content    = transactions[i].transaction;
-                var meta       = transactions[i].meta;
-                var recipient  = null;
+        nem_.com.requests.account.allTransactions(node_, gamer.getAddress(), null, lastTrxRead)
+            .then(function(res)
+            {
+                //logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.allTransactions: " + JSON.stringify(res));
 
-                if (content.type != nem_.model.transactionTypes.transfer
-                    && content.type != nem_.model.transactionTypes.multisigTransaction)
-                    // we are interested only in transfer transactions
-                    // and multisig transactions because only those might
-                    // change the evias.pacnem:heart balance of XEM address
-                    continue;
+                var transactions = res;
 
-                var mosaicStake = self.extractMosaicFromTransactionData_(content, heartsMosaicSlug);
+                lastTrxRead = self.saveGameCreditsRealHistoryForGamer(gamer, transactions);
 
-                if (mosaicStake === false)
-                    continue;
-
-                if (mosaicStake.recipient == gamer.getAddress()) {
-                    // gamer's transaction (incoming for gamer)
-                    totalHeartsIncome += mosaicStake.totalMosaic;
+                if (25 == transactions.length) {
+                    // recursion..
+                    // there may be more transactions in the past (25 transactions
+                    // is the limit that the API returns). If we specify a hash it
+                    // will start looking for transactions beginning at this hash.
+                    self.fetchGameCreditsRealHistoryByGamer(gamer, mosaic, lastTrxRead, callback);
                 }
-                else if (mosaicStake.recipient !== false) {
-                    // pacnem transaction (outgoing for gamer)
-                    totalHeartsOutgo  += mosaicStake.totalMosaic;
+                else if (callback) {
+                    // done.
+                    callback(gameCreditsHistory_[gamer.getAddress()]);
                 }
+
+            }, function(err) {
+                // NO Transactions available / wrong Network for address / Unresolved Promise Errors
+            });
+    };
+
+    this.saveGameCreditsRealHistoryForGamer = function(gamer, transactions)
+    {
+        var self = this;
+        var gamerHistory = gameCreditsHistory_[gamer.getAddress()];
+        var heartsMosaicSlug = pacNEM_NS_ + ":heart";
+
+        var lastTrxRead = null;
+        var lastTrxHash = null;
+        var totalHeartsIncome = 0;
+        var totalHeartsOutgo  = 0;
+        for (var i = 0; i < transactions.length; i++) {
+            var content    = transactions[i].transaction;
+            var meta       = transactions[i].meta;
+            var recipient  = null;
+
+            // save transaction id
+            lastTrxRead = self.getTransactionId(transactions[i]);
+            lastTrxHash = self.getTransactionHash(transactions[i]);
+            gamerHistory.trxIdList.push(lastTrxHash);
+
+            if (content.type != nem_.model.transactionTypes.transfer
+                && content.type != nem_.model.transactionTypes.multisigTransaction)
+                // we are interested only in transfer transactions
+                // and multisig transactions because only those might
+                // change the evias.pacnem:heart balance of XEM address
+                continue;
+
+            // get the searched for mosaic stake
+            var mosaicStake = self.extractMosaicFromTransactionData_(content, heartsMosaicSlug);
+
+            if (mosaicStake === false)
+                continue;
+
+            if (mosaicStake.recipient == gamer.getAddress()) {
+                // gamer's transaction (incoming for gamer)
+                totalHeartsIncome += mosaicStake.totalMosaic;
             }
+            else if (mosaicStake.recipient !== false) {
+                // pacnem transaction (outgoing for gamer)
+                totalHeartsOutgo  += mosaicStake.totalMosaic;
+            }
+        }
 
-            var totalRemaining = totalHeartsIncome > totalHeartsOutgo ? totalHeartsIncome - totalHeartsOutgo : 0;
-            gamer.updateCredits({countHearts: totalRemaining, countExchangedHearts: totalHeartsOutgo});
-        }, function(err) {
-            // NO Transactions available / wrong Network for address / Unresolved Promise Errors
+        var creditsInChunk = totalHeartsIncome - totalHeartsOutgo;
+        logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + creditsInChunk + " " + heartsMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
 
-            gamer.updateCredits({countHearts: 0});
-        });
+        gamerHistory.countHearts = gamerHistory.countHearts + creditsInChunk;
+        gamerHistory.exchangedHearts = gamerHistory.exchangedHearts + totalHeartsOutgo;
+
+        gameCreditsHistory_[gamer.getAddress()] = gamerHistory;
+        return lastTrxRead;
     };
 
     //XXX
@@ -389,6 +443,30 @@ var service = function(io, nemSDK, logger)
             logger_.error("[NEM] [ERROR]", "[MOSAIC-GET]", "Could not read mosaics definition for namespace: " + pacNEM_NS_ + ": " + err);
         });
     };
+
+    /**
+     * Read the Transaction Hash from a given TransactionMetaDataPair
+     * object (gotten from NEM websockets or API).
+     *
+     * @param  [TransactionMetaDataPair]{@link http://bob.nem.ninja/docs/#transactionMetaDataPair} transactionMetaDataPair
+     * @return {string}
+     */
+    this.getTransactionHash = function(transactionMetaDataPair)
+    {
+        var meta    = transactionMetaDataPair.meta;
+        var content = transactionMetaDataPair.transaction;
+
+        var trxHash = meta.hash.data;
+        if (meta.innerHash.data && meta.innerHash.data.length)
+            trxHash = meta.innerHash.data;
+
+        return trxHash;
+    };
+
+    this.getTransactionId = function(transactionMetaDataPair)
+    {
+        return transactionMetaDataPair.meta.id;
+    }
 
     /**
      * This will read `slugToExtract` Mosaic amounts from the given Transaction

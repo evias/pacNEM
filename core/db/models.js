@@ -71,6 +71,7 @@ var pacnem = function(io, chainDataLayer)
     // Schema definition
     this.NEMGameCredit_ = new mongoose.Schema({
         xem: String,
+        readTransactionIds: [String],
         countHearts: {type: Number, min: 0},
         countPlayedHearts: {type: Number, min: 0},
         countExchangedHearts: {type: Number, min: 0},
