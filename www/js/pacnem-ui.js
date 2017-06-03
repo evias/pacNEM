@@ -106,6 +106,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
             $wrap.show();
             self.animateHeartsCounter($data, 0, data, " Credits");
+
+            if (data > 0) {
+                $("#pacNEM-needs-payment").val("0");
+            }
+            else
+                $("#pacNEM-needs-payment").val("1");
+
+            if (session_) {
+                session_.details_.hearts = data;
+                session_.store(false); // do not re-validate with blockchain, we just did that!
+            }
         });
 
         socket_.on("pacnem_payment_success", function(rawdata)
@@ -534,7 +545,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         // either a pay-per-play or share-per-play (not yet implemented)
         socket_.emit('change_username', details.username);
         socket_.emit("notify");
-        return this;
+
+        // return whether an invoice is needed or not
+        return ! session_.details_.hearts;
     };
 
     /**
@@ -754,6 +767,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     {
         var self = this;
 
+        // Frontend to Backend WebSocket Handler
+        // -------------------------------------
+        // This method will receive updates from the PacNEM backend
+        // whenever a Payment Update is received on the NEM Blockchain.
+        // The updates are sent in the form of Socket.io events named
+        // `pacnem_payment_status_update`. The data sent through this
+        // websocket will contain a `status` field and a `paymentData`
+        // field containing the details of the said payment.
         var registerInvoiceStatusUpdateListener = function(ui)
             {
                 socket_.on("pacnem_payment_status_update", function(rawdata)
@@ -794,7 +815,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 });
             };
 
-        // Callback function filling the dynamic invoice fields
+        // Modal Box Initialization Callback
+        // ---------------------------------
+        // Callback function for Modal Box information updates.
+        // The createInvoice API call will retrieve an existing
+        // Invoice in case any money has been sent already.
         var fillInvoiceData = function(ui, player)
             {
                 API_.createInvoice(player, socket_.id, function(data)
@@ -839,6 +864,12 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 // update info of the invoice now that we will display it because
                 // we now have an address and username.
                 fillInvoiceData(self, player);
+
+                $(".pacnem-invoice-close-trigger").on("click", function()
+                {
+                    $(".pacnem-invoice-modal").modal("hide");
+                    callback(self);
+                });
             });
 
         // all configured, show.
@@ -980,6 +1011,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 var postPaymentCallback = function(ui)
                     {
                         ui.createSession();
+
                         ui.displayPlayerUI();
                         $("#rooms").parent().show();
                     };
@@ -993,9 +1025,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 else if (ctrl_.isPlayMode("pay-per-play")) {
                     self.displayInvoice(postPaymentCallback);
                 }
-                else {
-                    self.displayShareEngine(postPaymentCallback);
-                }
+                //else {
+                //    self.displayShareEngine(postPaymentCallback);
+                //}
             }
 
             return false;

@@ -38,13 +38,13 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		return this.socket_;
 	};
 
-	this.storeSession = function(details, callback)
+	this.storeSession = function(details, callback, validateHeartsPerBlockchain = true)
 	{
 		this.jquery_.ajax({
 			url: "/api/v1/sessions/store",
 			type: "POST",
 			dataType: "json",
-			data: details,
+			data: extendObj(details, {validateHearts: validateHeartsPerBlockchain ? 1 : 0}),
 			beforeSend: function(req) {
 				if (req && req.overrideMimeType)
 					req.overrideMimeType("application/json;charset=UTF-8");

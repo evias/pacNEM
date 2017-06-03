@@ -104,6 +104,7 @@
         "buy_hearts_manual_invoice_label": "Invoice",
         "label_payment_status": "Payment State",
         "label_amount_paid": "Amount Paid:",
-        "label_amount_unconfirmed": "Pending confirmation:"
+        "label_amount_unconfirmed": "Pending confirmation:",
+        "button_already_have_credits": "I already purchased Credits"
     }
 }

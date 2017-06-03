@@ -25,6 +25,7 @@
         <script src="/js/nem-sdk.js"></script>
         <script src="/js/kjua.min.js"></script>
 
+        <script src="/js/pacnem-utils.js"></script>
         <script src="/js/pacnem-api-client.js"></script>
         <script src="/js/pacnem-session.js"></script>
         <script src="/js/pacnem-ui.js"></script>
@@ -106,6 +107,7 @@ Handlebars.registerHelper('t', function(key, sub)
                                     <li><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-log-out"></span>&nbsp;<span>{{t "menus.purge"}}</span></a></li>
                                 </ul>
                                 <input type="hidden" id="pacNEM-sessionId" value="" />
+                                <input type="hidden" id="pacNEM-needs-payment" value="" />
                             </li>
                         </ul>
                     </div>

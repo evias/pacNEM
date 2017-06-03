@@ -274,7 +274,8 @@ app.post("/api/v1/sessions/store", function(req, res)
 			"username" : req.body.username.replace(/[^A-Za-z0-9\-_\.]/g, ""),
 			"score": parseInt(req.body.score),
 			"type": req.body.type.replace(/[^a-z0-9\-]/g, ""),
-			"sid": req.body.sid.replace(/[^A-Za-z0-9\-_\.#~]/g, "")
+			"sid": req.body.sid.replace(/[^A-Za-z0-9\-_\.#~]/g, ""),
+			"validateHearts": parseInt(req.body.validateHearts) === 1
 		};
 
 		// mongoDB model NEMGamer unique on xem address + username pair.
@@ -301,8 +302,10 @@ app.post("/api/v1/sessions/store", function(req, res)
 
 				player.save();
 
-				// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-				chainDataLayer.fetchHeartsByGamer(player);
+				if (input.validateHearts === true) {
+					// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
+					chainDataLayer.fetchHeartsByGamer(player);
+				}
 
 				return res.send(JSON.stringify({item: player}));
 			}
@@ -319,8 +322,10 @@ app.post("/api/v1/sessions/store", function(req, res)
 				});
 				player.save();
 
-				// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-				chainDataLayer.fetchHeartsByGamer(player);
+				if (input.validateHearts === true) {
+					// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
+					chainDataLayer.fetchHeartsByGamer(player);
+				}
 
 				return res.send(JSON.stringify({item: player}));
 			}

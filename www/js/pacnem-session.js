@@ -29,7 +29,9 @@ var GameSession = function(API, userName, xemAddress, gameMode)
         "username": userName,
         "type": (typeof gameMode == 'undefined' ? "sponsored" : gameMode),
         "xem": xemAddress,
-        "score": 0
+        "score": 0,
+        "hearts": 0,
+        "achievements": {}
     };
 
     this.API_  = API;
@@ -60,7 +62,7 @@ var GameSession = function(API, userName, xemAddress, gameMode)
         return this;
     };
 
-    this.store = function()
+    this.store = function(validateHeartsPerBlockchain = true)
     {
         var self = this;
         var storage = window.localStorage;
@@ -80,7 +82,7 @@ var GameSession = function(API, userName, xemAddress, gameMode)
             self.API_.storeSession(self.details_, function(response)
                 {
                     self.model = response.item;
-                });
+                }, validateHeartsPerBlockchain);
         }
         else {
             // issue db save in 3 seconds because rooms_update event
@@ -91,7 +93,7 @@ var GameSession = function(API, userName, xemAddress, gameMode)
                 self.API_.storeSession(self.details_, function(response)
                     {
                         self.model = response.item;
-                    });
+                    }, validateHeartsPerBlockchain);
             }, 3000);
         }
 
