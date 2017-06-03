@@ -754,7 +754,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     {
         var self = this;
 
-        var registerInvoiceStatusUpdateListener = function()
+        var registerInvoiceStatusUpdateListener = function(ui)
             {
                 socket_.on("pacnem_payment_status_update", function(rawdata)
                 {
@@ -784,11 +784,18 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     }
                     else
                         $unconfirmed.parents(".wrap-amount").first().hide();
+
+                    if (data.status == "paid") {
+                        var $invoiceBox = $(".pacnem-invoice-modal").first();
+                        $invoiceBox.modal("hide");
+
+                        return callback(ui);
+                    }
                 });
             };
 
         // Callback function filling the dynamic invoice fields
-        var fillInvoiceData = function(player)
+        var fillInvoiceData = function(ui, player)
             {
                 API_.createInvoice(player, socket_.id, function(data)
                 {
@@ -809,7 +816,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     $status.text(data.invoice.status).addClass("text-danger");
 
                     // subscribe to payment status updates from the NEMBot responsible for payment channels.
-                    registerInvoiceStatusUpdateListener();
+                    registerInvoiceStatusUpdateListener(ui);
 
                     var qrHtml = kjua({
                         size: 256,
@@ -831,7 +838,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
                 // update info of the invoice now that we will display it because
                 // we now have an address and username.
-                fillInvoiceData(player);
+                fillInvoiceData(self, player);
             });
 
         // all configured, show.
@@ -841,7 +848,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             show: true
         });
 
-        callback(this);
         return this;
     };
 
