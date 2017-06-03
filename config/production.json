@@ -1,6 +1,7 @@
 {
     "pacnem": {
         "business": "TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU",
+        "businessPublic": "7e5606db494a485d64f40c41416e43bb9a1405f52ba8dc7dcbe8abeb2dde1f40",
         "application": "TBPGYGLO4QMZLVR4TZF7GSL5IHJAUNPFXFNEEP4V",
         "applicationSecret": "",
         "namespace": "evias-tests.pacnem",

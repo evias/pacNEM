@@ -238,10 +238,12 @@ var service = function(io, nemSDK, logger)
         var heartsMosaicSlug = pacNEM_NS_ + ":heart";
 
         if (! gameCreditsHistory_.hasOwnProperty(gamer.getAddress())) {
+            // trxIdList is an OBJECT because we want to leverage the useful hasOwnProperty
+            // and getOwnProperty function from JS object core.
             gameCreditsHistory_[gamer.getAddress()] = {
                 countHearts: 0,
                 countExchangedHearts: 0,
-                trxIdList: []
+                trxIdList: {}
             };
         }
 
@@ -257,20 +259,22 @@ var service = function(io, nemSDK, logger)
 
                 lastTrxRead = self.saveGameCreditsRealHistoryForGamer(gamer, transactions);
 
-                if (25 == transactions.length) {
+                if (lastTrxRead !== false && 25 == transactions.length) {
                     // recursion..
                     // there may be more transactions in the past (25 transactions
                     // is the limit that the API returns). If we specify a hash it
                     // will start looking for transactions beginning at this hash.
                     self.fetchGameCreditsRealHistoryByGamer(gamer, mosaic, lastTrxRead, callback);
                 }
-                else if (callback) {
+
+                if (callback && (lastTrxRead === false || transactions.length < 25)) {
                     // done.
                     callback(gameCreditsHistory_[gamer.getAddress()]);
                 }
 
             }, function(err) {
                 // NO Transactions available / wrong Network for address / Unresolved Promise Errors
+                logger_.info("[DEBUG]", "[ERROR]", "Error in NIS API account.allTransactions: " + JSON.stringify(err));
             });
     };
 
@@ -292,7 +296,12 @@ var service = function(io, nemSDK, logger)
             // save transaction id
             lastTrxRead = self.getTransactionId(transactions[i]);
             lastTrxHash = self.getTransactionHash(transactions[i]);
-            gamerHistory.trxIdList.push(lastTrxHash);
+
+            if (gamerHistory.trxIdList.hasOwnProperty(lastTrxHash))
+                // stopping the loop, reading data we already know about.
+                return false;
+
+            gamerHistory.trxIdList[lastTrxHash] = true;
 
             if (content.type != nem_.model.transactionTypes.transfer
                 && content.type != nem_.model.transactionTypes.multisigTransaction)
@@ -526,7 +535,7 @@ var service = function(io, nemSDK, logger)
 
             if (slugToExtract != slug)
                 // mosaic filter
-                return false;
+                continue;
 
             // get the quantity, compute with transaction amount field in mosaic transfer
             // transaction, the amount field is in fact a QUANTITY. Whereas the `mosaic.quantity`
