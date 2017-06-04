@@ -19,7 +19,9 @@
         "high_scores": "Records",
         "purge": "Déconnecter",
         "change_name": "Changer de nom",
-        "language": "Langue"
+        "language": "Langue",
+        "buy_credits": "Acheter des Crédits",
+        "invoice_history": "Historiques des Achats"
     },
     "guest": {
         "title_blue_box": "Jeu de Pacman Multiplayer",
@@ -80,7 +82,7 @@
         "xem_label": "Wallet XEM",
         "date_label": "Date du Jeu",
         "hide_button": "Masquer",
-        "empty_highscores": "Il n'y a actuellement encore aucun High Score de publié sur la blockchain."
+        "empty_high_scores": "Il n'y a actuellement encore aucun High Score de publié sur la blockchain."
     },
     "sponsors": {
         "example_description": "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.",
@@ -104,5 +106,18 @@
         "buy_hearts_warning_message": "<b>Pensez à inclure le message ci-dessous dans votre Transaction à PacNEM!</b>",
         "buy_hearts_manual_invoice_label": "Facture",
         "button_already_have_credits": "Je possède déjà des Crédits"
+    },
+    "invoice_history": {
+        "title": "Votre Historique d'Achats sur <span>Pac</span><span class='NEMifiedText'>nem</span>",
+        "explain": "<span>Vous trouverez ci-dessous l'historique de vos Achats sur le Jeu </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>.</span>",
+        "recipient_label": "Destinataire",
+        "amount_label": "Prix Total",
+        "amountPaid_label": "Total payé",
+        "message_label": "Message",
+        "status_label": "Statut du Paiement",
+        "createdAt_label": "Date de Création",
+        "updatedAt_label": "Dernière Modification",
+        "hide_button": "Masquer",
+        "empty_invoice_history": "Il n'y a pas d'Historiques pour votre Compte."
     }
 }

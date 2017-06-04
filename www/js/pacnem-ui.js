@@ -580,6 +580,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         // socket io "pacnem_heart_sync" event
         $("#currentHearts").fadeIn("slow");
 
+        this.initPurchasesButtons();
+
         return this;
     };
 
@@ -870,6 +872,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     $(".pacnem-invoice-modal").modal("hide");
                     callback(self);
                 });
+
+                //XXX $("#pacnem-invoice-show-trigger").off("click");
             });
 
         // all configured, show.
@@ -877,6 +881,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             backdrop: "static",
             keyboard: false,
             show: true
+        });
+
+        $("#pacnem-invoice-show-trigger").on("click", function()
+        {
+            $(".pacnem-invoice-modal").modal("show");
         });
 
         return this;
@@ -1083,6 +1092,39 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 $(".msgSelectRoom").show();
                 $("#pacnem-scores-wrapper").hide();
                 $("#pacnem-current-player-details").show();
+            }
+        });
+    };
+
+    /**
+     * Add event listener for Purchase History button
+     *
+     * @return GameUI
+     */
+    this.initPurchasesButtons = function()
+    {
+        var self = this;
+
+        $("#pacnem-invoice-history-trigger").on("click", function()
+        {
+            var flag = $(this).attr("data-display");
+            var player = self.getPlayerDetails();
+
+            if (flag == "0") {
+                $(this).attr("data-display", "1");
+                API_.fetchPurchaseHistory(player, function(history)
+                    {
+                        self.initBackToPlayButtons();
+                        $(".msgSelectRoom").hide();
+                        //$("#pacnem-current-player-details").hide();
+                        $("#pacnem-invoice-history-wrapper").show();
+                    });
+            }
+            else {
+                $(this).attr("data-display", "0");
+                $(".msgSelectRoom").show();
+                $("#pacnem-invoice-history-wrapper").hide();
+                //$("#pacnem-current-player-details").show();
             }
         });
     };

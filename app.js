@@ -485,6 +485,48 @@ app.get("/api/v1/credits/buy", function(req, res)
 		});
 	});
 
+app.get("/api/v1/credits/history", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		var payer = req.query.payer ? req.query.payer : undefined;
+		if (! payer.length || dataLayer.isApplicationWallet(payer))
+			// cannot be one of the application wallets
+			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
+
+		dataLayer.NEMPaymentChannel.find({
+			payerXEM: payer,
+			status: {$in: ["not_paid", "unconfirmed", "paid_partly", "paid"]}
+		}, function(err, invoices)
+		{
+			if (err) {
+				var errorMessage = "Error occured on /credits/history: " + err;
+				serverLog(req, errorMessage, "ERROR");
+				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+			}
+
+			// return list of invoices
+			var invoicesHistory = [];
+			if (invoices && invoices.length) {
+				for (var i = 0; i < invoices.length; i++) {
+					var currentInvoice = invoices[i];
+					invoicesHistory.push({
+						recipient: currentInvoice.recipientXEM,
+						truncRecipient: currentInvoice.getTruncatedRecipient(),
+						amount: currentInvoice.amount,
+						amountPaid: currentInvoice.amountPaid,
+						message: currentInvoice.message,
+						status: currentInvoice.status,
+						createdAt: currentInvoice.createdAt,
+						updatedAt: currentInvoice.updatedAt
+					});
+				}
+			}
+
+			res.send(JSON.stringify({data: invoicesHistory}));
+		});
+	});
+
 /**
  * Socket.IO RoomManager implementation
  *

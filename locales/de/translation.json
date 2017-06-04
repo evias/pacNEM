@@ -19,7 +19,9 @@
         "high_scores": "Rekorde",
         "purge": "Abmelden",
         "change_name": "Name ändern",
-        "language": "Sprache"
+        "language": "Sprache",
+        "buy_credits": "Credits kaufen",
+        "invoice_history": "Meine Bestellungen"
     },
     "guest": {
         "title_blue_box": "Multiplayer Pacman Spiel",
@@ -79,7 +81,7 @@
         "xem_label": "XEM Wallet",
         "date_label": "Spieldatum",
         "hide_button": "Ausblenden",
-        "empty_highscores": "Es wurden bisher noch keine High Scores auf die Blockchain veröffentlicht."
+        "empty_high_scores": "Es wurden bisher noch keine High Scores auf die Blockchain veröffentlicht."
     },
     "sponsors": {
         "example_description": "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.",
@@ -103,5 +105,18 @@
         "buy_hearts_warning_message": "<b>Bitte, vergesse nicht die Nachricht in deine Transaktion an PacNEM!</b>",
         "buy_hearts_manual_invoice_label": "Rechnung",
         "button_already_have_credits": "Ich habe schon Credits"
+    },
+    "invoice_history": {
+        "title": "Ihre <span>Pac</span><span class='NEMifiedText'>nem</span> Bestellungen Historie",
+        "explain": "<span>Hier finden Sie die Historie Ihrer Bestellung auf der Platform von </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>.</span>",
+        "recipient_label": "Empfänger",
+        "amount_label": "Gesamt Betrag",
+        "amountPaid_label": "Betrag Empfangen",
+        "message_label": "Nachricht",
+        "status_label": "Status der Zahlung",
+        "createdAt_label": "Erstellt am",
+        "updatedAt_label": "Letzte Änderung",
+        "hide_button": "Ausblenden",
+        "empty_invoice_history": "Sie haben noch keine Bestellungen gemacht."
     }
 }

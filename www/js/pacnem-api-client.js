@@ -130,4 +130,27 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 	        }
 	    });
 	};
+
+	this.fetchPurchaseHistory = function(player, callback)
+	{
+		var self = this;
+		self.jquery_.ajax({
+			url: "/api/v1/credits/history?payer=" + player.address,
+			type: "GET",
+			dataType: "json",
+			beforeSend: function(req) {
+				if (req && req.overrideMimeType)
+					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(response) {
+				var history = response.data;
+
+				self.template_.render("invoice-history-container", function(compileWith)
+				{
+					$("#pacnem-invoice-history-wrapper").html(compileWith(response));
+					callback(history);
+				});
+			}
+		});
+	};
 };

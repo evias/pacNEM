@@ -91,11 +91,16 @@ Handlebars.registerHelper('t', function(key, sub)
 
                     <div class="custom-navbar">
                         <ul class="nav navbar-nav">
-                            <li id="currentHearts" style="display: none;">
-                                <a href="#">
+                            <li id="currentHearts" class="dropdown" style="display: none;">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <span class="glyphicon glyphicon-heart"></span>&nbsp;
-                                    <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
+                                    <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>&nbsp;
+                                    <span class="caret"></span>
                                 </a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" id="pacnem-invoice-show-trigger" class="text-danger"><span class="glyphicon glyphicon-plus"></span>&nbsp;<span>{{t "menus.buy_credits"}}</span></a></li>
+                                    <li><a href="#" id="pacnem-invoice-history-trigger" class="text-danger"><span class="glyphicon glyphicon-time"></span>&nbsp;<span>{{t "menus.invoice_history"}}</span></a></li>
+                                </ul>
                             </li>
                             <li id="currentUser" class="dropdown" style="display: none;">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">

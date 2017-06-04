@@ -184,7 +184,7 @@ var service = function(io, nemSDK, logger)
                 return null;
             }
 
-            logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.mosaics: " + JSON.stringify(res));
+            //logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.mosaics: " + JSON.stringify(res));
 
             // this accounts owns mosaics, check if he has evias.pacnem:heart
             // mosaic so that he can play.
@@ -235,7 +235,7 @@ var service = function(io, nemSDK, logger)
     this.fetchGameCreditsRealHistoryByGamer = function(gamer, mosaic, lastTrxRead, callback)
     {
         var self = this;
-        var heartsMosaicSlug = pacNEM_NS_ + ":heart";
+        var heartsMosaicSlug = mosaic.mosaicId.namespaceId + ":" + mosaic.mosaicId.name;
 
         if (! gameCreditsHistory_.hasOwnProperty(gamer.getAddress())) {
             // trxIdList is an OBJECT because we want to leverage the useful hasOwnProperty
@@ -257,13 +257,15 @@ var service = function(io, nemSDK, logger)
 
                 var transactions = res;
 
-                lastTrxRead = self.saveGameCreditsRealHistoryForGamer(gamer, transactions);
+                lastTrxRead = self.saveGameCreditsRealHistoryForGamer(gamer, mosaic, transactions);
 
                 if (lastTrxRead !== false && 25 == transactions.length) {
                     // recursion..
                     // there may be more transactions in the past (25 transactions
-                    // is the limit that the API returns). If we specify a hash it
-                    // will start looking for transactions beginning at this hash.
+                    // is the limit that the API returns). If we specify a hash or ID it
+                    // will look for transactions BEFORE this hash or ID (25 before ID..).
+                    // We pass transactions IDs because all NEM nodes support those, hashes are
+                    // only supported by a subset of the NEM nodes.
                     self.fetchGameCreditsRealHistoryByGamer(gamer, mosaic, lastTrxRead, callback);
                 }
 
@@ -278,11 +280,23 @@ var service = function(io, nemSDK, logger)
             });
     };
 
-    this.saveGameCreditsRealHistoryForGamer = function(gamer, transactions)
+    /**
+     * This method reads a transactions list to extract the Mosaic described by
+     * the `mosaic` parameter. It also validates the transaction types, this must
+     * be either a Mosaic Transfer Transaction or a Multi Signature Mosaic Transfer
+     * Transaction.
+     *
+     * This method is called with each chunk of 25 transactions read from the blockchain.
+     *
+     * @param  {NEMGamer} gamer        [description]
+     * @param  {Array} transactions [description]
+     * @return integer | boolean    Integer if read Trx (last Trx ID) - Boolean false if already read.
+     */
+    this.saveGameCreditsRealHistoryForGamer = function(gamer, mosaic, transactions)
     {
         var self = this;
         var gamerHistory = gameCreditsHistory_[gamer.getAddress()];
-        var heartsMosaicSlug = pacNEM_NS_ + ":heart";
+        var heartsMosaicSlug = mosaic.mosaicId.namespaceId + ":" + mosaic.mosaicId.name;
 
         var lastTrxRead = null;
         var lastTrxHash = null;
@@ -327,7 +341,7 @@ var service = function(io, nemSDK, logger)
         }
 
         var creditsInChunk = totalHeartsIncome - totalHeartsOutgo;
-        logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + creditsInChunk + " " + heartsMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
+        //logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + creditsInChunk + " " + heartsMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
 
         gamerHistory.countHearts = gamerHistory.countHearts + creditsInChunk;
         gamerHistory.exchangedHearts = gamerHistory.exchangedHearts + totalHeartsOutgo;
