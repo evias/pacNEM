@@ -511,14 +511,14 @@ app.get("/api/v1/credits/history", function(req, res)
 				for (var i = 0; i < invoices.length; i++) {
 					var currentInvoice = invoices[i];
 					invoicesHistory.push({
+						number: currentInvoice.number,
 						recipient: currentInvoice.recipientXEM,
 						truncRecipient: currentInvoice.getTruncatedRecipient(),
 						amount: currentInvoice.amount,
 						amountPaid: currentInvoice.amountPaid,
-						message: currentInvoice.message,
 						status: currentInvoice.status,
-						createdAt: currentInvoice.createdAt,
-						updatedAt: currentInvoice.updatedAt
+						createdAt: new Date(currentInvoice.createdAt).toLocaleString(),
+						updatedAt: new Date(currentInvoice.updatedAt).toLocaleString()
 					});
 				}
 			}

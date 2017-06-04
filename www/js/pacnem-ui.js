@@ -580,8 +580,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         // socket io "pacnem_heart_sync" event
         $("#currentHearts").fadeIn("slow");
 
-        this.initPurchasesButtons();
-
         return this;
     };
 
@@ -1172,6 +1170,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         this.initAuthButton();
         this.initPurgeButton();
         this.initScoresButton();
+        this.initPurchasesButtons();
         this.initGameModes();
         this.initBackToPlayButtons();
 
@@ -1227,6 +1226,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         {
             $("#pacnem-scores-trigger").attr("data-display", "0");
             $("#pacnem-scores-wrapper").hide();
+            $("#pacnem-invoice-history-trigger").attr("data-display", "0");
+            $("#pacnem-invoice-history-wrapper").hide();
             $("#pacnem-current-player-details").show();
 
             var sess = new GameSession(API_);

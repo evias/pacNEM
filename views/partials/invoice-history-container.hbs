@@ -18,7 +18,6 @@
                         <th>{{t "invoice_history.recipient_label"}}</th>
                         <th>{{t "invoice_history.amount_label"}}</th>
                         <th>{{t "invoice_history.amountPaid_label"}}</th>
-                        <th>{{t "invoice_history.message_label"}}</th>
                         <th>{{t "invoice_history.status_label"}}</th>
                         <th>{{t "invoice_history.createdAt_label"}}</th>
                         <th>{{t "invoice_history.updatedAt_label"}}</th>
@@ -39,6 +38,7 @@
                     {{#each data}}
 
                     <tr class="table-success">
+                        <td>{{number}}</td>
                         <td>
                             <a class="label label-sm label-info"
                                 target="_blank"
@@ -48,7 +48,6 @@
                         </td>
                         <td>{{amount}}</td>
                         <td>{{amountPaid}}</td>
-                        <td>{{message}}</td>
                         <td>{{status}}</td>
                         <td>{{createdAt}}</td>
                         <td>{{updatedAt}}</td>
