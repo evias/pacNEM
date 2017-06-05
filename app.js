@@ -404,6 +404,8 @@ app.get("/api/v1/credits/buy", function(req, res)
 		if (! clientSocketId || ! clientSocketId.length)
 			return res.send(JSON.stringify({"status": "error", "message": "Mandatory field `Client Socket ID` is invalid."}));
 
+		var invoiceNumber = req.query.num ? req.query.num : null;
+
 		var payer = req.query.payer ? req.query.payer : undefined;
 		if (! payer.length || dataLayer.isApplicationWallet(payer))
 			// cannot be one of the application wallets
@@ -418,14 +420,25 @@ app.get("/api/v1/credits/buy", function(req, res)
 		var receivingHearts = Math.ceil(amount * heartPrice); // XEM price * (1 Heart / x XEM)
 		var invoiceAmount   = amount * 1000000; // convert amount to micro XEM
 		var currentNetwork  = chainDataLayer.getNetwork();
+		var disableChannel  = req.query.chan ? req.query.chan == "0" : false;
+
+		var dbConditions = {
+			payerXEM: payer,
+			recipientXEM: recipient
+		};
+
+		// when no invoiceNumber is given, create or retrieve in following statuses
+		dbConditions["status"] = { $in: ["not_paid", "unconfirmed", "paid_partly", "paid"] };
+		if (invoiceNumber && invoiceNumber.length) {
+			// load invoice by number
+			dbConditions["number"] = decodeURIComponent(invoiceNumber);
+			delete dbConditions["status"];
+		}
+
+		//serverLog("DEBUG", JSON.stringify(dbConditions), "DEBUG");
 
 		// mongoDB model NEMPaymentChannel unique on xem address + message pair.
-		dataLayer.NEMPaymentChannel.findOne({
-			payerXEM: payer,
-			recipientXEM: recipient,
-			status: {$in: ["not_paid", "unconfirmed", "paid_partly", "paid"]},
-			sentHearts: false
-		}, function(err, invoice)
+		dataLayer.NEMPaymentChannel.findOne(dbConditions, function(err, invoice)
 		{
 			if (!err && ! invoice) {
 				// creation mode
@@ -467,21 +480,34 @@ app.get("/api/v1/credits/buy", function(req, res)
 				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
 			}
 
-			// update mode, invoice already exists, create payment channel proxy
+			if (disableChannel === true) {
+				res.send(JSON.stringify({
+					status: "ok",
+					item: {
+						network: currentNetwork,
+						qrData: invoice.getQRData(),
+						invoice: invoice
+					}
+				}));
+			}
+			else {
 
-			PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice)
-				{
-					// payment channel created, end create-invoice response.
+				// update mode, invoice already exists, create payment channel proxy
 
-					res.send(JSON.stringify({
-						status: "ok",
-						item: {
-							network: currentNetwork,
-							qrData: invoice.getQRData(),
-							invoice: invoice
-						}
-					}));
-				});
+				PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice)
+					{
+						// payment channel created, end create-invoice response.
+
+						res.send(JSON.stringify({
+							status: "ok",
+							item: {
+								network: currentNetwork,
+								qrData: invoice.getQRData(),
+								invoice: invoice
+							}
+						}));
+					});
+			}
 		});
 	});
 
@@ -496,7 +522,7 @@ app.get("/api/v1/credits/history", function(req, res)
 
 		dataLayer.NEMPaymentChannel.find({
 			payerXEM: payer,
-			status: {$in: ["not_paid", "unconfirmed", "paid_partly", "paid"]}
+			status: {$in: ["not_paid", "expired", "unconfirmed", "paid_partly", "paid"]}
 		}, function(err, invoices)
 		{
 			if (err) {
@@ -510,15 +536,32 @@ app.get("/api/v1/credits/history", function(req, res)
 			if (invoices && invoices.length) {
 				for (var i = 0; i < invoices.length; i++) {
 					var currentInvoice = invoices[i];
+					var statusLabelClass = "label-default";
+					var statusLabelIcon  = "glyphicon glyphicon-time";
+
+					if (currentInvoice.isPaid) {
+						statusLabelClass = "label-success";
+						statusLabelIcon  = "glyphicon glyphicon-ok";
+					}
+					else if (currentInvoice.status == "paid_partly") {
+						statusLabelClass = "label-info";
+						statusLabelIcon  = "glyphicon glyphicon-download-alt";
+					}
+
+					var fmtCreatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
+					var fmtUpdatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
+
 					invoicesHistory.push({
 						number: currentInvoice.number,
 						recipient: currentInvoice.recipientXEM,
 						truncRecipient: currentInvoice.getTruncatedRecipient(),
-						amount: currentInvoice.amount,
-						amountPaid: currentInvoice.amountPaid,
+						amount: (currentInvoice.amount / Math.pow(10, 6)),
+						amountPaid: (currentInvoice.amountPaid / Math.pow(10, 6)),
 						status: currentInvoice.status,
-						createdAt: new Date(currentInvoice.createdAt).toLocaleString(),
-						updatedAt: new Date(currentInvoice.updatedAt).toLocaleString()
+						createdAt: fmtCreatedAt,
+						updatedAt: fmtUpdatedAt,
+						statusLabelClass: statusLabelClass,
+						statusLabelIcon: statusLabelIcon
 					});
 				}
 			}

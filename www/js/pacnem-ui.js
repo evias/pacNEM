@@ -763,7 +763,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  Function callback
      * @return GameUI
      */
-    this.displayInvoice = function(callback)
+    this.watchInvoice = function(callback)
     {
         var self = this;
 
@@ -810,7 +810,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                         var $invoiceBox = $(".pacnem-invoice-modal").first();
                         $invoiceBox.modal("hide");
 
-                        return callback(ui);
+                        if (callback)
+                            return callback(ui);
                     }
                 });
             };
@@ -818,11 +819,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         // Modal Box Initialization Callback
         // ---------------------------------
         // Callback function for Modal Box information updates.
-        // The createInvoice API call will retrieve an existing
+        // The getInvoice API call will retrieve an existing
         // Invoice in case any money has been sent already.
         var fillInvoiceData = function(ui, player)
             {
-                API_.createInvoice(player, socket_.id, function(data)
+                API_.getInvoice(player, socket_.id, null, function(data)
                 {
                     var prefix = $("#pacnem-invoice-prefix").val();
                     var $number = $("#" + prefix + "-id");
@@ -865,6 +866,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 // we now have an address and username.
                 fillInvoiceData(self, player);
 
+                $(".pacnem-invoice-close-trigger").off("click");
                 $(".pacnem-invoice-close-trigger").on("click", function()
                 {
                     $(".pacnem-invoice-modal").modal("hide");
@@ -881,12 +883,67 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             show: true
         });
 
+        $("#pacnem-invoice-show-trigger").off("click");
         $("#pacnem-invoice-show-trigger").on("click", function()
         {
             $(".pacnem-invoice-modal").modal("show");
         });
 
         return this;
+    };
+
+    this.displayInvoice = function(invoiceNumber)
+    {
+        var self = this;
+        var player = self.getPlayerDetails();
+
+        self.prepareInvoiceBox(function(ui)
+        {
+            API_.getInvoice(player, socket_.id, invoiceNumber, function(data)
+            {
+                var prefix = $("#pacnem-invoice-prefix").val();
+                var $number = $("#" + prefix + "-id");
+                var $recipient = $("#" + prefix + "-recipient");
+                var $amount    = $("#" + prefix + "-amount");
+                var $message   = $("#" + prefix + "-message");
+                var $receiving = $("#" + prefix + "-receiving ");
+                var $status    = $("#" + prefix + "-status ");
+                var fmtAmount  = (data.invoice.amount / 1000000) + " XEM";
+
+                $number.html(data.invoice.number);
+                $recipient.html(data.invoice.recipientXEM);
+                $amount.html(fmtAmount);
+                $message.html(data.invoice.number);
+                $receiving.html(data.invoice.countHearts + "&nbsp;<b>&hearts;&nbsp;evias.pacnem:heart</b>");
+                $status.text(data.invoice.status).addClass("text-danger");
+
+                var qrHtml = kjua({
+                    size: 256,
+                    text: JSON.stringify(data.qrData),
+                    fill: '#000',
+                    quiet: 0,
+                    ratio: 2
+                });
+                $("#" + prefix + "-qrcode-wrapper").html(qrHtml);
+
+                var $invoiceBox = $(".pacnem-invoice-modal").first();
+                $invoiceBox.modal({
+                    backdrop: "static",
+                    keyboard: false,
+                    show: true
+                });
+
+                $(".pacnem-invoice-close-trigger").off("click");
+                $(".pacnem-invoice-close-trigger").on("click", function()
+                {
+                    $(".pacnem-invoice-modal").modal("hide");
+                    if (callback)
+                        callback(self);
+
+                    return false;
+                });
+            });
+        });
     };
 
     /**
@@ -1030,7 +1087,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     self.displaySponsorAdvertisement(postPaymentCallback);
                 }
                 else if (ctrl_.isPlayMode("pay-per-play")) {
-                    self.displayInvoice(postPaymentCallback);
+                    self.watchInvoice(postPaymentCallback);
                 }
                 //else {
                 //    self.displayShareEngine(postPaymentCallback);
@@ -1108,10 +1165,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             var flag = $(this).attr("data-display");
             var player = self.getPlayerDetails();
 
-            if (flag == "0") {
+            if (! flag || ! flag.length || flag == "0") {
                 $(this).attr("data-display", "1");
                 API_.fetchPurchaseHistory(player, function(history)
                     {
+                        self.initInvoicesButtons();
                         self.initBackToPlayButtons();
                         $(".msgSelectRoom").hide();
                         //$("#pacnem-current-player-details").hide();
@@ -1124,6 +1182,23 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 $("#pacnem-invoice-history-wrapper").hide();
                 //$("#pacnem-current-player-details").show();
             }
+        });
+    };
+
+    this.initInvoicesButtons = function()
+    {
+        var self = this;
+
+        $(".pacnem-invoice-display-trigger").off("click");
+        $(".pacnem-invoice-display-trigger").on("click", function()
+        {
+            var number = $(this).attr("data-invoice-number");
+            console.log("NumbeR: " + number);
+            if (number && number.length) {
+                self.displayInvoice(number);
+            }
+
+            return false;
         });
     };
 

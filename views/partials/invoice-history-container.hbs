@@ -20,7 +20,6 @@
                         <th>{{t "invoice_history.amountPaid_label"}}</th>
                         <th>{{t "invoice_history.status_label"}}</th>
                         <th>{{t "invoice_history.createdAt_label"}}</th>
-                        <th>{{t "invoice_history.updatedAt_label"}}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,19 +37,21 @@
                     {{#each data}}
 
                     <tr class="table-success">
-                        <td>{{number}}</td>
+                        <td>
+                            <a href="#" class="label label-info pacnem-invoice-display-trigger" data-invoice-number="{{number}}">
+                                <i class="glyphicon glyphicon-eye-open"></i>&nbsp;<span>{{number}}</span></a>
+                        </td>
                         <td>
                             <a class="label label-sm label-info"
                                 target="_blank"
                                 href="http://bob.nem.ninja:7890/account/get?address={{recipient}}">
-                                    <span class="glyphicon glyphicon-search"></span>&nbsp;<span>{{truncRecipient}}</span>
+                                    <i class="glyphicon glyphicon-search"></i>&nbsp;<span>{{truncRecipient}}</span>
                             </a>
                         </td>
-                        <td>{{amount}}</td>
-                        <td>{{amountPaid}}</td>
-                        <td>{{status}}</td>
+                        <td>{{amount}} XEM</td>
+                        <td>{{amountPaid}} XEM</td>
+                        <td><span class="label {{statusLabelClass}}"><i class="{{statusLabelIcon}}"></i>&nbsp;{{status}}</span></td>
                         <td>{{createdAt}}</td>
-                        <td>{{updatedAt}}</td>
                     </tr>
 
                     {{/each}}

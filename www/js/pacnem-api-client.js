@@ -113,10 +113,13 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		});
 	};
 
-	this.createInvoice = function(player, socketId, callback)
+	this.getInvoice = function(player, socketId, invoiceNumber, callback)
 	{
+		var numSuffix = invoiceNumber && invoiceNumber.length ? "&num=" + encodeURIComponent(invoiceNumber) : "";
+		var chanSuffix = invoiceNumber && invoiceNumber.length ? "&chan=0" : "";
+
 		$.ajax({
-	        url: "/api/v1/credits/buy?payer=" + player.address + "&usid=" + socketId,
+	        url: "/api/v1/credits/buy?payer=" + player.address + "&usid=" + socketId + numSuffix + chanSuffix,
 	        type: "GET",
 	        success: function(res)
 	        {
