@@ -171,7 +171,7 @@ var service = function(io, nemSDK, logger)
      *
      * @param  NEMGamer gamer
      */
-    this.fetchHeartsByGamer = function(gamer)
+    this.fetchHeartsByGamer = function(gamer, callback)
     {
         var self = this;
         var heartsMosaicSlug = pacNEM_NS_ + ":heart";
@@ -204,7 +204,10 @@ var service = function(io, nemSDK, logger)
                     self.fetchGameCreditsRealHistoryByGamer(gamer, mosaic, null, function(creditsData)
                         {
                             logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Total of " + creditsData.countHearts + " " + heartsMosaicSlug + " found for " + gamer.getAddress());
-                            gamer.updateCredits(creditsData);
+                            if (callback)
+                                return callback(creditsData);
+                            else
+                                gamer.updateCredits(creditsData);
                         });
                     hasHearts = true;
                 }

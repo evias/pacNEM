@@ -428,7 +428,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 		};
 
 		// when no invoiceNumber is given, create or retrieve in following statuses
-		dbConditions["status"] = { $in: ["not_paid", "unconfirmed", "paid_partly", "paid"] };
+		dbConditions["status"] = { $in: ["not_paid", "unconfirmed", "paid_partly"] };
 		if (invoiceNumber && invoiceNumber.length) {
 			// load invoice by number
 			dbConditions["number"] = decodeURIComponent(invoiceNumber);
@@ -567,6 +567,36 @@ app.get("/api/v1/credits/history", function(req, res)
 			}
 
 			res.send(JSON.stringify({data: invoicesHistory}));
+		});
+	});
+
+app.get("/api/v1/credits/remaining", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		var payer = req.query.payer ? req.query.payer : undefined;
+		if (! payer.length || dataLayer.isApplicationWallet(payer))
+			// cannot be one of the application wallets
+			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
+
+		// fetch an existing NEMGamer entry by XEM address, this
+		dataLayer.NEMGamer.findOne({"xem": payer}, function(err, player)
+		{
+			if (err || ! player) {
+				// error mode
+				var errorMessage = "Error occured on NEMGamer READ: " + err;
+
+				serverLog(req, errorMessage, "ERROR");
+				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+			}
+
+			chainDataLayer.fetchHeartsByGamer(player, function(creditsDetails)
+			{
+				res.send(JSON.stringify({
+					"status": "ok",
+					"item": creditsDetails.countHearts
+				}));
+			});
 		});
 	});
 

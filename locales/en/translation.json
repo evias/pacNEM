@@ -107,7 +107,7 @@
         "label_payment_status": "Payment State",
         "label_amount_paid": "Amount Paid:",
         "label_amount_unconfirmed": "Pending confirmation:",
-        "button_already_have_credits": "I already purchased Credits"
+        "button_already_have_credits": "Close this window"
     },
     "invoice_history": {
         "title": "Your <span>Pac</span><span class='NEMifiedText'>nem</span> Purchases History",

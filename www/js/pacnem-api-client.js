@@ -156,4 +156,27 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 			}
 		});
 	};
+
+	this.fetchRemainingHearts = function(player, callback)
+	{
+		var self = this;
+		self.jquery_.ajax({
+			url: "/api/v1/credits/remaining?payer=" + player.address,
+			type: "GET",
+			dataType: "json",
+			beforeSend: function(req) {
+				if (req && req.overrideMimeType)
+					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(response) {
+	            if (response.status == "error") {
+	                console.log("Error occured on Credits Read: " + response.message);
+	                return false;
+	            }
+	            else if (response.status == "ok") {
+	            	return callback(response.item);
+	            }
+			}
+		});
+	};
 };
