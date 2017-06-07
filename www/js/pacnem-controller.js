@@ -113,6 +113,7 @@ var GameController = function(config, socket, nem, chainId)
     var play_mode_  = "pay-per-play";
     var sponsor_ = undefined;
     var advertised_ = false;
+    var needsPayment_ = false;
     var player_session_ = null;
 
     this.start = function()
@@ -314,6 +315,17 @@ var GameController = function(config, socket, nem, chainId)
     this.isAdvertised = function()
     {
         return advertised_ === true;
+    };
+
+    this.setNeedsPayment = function(flag)
+    {
+        needsPayment_ = flag === true;
+        return this;
+    };
+
+    this.needsPayment = function()
+    {
+        return needsPayment_ === true;
     };
 
     /**

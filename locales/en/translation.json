@@ -19,7 +19,9 @@
         "high_scores": "High Scores",
         "purge": "Sign out",
         "change_name": "Change name",
-        "language": "Language"
+        "language": "Language",
+        "buy_credits": "Buy Credits",
+        "invoice_history": "Purchases History"
     },
     "guest": {
         "title_blue_box": "NEM #blockchain meets Pacman (<a href='https://nem.io' target='_blank'>Read the Blog article about this Project</a>)",
@@ -79,7 +81,7 @@
         "xem_label": "XEM Wallet",
         "date_label": "Date of Game",
         "hide_button": "Hide",
-        "empty_highscores": "Currently, no PacNEM high scores have been saved to the blockchain yet."
+        "empty_high_scores": "Currently, no PacNEM high scores have been saved to the blockchain yet."
     },
     "sponsors": {
         "example_description": "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.",
@@ -104,6 +106,21 @@
         "buy_hearts_manual_invoice_label": "Invoice",
         "label_payment_status": "Payment State",
         "label_amount_paid": "Amount Paid:",
-        "label_amount_unconfirmed": "Pending confirmation:"
+        "label_amount_unconfirmed": "Pending confirmation:",
+        "button_already_have_credits": "Close this window",
+        "flow_after_paid_explain": "PacNEM will process your Payment automatically. When we have received your Payment we will send you the listed Mosaics using the NEM Blockchain. A Listing of Transactions matched to Invoices can be found under your Purchases History."
+    },
+    "invoice_history": {
+        "title": "Your <span>Pac</span><span class='NEMifiedText'>nem</span> Purchases History",
+        "explain": "<span>On this page you will find a History of your Purchases with the </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Game.</span>",
+        "recipient_label": "Recipient",
+        "amount_label": "Total Amount",
+        "amountPaid_label": "Amount Paid",
+        "message_label": "Message",
+        "status_label": "Payment State",
+        "createdAt_label": "Created At",
+        "updatedAt_label": "Last Update",
+        "hide_button": "Hide",
+        "empty_invoice_history": "You didn't make a purchase yet."
     }
 }

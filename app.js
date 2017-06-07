@@ -274,7 +274,8 @@ app.post("/api/v1/sessions/store", function(req, res)
 			"username" : req.body.username.replace(/[^A-Za-z0-9\-_\.]/g, ""),
 			"score": parseInt(req.body.score),
 			"type": req.body.type.replace(/[^a-z0-9\-]/g, ""),
-			"sid": req.body.sid.replace(/[^A-Za-z0-9\-_\.#~]/g, "")
+			"sid": req.body.sid.replace(/[^A-Za-z0-9\-_\.#~]/g, ""),
+			"validateHearts": parseInt(req.body.validateHearts) === 1
 		};
 
 		// mongoDB model NEMGamer unique on xem address + username pair.
@@ -301,8 +302,10 @@ app.post("/api/v1/sessions/store", function(req, res)
 
 				player.save();
 
-				// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-				chainDataLayer.fetchHeartsByGamer(player);
+				if (input.validateHearts === true) {
+					// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
+					chainDataLayer.fetchHeartsByGamer(player);
+				}
 
 				return res.send(JSON.stringify({item: player}));
 			}
@@ -319,8 +322,10 @@ app.post("/api/v1/sessions/store", function(req, res)
 				});
 				player.save();
 
-				// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-				chainDataLayer.fetchHeartsByGamer(player);
+				if (input.validateHearts === true) {
+					// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
+					chainDataLayer.fetchHeartsByGamer(player);
+				}
 
 				return res.send(JSON.stringify({item: player}));
 			}
@@ -399,6 +404,8 @@ app.get("/api/v1/credits/buy", function(req, res)
 		if (! clientSocketId || ! clientSocketId.length)
 			return res.send(JSON.stringify({"status": "error", "message": "Mandatory field `Client Socket ID` is invalid."}));
 
+		var invoiceNumber = req.query.num ? req.query.num : null;
+
 		var payer = req.query.payer ? req.query.payer : undefined;
 		if (! payer.length || dataLayer.isApplicationWallet(payer))
 			// cannot be one of the application wallets
@@ -413,14 +420,25 @@ app.get("/api/v1/credits/buy", function(req, res)
 		var receivingHearts = Math.ceil(amount * heartPrice); // XEM price * (1 Heart / x XEM)
 		var invoiceAmount   = amount * 1000000; // convert amount to micro XEM
 		var currentNetwork  = chainDataLayer.getNetwork();
+		var disableChannel  = req.query.chan ? req.query.chan == "0" : false;
+
+		var dbConditions = {
+			payerXEM: payer,
+			recipientXEM: recipient
+		};
+
+		// when no invoiceNumber is given, create or retrieve in following statuses
+		dbConditions["status"] = { $in: ["not_paid", "unconfirmed", "paid_partly"] };
+		if (invoiceNumber && invoiceNumber.length) {
+			// load invoice by number
+			dbConditions["number"] = decodeURIComponent(invoiceNumber);
+			delete dbConditions["status"];
+		}
+
+		//serverLog("DEBUG", JSON.stringify(dbConditions), "DEBUG");
 
 		// mongoDB model NEMPaymentChannel unique on xem address + message pair.
-		dataLayer.NEMPaymentChannel.findOne({
-			payerXEM: payer,
-			recipientXEM: recipient,
-			status: {$in: ["not_paid", "unconfirmed", "paid_partly", "paid"]},
-			sentHearts: false
-		}, function(err, invoice)
+		dataLayer.NEMPaymentChannel.findOne(dbConditions, function(err, invoice)
 		{
 			if (!err && ! invoice) {
 				// creation mode
@@ -462,21 +480,131 @@ app.get("/api/v1/credits/buy", function(req, res)
 				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
 			}
 
-			// update mode, invoice already exists, create payment channel proxy
+			if (disableChannel === true) {
+				res.send(JSON.stringify({
+					status: "ok",
+					item: {
+						network: currentNetwork,
+						qrData: invoice.getQRData(),
+						invoice: invoice
+					}
+				}));
+			}
+			else {
 
-			PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice)
-				{
-					// payment channel created, end create-invoice response.
+				// update mode, invoice already exists, create payment channel proxy
 
-					res.send(JSON.stringify({
-						status: "ok",
-						item: {
-							network: currentNetwork,
-							qrData: invoice.getQRData(),
-							invoice: invoice
-						}
-					}));
-				});
+				PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice)
+					{
+						// payment channel created, end create-invoice response.
+
+						res.send(JSON.stringify({
+							status: "ok",
+							item: {
+								network: currentNetwork,
+								qrData: invoice.getQRData(),
+								invoice: invoice
+							}
+						}));
+					});
+			}
+		});
+	});
+
+app.get("/api/v1/credits/history", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		var payer = req.query.payer ? req.query.payer : undefined;
+		if (! payer.length || dataLayer.isApplicationWallet(payer))
+			// cannot be one of the application wallets
+			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
+
+		dataLayer.NEMPaymentChannel.find({
+			payerXEM: payer,
+			status: {$in: ["not_paid", "expired", "unconfirmed", "paid_partly", "paid"]}
+		}, function(err, invoices)
+		{
+			if (err) {
+				var errorMessage = "Error occured on /credits/history: " + err;
+				serverLog(req, errorMessage, "ERROR");
+				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+			}
+
+			// return list of invoices
+			var invoicesHistory = [];
+			if (invoices && invoices.length) {
+				for (var i = 0; i < invoices.length; i++) {
+					var currentInvoice = invoices[i];
+					var statusLabelClass = "label-default";
+					var statusLabelIcon  = "glyphicon glyphicon-time";
+
+					if (currentInvoice.isPaid) {
+						statusLabelClass = "label-success";
+						statusLabelIcon  = "glyphicon glyphicon-ok";
+					}
+					else if (currentInvoice.status == "paid_partly") {
+						statusLabelClass = "label-info";
+						statusLabelIcon  = "glyphicon glyphicon-download-alt";
+					}
+
+					var fmtCreatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
+					var fmtUpdatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
+
+					invoicesHistory.push({
+						number: currentInvoice.number,
+						recipient: currentInvoice.recipientXEM,
+						truncRecipient: currentInvoice.getTruncatedRecipient(),
+						amount: (currentInvoice.amount / Math.pow(10, 6)),
+						amountPaid: (currentInvoice.amountPaid / Math.pow(10, 6)),
+						status: currentInvoice.status,
+						createdAt: fmtCreatedAt,
+						updatedAt: fmtUpdatedAt,
+						statusLabelClass: statusLabelClass,
+						statusLabelIcon: statusLabelIcon
+					});
+				}
+			}
+
+			res.send(JSON.stringify({data: invoicesHistory}));
+		});
+	});
+
+app.get("/api/v1/credits/remaining", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		var payer = req.query.payer ? req.query.payer : undefined;
+		if (! payer.length || dataLayer.isApplicationWallet(payer))
+			// cannot be one of the application wallets
+			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
+
+		// fetch an existing NEMGamer entry by XEM address, this
+		dataLayer.NEMGamer.findOne({"xem": payer}, function(err, player)
+		{
+			if (err || ! player) {
+				// never played before
+
+				return res.send(JSON.stringify({
+					status: "ok",
+					item: 0
+				}));
+			}
+
+			// get a "last credit state from db"
+			player.credits(function(err, credit)
+			{
+				var remaining = 0;
+
+				if (! err && credit) {
+					remaining = credit.getCountRemaining();
+				}
+
+				res.send(JSON.stringify({
+					status: "ok",
+					item: remaining
+				}));
+			});
 		});
 	});
 
