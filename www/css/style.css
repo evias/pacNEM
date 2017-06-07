@@ -180,6 +180,13 @@ footer {
     margin-top: 125px;
 }
 
+.label-mosaic {
+    font-size: 110%;
+    display: inline-block;
+    margin: 7px;
+    width: 60px;
+}
+
 .mt5 { margin-top: 5px; }
 .mt10 { margin-top: 10px; }
 .mb5 { margin-bottom: 5px; }
@@ -188,6 +195,7 @@ footer {
 .ml10 { margin-left: 10px; }
 .mr5 { margin-right: 5px; }
 .mr10 { margin-right: 10px; }
+.m5 { margin: 5px; }
 
 .importantText {
     font-weight: 900;

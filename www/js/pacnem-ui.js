@@ -877,11 +877,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
         var fmtAmount  = (data.invoice.amount / 1000000) + " XEM";
 
+        var rcvHeartsHtml = '<div><div class="label label-success label-mosaic"><b>' + data.invoice.countHearts + '&nbsp;<i class="glyphicon glyphicon-heart"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:heart</a></div>';
+        var rcvPlayerHtml = '<div><div class="label label-default label-mosaic"><b>1&nbsp;<i class="glyphicon glyphicon-user"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:player</a></div>';
+        var rcvBetaHtml   = '<div><div class="label label-primary label-mosaic"><b>1&nbsp;<i class="glyphicon glyphicon-star-empty"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:beta-player</a></div>';
+
         $number.html(data.invoice.number);
         $recipient.html(data.invoice.recipientXEM);
         $amount.html(fmtAmount);
         $message.html(data.invoice.number);
-        $receiving.html(data.invoice.countHearts + "&nbsp;<b>&hearts;&nbsp;evias.pacnem:heart</b>");
+        $receiving.html(rcvHeartsHtml + rcvPlayerHtml + rcvBetaHtml);
         $status.text(data.invoice.status).addClass("text-danger");
 
         var statusClass  = "danger";

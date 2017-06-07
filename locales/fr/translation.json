@@ -105,7 +105,8 @@
         "buy_hearts_warning_game_autonomous": "Ce jeu est entièrement autonome, sois averti qu'il nous est impossible de renvoyer des XEMs envoyés à PacNEM sans le message ci-dessous.",
         "buy_hearts_warning_message": "<b>Pensez à inclure le message ci-dessous dans votre Transaction à PacNEM!</b>",
         "buy_hearts_manual_invoice_label": "Facture",
-        "button_already_have_credits": "Fermer cette fenêtre"
+        "button_already_have_credits": "Fermer cette fenêtre",
+        "flow_after_paid_explain": "PacNEM mettra automatiquement le Paiement à jour. Cela dit, étant donné que PacNEM utilise des Mosaics sur la blockchain NEM pour vous envoyer des Crédits de Jeu, il se peut que vous deviez attendre jusqu'a 1 minute <b>après</b> réception de votre paiement, pour recevoir vos Mosaics. Vous trouverez un résumé de vos Achats sous Historique d'Achats."
     },
     "invoice_history": {
         "title": "Votre Historique d'Achats sur <span>Pac</span><span class='NEMifiedText'>nem</span>",
