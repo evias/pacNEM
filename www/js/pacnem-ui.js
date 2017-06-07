@@ -113,12 +113,12 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             else
                 $("#pacNEM-needs-payment").val("1");
 
-            if (session_) {
+            if (typeof session_ != 'undefined' && session_.details_.hearts != data) {
                 session_.details_.hearts = data;
                 session_.store(false); // do not re-validate with blockchain, we just did that!
-
-                $(".pacnem-invoice-close-trigger").show();
             }
+
+            $(".pacnem-invoice-close-trigger").show();
         });
 
         socket_.on("pacnem_payment_success", function(rawdata)
@@ -785,15 +785,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             {
                 var player = self.getPlayerDetails();
 
-                API_.fetchRemainingHearts(player, function(hearts)
-                    {
-                        var heartsParsed = parseInt(hearts);
-
-                        if (! isNaN(heartsParsed) && heartsParsed > 0) {
-                            $(".pacnem-invoice-close-trigger").show();
-                        }
-                    });
-
                 socket_.on("pacnem_payment_status_update", function(rawdata)
                 {
                     var data = JSON.parse(rawdata);
@@ -835,91 +826,23 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 });
             };
 
-        // Modal Box Initialization Callback
-        // ---------------------------------
-        // Callback function for Modal Box information updates.
-        // The getInvoice API call will retrieve an existing
-        // Invoice in case any money has been sent already.
-        var fillInvoiceData = function(ui, player)
-            {
-                API_.getInvoice(player, socket_.id, null, function(data)
-                {
-                    var prefix = $("#pacnem-invoice-prefix").val();
-                    var $number = $("#" + prefix + "-id");
-                    var $recipient = $("#" + prefix + "-recipient");
-                    var $amount    = $("#" + prefix + "-amount");
-                    var $message   = $("#" + prefix + "-message");
-                    var $receiving = $("#" + prefix + "-receiving ");
-                    var $status    = $("#" + prefix + "-status ");
-                    var $paid      = $("#" + prefix + "-amountPaid .amount");
-                    var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
-                    var fmtAmount  = (data.invoice.amount / 1000000) + " XEM";
-
-                    $number.html(data.invoice.number);
-                    $recipient.html(data.invoice.recipientXEM);
-                    $amount.html(fmtAmount);
-                    $message.html(data.invoice.number);
-                    $receiving.html(data.invoice.countHearts + "&nbsp;<b>&hearts;&nbsp;evias.pacnem:heart</b>");
-                    $status = $status.text(data.invoice.status).addClass("text-danger");
-
-                    var statusClass  = "danger";
-                    var statusIcon   = "glyphicon-time";
-
-                    if (data.invoice.status == "paid") {
-                        statusClass = "success";
-                        statusIcon  = "glyphicon-check";
-
-                        $paid.text(data.invoice.amountPaid / 1000000);
-                        $paid.parents(".wrap-amount").first().show();
-                    }
-                    else if (data.invoice.status == "paid_partly") {
-                        statusClass = "success";
-                        statusIcon  = "glyphicon-time";
-
-                        $paid.text(data.invoice.amountPaid / 1000000);
-                        $paid.parents(".wrap-amount").first().show();
-                    }
-                    else if (data.invoice.status == "unconfirmed") {
-                        statusClass = "warning";
-                        statusIcon  = "glyphicon-time";
-
-                        $unconfirmed.text(data.invoice.amountUnconfirmed / 1000000);
-                        $unconfirmed.parents(".wrap-amount").first().show();
-                    }
-
-                    $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + data.invoice.status + "</span>")
-                           .removeClass("text-danger").addClass("text-" + statusClass);
-
-                    if (data.invoice.status == "paid") {
-                        // if status is paid we don't need to listen for updates on this invoice
-                        $(".pacnem-invoice-close-trigger").show();
-                    }
-                    else {
-                        // subscribe to payment status updates from the NEMBot responsible for payment channels.
-                        registerInvoiceStatusUpdateListener(ui);
-                    }
-
-                    var qrHtml = kjua({
-                        size: 256,
-                        text: JSON.stringify(data.qrData),
-                        fill: '#000',
-                        quiet: 0,
-                        ratio: 2
-                    });
-                    $("#" + prefix + "-qrcode-wrapper").html(qrHtml);
-                });
-            };
-
         // pre-show event should trigger an ajax request to load the
         // dynamic invoice fields.
         var $invoiceBox = $(".pacnem-invoice-modal").first();
-        $invoiceBox.on("show.bs.modal", function()
+        $invoiceBox.on("shown.bs.modal", function()
             {
                 var player  = self.getPlayerDetails();
 
                 // update info of the invoice now that we will display it because
                 // we now have an address and username.
-                fillInvoiceData(self, player);
+                API_.getInvoice(player, socket_.id, null, function(data)
+                {
+                    self.fillInvoiceModal(data, false);
+
+                    if (data.status != 'paid') {
+                        registerInvoiceStatusUpdateListener(self);
+                    }
+                });
 
                 $(".pacnem-invoice-close-trigger").off("click");
                 $(".pacnem-invoice-close-trigger").on("click", function()
@@ -941,6 +864,81 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         return this;
     };
 
+    this.fillInvoiceModal = function(data, closeable = false)
+    {
+        var prefix = $("#pacnem-invoice-prefix").val();
+        var $number = $("#" + prefix + "-id");
+        var $recipient = $("#" + prefix + "-recipient");
+        var $amount    = $("#" + prefix + "-amount");
+        var $message   = $("#" + prefix + "-message");
+        var $receiving = $("#" + prefix + "-receiving ");
+        var $status    = $("#" + prefix + "-status ");
+        var $paid      = $("#" + prefix + "-amountPaid .amount");
+        var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
+        var fmtAmount  = (data.invoice.amount / 1000000) + " XEM";
+
+        $number.html(data.invoice.number);
+        $recipient.html(data.invoice.recipientXEM);
+        $amount.html(fmtAmount);
+        $message.html(data.invoice.number);
+        $receiving.html(data.invoice.countHearts + "&nbsp;<b>&hearts;&nbsp;evias.pacnem:heart</b>");
+        $status.text(data.invoice.status).addClass("text-danger");
+
+        var statusClass  = "danger";
+        var statusIcon   = "glyphicon-time";
+
+        if (data.invoice.status == "paid") {
+            statusClass = "success";
+            statusIcon  = "glyphicon-check";
+
+            $paid.text(data.invoice.amountPaid / 1000000);
+            $paid.parents(".wrap-amount").first().show();
+        }
+        else if (data.invoice.status == "paid_partly") {
+            statusClass = "success";
+            statusIcon  = "glyphicon-time";
+
+            $paid.text(data.invoice.amountPaid / 1000000);
+            $paid.parents(".wrap-amount").first().show();
+        }
+        else if (data.invoice.status == "unconfirmed") {
+            statusClass = "warning";
+            statusIcon  = "glyphicon-time";
+
+            $unconfirmed.text(data.invoice.amountUnconfirmed / 1000000);
+            $unconfirmed.parents(".wrap-amount").first().show();
+        }
+
+        $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + data.invoice.status + "</span>")
+               .removeClass("text-danger").addClass("text-" + statusClass);
+
+        var qrHtml = kjua({
+            size: 256,
+            text: JSON.stringify(data.qrData),
+            fill: '#000',
+            quiet: 0,
+            ratio: 2
+        });
+        $("#" + prefix + "-qrcode-wrapper").html(qrHtml);
+
+        var $invoiceBox = $(".pacnem-invoice-modal").first();
+        $invoiceBox.modal({
+            backdrop: "static",
+            keyboard: false,
+            show: true
+        });
+
+        if (closeable === true)
+            $(".pacnem-invoice-close-trigger").show();
+
+        $(".pacnem-invoice-close-trigger").off("click");
+        $(".pacnem-invoice-close-trigger").on("click", function()
+        {
+            $(".pacnem-invoice-modal").modal("hide");
+            return false;
+        });
+    };
+
     this.displayInvoice = function(invoiceNumber)
     {
         var self = this;
@@ -950,75 +948,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         {
             API_.getInvoice(player, socket_.id, invoiceNumber, function(data)
             {
-                var prefix = $("#pacnem-invoice-prefix").val();
-                var $number = $("#" + prefix + "-id");
-                var $recipient = $("#" + prefix + "-recipient");
-                var $amount    = $("#" + prefix + "-amount");
-                var $message   = $("#" + prefix + "-message");
-                var $receiving = $("#" + prefix + "-receiving ");
-                var $status    = $("#" + prefix + "-status ");
-                var $paid      = $("#" + prefix + "-amountPaid .amount");
-                var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
-                var fmtAmount  = (data.invoice.amount / 1000000) + " XEM";
-
-                $number.html(data.invoice.number);
-                $recipient.html(data.invoice.recipientXEM);
-                $amount.html(fmtAmount);
-                $message.html(data.invoice.number);
-                $receiving.html(data.invoice.countHearts + "&nbsp;<b>&hearts;&nbsp;evias.pacnem:heart</b>");
-                $status.text(data.invoice.status).addClass("text-danger");
-
-                var statusClass  = "danger";
-                var statusIcon   = "glyphicon-time";
-
-                if (data.invoice.status == "paid") {
-                    statusClass = "success";
-                    statusIcon  = "glyphicon-check";
-
-                    $paid.text(data.invoice.amountPaid / 1000000);
-                    $paid.parents(".wrap-amount").first().show();
-                }
-                else if (data.invoice.status == "paid_partly") {
-                    statusClass = "success";
-                    statusIcon  = "glyphicon-time";
-
-                    $paid.text(data.invoice.amountPaid / 1000000);
-                    $paid.parents(".wrap-amount").first().show();
-                }
-                else if (data.invoice.status == "unconfirmed") {
-                    statusClass = "warning";
-                    statusIcon  = "glyphicon-time";
-
-                    $unconfirmed.text(data.invoice.amountUnconfirmed / 1000000);
-                    $unconfirmed.parents(".wrap-amount").first().show();
-                }
-
-                $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + data.invoice.status + "</span>")
-                       .removeClass("text-danger").addClass("text-" + statusClass);
-
-                var qrHtml = kjua({
-                    size: 256,
-                    text: JSON.stringify(data.qrData),
-                    fill: '#000',
-                    quiet: 0,
-                    ratio: 2
-                });
-                $("#" + prefix + "-qrcode-wrapper").html(qrHtml);
-
-                var $invoiceBox = $(".pacnem-invoice-modal").first();
-                $invoiceBox.modal({
-                    backdrop: "static",
-                    keyboard: false,
-                    show: true
-                });
-
-                $(".pacnem-invoice-close-trigger").show();
-                $(".pacnem-invoice-close-trigger").off("click");
-                $(".pacnem-invoice-close-trigger").on("click", function()
-                {
-                    $(".pacnem-invoice-modal").modal("hide");
-                    return false;
-                });
+                self.fillInvoiceModal(data, true);
             });
         });
     };

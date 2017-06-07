@@ -585,17 +585,27 @@ app.get("/api/v1/credits/remaining", function(req, res)
 			if (err || ! player) {
 				// error mode
 				var errorMessage = "Error occured on NEMGamer READ: " + err;
-
 				serverLog(req, errorMessage, "ERROR");
 				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
 			}
 
-			chainDataLayer.fetchHeartsByGamer(player, function(creditsDetails)
+			// this will issue a pacnem_heart_sync event to the frontend.
+			chainDataLayer.fetchHeartsByGamer(player);
+
+			// get a "last credit state from db"
+			player.credits(function(err, credit)
 			{
+				if (err || ! credit) {
+					// error mode
+					var errorMessage = "Error occured on NEMGameCredit READ: " + err;
+					serverLog(req, errorMessage, "ERROR");
+					return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
+				}
+
 				res.send(JSON.stringify({
-					"status": "ok",
-					"item": creditsDetails.countHearts
-				}));
+					status: "ok",
+					item: credit.getCountRemaining()
+				}))
 			});
 		});
 	});
