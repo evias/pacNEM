@@ -38,13 +38,13 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		return this.socket_;
 	};
 
-	this.storeSession = function(details, callback)
+	this.storeSession = function(details, callback, validateHeartsPerBlockchain = true)
 	{
 		this.jquery_.ajax({
 			url: "/api/v1/sessions/store",
 			type: "POST",
 			dataType: "json",
-			data: details,
+			data: extendObj(details, {validateHearts: validateHeartsPerBlockchain ? 1 : 0}),
 			beforeSend: function(req) {
 				if (req && req.overrideMimeType)
 					req.overrideMimeType("application/json;charset=UTF-8");
@@ -113,10 +113,13 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		});
 	};
 
-	this.createInvoice = function(player, socketId, callback)
+	this.getInvoice = function(player, socketId, invoiceNumber, callback)
 	{
+		var numSuffix = invoiceNumber && invoiceNumber.length ? "&num=" + encodeURIComponent(invoiceNumber) : "";
+		var chanSuffix = invoiceNumber && invoiceNumber.length ? "&chan=0" : "";
+
 		$.ajax({
-	        url: "/api/v1/credits/buy?payer=" + player.address + "&usid=" + socketId,
+	        url: "/api/v1/credits/buy?payer=" + player.address + "&usid=" + socketId + numSuffix + chanSuffix,
 	        type: "GET",
 	        success: function(res)
 	        {
@@ -129,5 +132,51 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 	            }
 	        }
 	    });
+	};
+
+	this.fetchPurchaseHistory = function(player, callback)
+	{
+		var self = this;
+		self.jquery_.ajax({
+			url: "/api/v1/credits/history?payer=" + player.address,
+			type: "GET",
+			dataType: "json",
+			beforeSend: function(req) {
+				if (req && req.overrideMimeType)
+					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(response) {
+				var history = response.data;
+
+				self.template_.render("invoice-history-container", function(compileWith)
+				{
+					$("#pacnem-invoice-history-wrapper").html(compileWith(response));
+					callback(history);
+				});
+			}
+		});
+	};
+
+	this.fetchRemainingHearts = function(player, callback)
+	{
+		var self = this;
+		self.jquery_.ajax({
+			url: "/api/v1/credits/remaining?payer=" + player.address,
+			type: "GET",
+			dataType: "json",
+			beforeSend: function(req) {
+				if (req && req.overrideMimeType)
+					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(response) {
+	            if (response.status == "error") {
+	                console.log("Error occured on Credits Read: " + response.message);
+	                return false;
+	            }
+	            else if (response.status == "ok") {
+	            	return callback(response.item);
+	            }
+			}
+		});
 	};
 };

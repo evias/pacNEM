@@ -7,10 +7,10 @@
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <p class="col-md-10 col-md-offset-1 text-justify">{{t "invoices.buy_hearts_explain"}}</p>
+                    <p class="col-md-12 text-justify">{{t "invoices.buy_hearts_explain"}}</p>
                 </div>
 
-                <hr />
+                <hr style="margin-top: 5px; margin-bottom: 5px;" />
 
                 <div class="row">
                     <div class="col-md-4">
@@ -25,16 +25,16 @@
                     </div>
                     <div class="col-md-8">
                         <div class="form-horizontal">
-                            <div class="form-group row">
+                            <div class="form-group row mb5">
                                 <label class="control-label">{{t "invoices.buy_hearts_manual_title"}} - {{t "invoices.buy_hearts_manual_invoice_label"}}: <span id="{{invoicePrefix}}-id"></span></label>
                             </div>
-                            <div class="form-group row">
+                            <div class="form-group row mb5">
                                 <div class="panel col-md-12" style="padding: 10px; margin-bottom: 0;">
                                     <ul class="text-danger text-justify" style="margin: 0; padding:0; list-style: none;">
-                                        <li style="padding-left: 10px;">
+                                        <!--<li style="padding-left: 10px;">
                                             <span class="glyphicon glyphicon-warning-sign"></span>&nbsp;
                                             <span>{{t "invoices.buy_hearts_warning_game_autonomous"}}</span>
-                                        </li>
+                                        </li>-->
                                         <li style="padding-left: 10px;">
                                             <span class="glyphicon glyphicon-warning-sign"></span>&nbsp;
                                             <span>{{t "invoices.buy_hearts_warning_message"}}</span>
@@ -42,31 +42,31 @@
                                     </ul>
                                 </div>
                             </div>
-                            <div class="form-group row">
+                            <div class="form-group row mb5">
                                 <label class="control-label col-md-3" for="{{invoicePrefix}}-recipient">{{t "invoices.label_recipient"}}</label>
                                 <div class="col-md-9">
-                                    <pre id="{{invoicePrefix}}-recipient" style="font-weight: 700;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
+                                    <pre id="{{invoicePrefix}}-recipient" style="font-weight: 700; font-size: 110%;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
                                 </div>
                             </div>
-                            <div class="form-group row">
+                            <div class="form-group row mb5">
                                 <label class="control-label col-md-3" for="{{invoicePrefix}}-amount">{{t "invoices.label_amount"}}</label>
                                 <div class="col-md-9">
-                                    <pre id="{{invoicePrefix}}-amount" style="font-weight: 700;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
+                                    <pre id="{{invoicePrefix}}-amount" style="font-weight: 700; font-size: 110%;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
                                 </div>
                             </div>
-                            <div class="form-group row">
+                            <div class="form-group row mb5">
                                 <label class="control-label col-md-3" for="{{invoicePrefix}}-message">{{t "invoices.label_message"}}</label>
                                 <div class="col-md-9">
-                                    <pre id="{{invoicePrefix}}-message" style="font-weight: 700;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
+                                    <pre id="{{invoicePrefix}}-message" style="font-weight: 700; font-size: 110%;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
                                 </div>
                             </div>
-                            <div class="form-group row">
+                            <div class="form-group row mb5">
                                 <label class="control-label col-md-3" for="{{invoicePrefix}}-receiving">{{t "invoices.label_receiving"}}</label>
                                 <div class="col-md-9 text-left" style="padding-top: 7px;">
-                                    <span id="{{invoicePrefix}}-receiving"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
+                                    <div id="{{invoicePrefix}}-receiving"><img src="/img/loading.gif" style="max-height: 22px;"/></div>
                                 </div>
                             </div>
-                            <div id="{{invoicePrefix}}-status-wrapper" class="form-group row">
+                            <div id="{{invoicePrefix}}-status-wrapper" class="form-group row mb5">
                                 <label class="control-label col-md-3" for="{{invoicePrefix}}-receiving">{{t "invoices.label_payment_status"}}</label>
                                 <div class="col-md-9 text-left" style="padding-top: 7px;">
                                     <span id="{{invoicePrefix}}-status"></span>
@@ -77,12 +77,18 @@
                         </div>
                     </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="border: 0;">
+                <div class="row text-justify">
+                    <p>{{t "invoices.flow_after_paid_explain"}}</p>
+                </div>
+
+                <hr style="margin-top: 5px; margin-bottom: 5px;" />
+
                 <div class="row text-center">
                     <input type="hidden" id="{{invoicePrefix}}-token_" value="{{token_}}" />
                     <input type="hidden" id="pacnem-invoice-prefix" value="{{invoicePrefix}}" />
-                    <button id="pacnem-invoice-close-trigger" class="btn btn-default" role="button">
-                        <span>{{t "invoices.button_close"}}</span>
+                    <button class="btn btn-primary pacnem-invoice-close-trigger" role="button" style="display: none;">
+                        <span>{{t "invoices.button_already_have_credits"}}</span>
                     </button>
                 </div>
             </div>

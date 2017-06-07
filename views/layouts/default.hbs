@@ -25,6 +25,7 @@
         <script src="/js/nem-sdk.js"></script>
         <script src="/js/kjua.min.js"></script>
 
+        <script src="/js/pacnem-utils.js"></script>
         <script src="/js/pacnem-api-client.js"></script>
         <script src="/js/pacnem-session.js"></script>
         <script src="/js/pacnem-ui.js"></script>
@@ -90,11 +91,16 @@ Handlebars.registerHelper('t', function(key, sub)
 
                     <div class="custom-navbar">
                         <ul class="nav navbar-nav">
-                            <li id="currentHearts" style="display: none;">
-                                <a href="#">
+                            <li id="currentHearts" class="dropdown" style="display: none;">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <span class="glyphicon glyphicon-heart"></span>&nbsp;
-                                    <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
+                                    <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>&nbsp;
+                                    <span class="caret pacnem-credits-submenu hidden"></span>
                                 </a>
+                                <ul class="dropdown-menu pacnem-credits-submenu hidden">
+                                    <li><a href="#" id="pacnem-invoice-show-trigger" class="text-danger"><span class="glyphicon glyphicon-plus"></span>&nbsp;<span>{{t "menus.buy_credits"}}</span></a></li>
+                                    <li><a href="#" id="pacnem-invoice-history-trigger" class="text-danger"><span class="glyphicon glyphicon-time"></span>&nbsp;<span>{{t "menus.invoice_history"}}</span></a></li>
+                                </ul>
                             </li>
                             <li id="currentUser" class="dropdown" style="display: none;">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -106,6 +112,7 @@ Handlebars.registerHelper('t', function(key, sub)
                                     <li><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-log-out"></span>&nbsp;<span>{{t "menus.purge"}}</span></a></li>
                                 </ul>
                                 <input type="hidden" id="pacNEM-sessionId" value="" />
+                                <input type="hidden" id="pacNEM-needs-payment" value="" />
                             </li>
                         </ul>
                     </div>

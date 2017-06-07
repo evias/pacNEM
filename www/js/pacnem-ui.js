@@ -106,6 +106,19 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
             $wrap.show();
             self.animateHeartsCounter($data, 0, data, " Credits");
+
+            if (data > 0) {
+                $("#pacNEM-needs-payment").val("0");
+            }
+            else
+                $("#pacNEM-needs-payment").val("1");
+
+            if (typeof session_ != 'undefined' && session_.details_.hearts != data) {
+                session_.details_.hearts = data;
+                session_.store(false); // do not re-validate with blockchain, we just did that!
+            }
+
+            $(".pacnem-invoice-close-trigger").show();
         });
 
         socket_.on("pacnem_payment_success", function(rawdata)
@@ -114,8 +127,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             var sess = ctrl_.getSession();
 
             // close modal
-            var $invoiceBox = $(".pacnem-invoice-modal").first();
-            $invoiceBox.modal("hide");
+            //var $invoiceBox = $(".pacnem-invoice-modal").first();
+            //$invoiceBox.modal("hide");
+            $(".pacnem-invoice-close-trigger").show();
 
             // get session call will also trigger a "pacnem_heart_sync" event
             // to update the credits.
@@ -534,7 +548,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         // either a pay-per-play or share-per-play (not yet implemented)
         socket_.emit('change_username', details.username);
         socket_.emit("notify");
-        return this;
+
+        // return whether an invoice is needed or not
+        return ! session_.details_.hearts;
     };
 
     /**
@@ -652,51 +668,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     };
 
     /**
-     * Fetch the asynchronous template content for
-     * the invoice. This payment is to receive
-     * evias.pacnem:heart mosaic.
-     *
-     * The modal box is not opened here.
-     *
-     * @param  NEMSponsor sponsor
-     * @return GameUI
-     */
-    this.prepareInvoiceBox = function(callback)
-    {
-        var self = this;
-
-        if ($(".pacnem-invoice-modal").length)
-            // always create a new invoice
-            $(".pacnem-invoice-modal").remove();
-
-        template_.render("invoice-box", function(compileWith)
-            {
-                // i know.. come on, just using nem :D
-                var rBytes = ctrl_.nem().crypto.nacl.randomBytes(8);
-                var seed   = ctrl_.nem().crypto.nacl.randomBytes(4);
-
-                var unsafe = ctrl_.nem().utils.convert.ua2hex(rBytes);
-                var seed   = ctrl_.nem().utils.convert.ua2hex(seed);
-
-                var token  = unsafe + seed;
-                var prefix = "pacnem-invoice-" + token.substr(0, 6);
-
-                // add server side generated invoice HTML to a modal
-                // boxes wrapper.
-                var html = $("#pacnem-modal-wrapper").html();
-                $("#pacnem-modal-wrapper").html(html + compileWith({
-                    invoicePrefix: prefix,
-                    token_: token
-                }));
-
-                if (callback)
-                    callback(self);
-            });
-
-        return this;
-    };
-
-    /**
      * Open the Advertisement modal box and execute
      * `callback` when the delay is over.
      *
@@ -743,6 +714,51 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     };
 
     /**
+     * Fetch the asynchronous template content for
+     * the invoice. This payment is to receive
+     * evias.pacnem:heart mosaic.
+     *
+     * The modal box is not opened here.
+     *
+     * @param  NEMSponsor sponsor
+     * @return GameUI
+     */
+    this.prepareInvoiceBox = function(callback)
+    {
+        var self = this;
+
+        if ($(".pacnem-invoice-modal").length)
+            // always create a new invoice
+            $(".pacnem-invoice-modal").remove();
+
+        template_.render("invoice-box", function(compileWith)
+            {
+                // i know.. come on, just using nem :D
+                var rBytes = ctrl_.nem().crypto.nacl.randomBytes(8);
+                var seed   = ctrl_.nem().crypto.nacl.randomBytes(4);
+
+                var unsafe = ctrl_.nem().utils.convert.ua2hex(rBytes);
+                var seed   = ctrl_.nem().utils.convert.ua2hex(seed);
+
+                var token  = unsafe + seed;
+                var prefix = "pacnem-invoice-" + token.substr(0, 6);
+
+                // add server side generated invoice HTML to a modal
+                // boxes wrapper.
+                var html = $("#pacnem-modal-wrapper").html();
+                $("#pacnem-modal-wrapper").html(html + compileWith({
+                    invoicePrefix: prefix,
+                    token_: token
+                }));
+
+                if (callback)
+                    callback(self);
+            });
+
+        return this;
+    };
+
+    /**
      * Open the Invoice modal box for the user to Pay
      * per Play. This invoice will contain a Mosaic
      * amount to defined.
@@ -750,12 +766,22 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  Function callback
      * @return GameUI
      */
-    this.displayInvoice = function(callback)
+    this.watchInvoice = function(callback)
     {
         var self = this;
 
+        // Frontend to Backend WebSocket Handler
+        // -------------------------------------
+        // This method will receive updates from the PacNEM backend
+        // whenever a Payment Update is received on the NEM Blockchain.
+        // The updates are sent in the form of Socket.io events named
+        // `pacnem_payment_status_update`. The data sent through this
+        // websocket will contain a `status` field and a `paymentData`
+        // field containing the details of the said payment.
         var registerInvoiceStatusUpdateListener = function(ui)
             {
+                var player = self.getPlayerDetails();
+
                 socket_.on("pacnem_payment_status_update", function(rawdata)
                 {
                     var data = JSON.parse(rawdata);
@@ -786,59 +812,45 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                         $unconfirmed.parents(".wrap-amount").first().hide();
 
                     if (data.status == "paid") {
+                        $(".pacnem-invoice-close-trigger").show();
+
                         var $invoiceBox = $(".pacnem-invoice-modal").first();
-                        $invoiceBox.modal("hide");
 
-                        return callback(ui);
+                        //XXX do not close modal automatically anymore.
+                        //$invoiceBox.modal("hide");
+
+                        if (callback)
+                            return callback(ui);
                     }
-                });
-            };
-
-        // Callback function filling the dynamic invoice fields
-        var fillInvoiceData = function(ui, player)
-            {
-                API_.createInvoice(player, socket_.id, function(data)
-                {
-                    var prefix = $("#pacnem-invoice-prefix").val();
-                    var $number = $("#" + prefix + "-id");
-                    var $recipient = $("#" + prefix + "-recipient");
-                    var $amount    = $("#" + prefix + "-amount");
-                    var $message   = $("#" + prefix + "-message");
-                    var $receiving = $("#" + prefix + "-receiving ");
-                    var $status    = $("#" + prefix + "-status ");
-                    var fmtAmount  = (data.invoice.amount / 1000000) + " XEM";
-
-                    $number.html(data.invoice.number);
-                    $recipient.html(data.invoice.recipientXEM);
-                    $amount.html(fmtAmount);
-                    $message.html(data.invoice.number);
-                    $receiving.html(data.invoice.countHearts + "&nbsp;<b>&hearts;&nbsp;evias.pacnem:heart</b>");
-                    $status.text(data.invoice.status).addClass("text-danger");
-
-                    // subscribe to payment status updates from the NEMBot responsible for payment channels.
-                    registerInvoiceStatusUpdateListener(ui);
-
-                    var qrHtml = kjua({
-                        size: 256,
-                        text: JSON.stringify(data.qrData),
-                        fill: '#000',
-                        quiet: 0,
-                        ratio: 2
-                    });
-                    $("#" + prefix + "-qrcode-wrapper").html(qrHtml);
                 });
             };
 
         // pre-show event should trigger an ajax request to load the
         // dynamic invoice fields.
         var $invoiceBox = $(".pacnem-invoice-modal").first();
-        $invoiceBox.on("show.bs.modal", function()
+        $invoiceBox.on("shown.bs.modal", function()
             {
                 var player  = self.getPlayerDetails();
 
                 // update info of the invoice now that we will display it because
                 // we now have an address and username.
-                fillInvoiceData(self, player);
+                API_.getInvoice(player, socket_.id, null, function(data)
+                {
+                    self.fillInvoiceModal(data, false);
+
+                    if (data.status != 'paid') {
+                        registerInvoiceStatusUpdateListener(self);
+                    }
+                });
+
+                $(".pacnem-invoice-close-trigger").off("click");
+                $(".pacnem-invoice-close-trigger").on("click", function()
+                {
+                    $(".pacnem-invoice-modal").modal("hide");
+                    callback(self);
+                });
+
+                //XXX $("#pacnem-invoice-show-trigger").off("click");
             });
 
         // all configured, show.
@@ -849,6 +861,99 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         });
 
         return this;
+    };
+
+    this.fillInvoiceModal = function(data, closeable = false)
+    {
+        var prefix = $("#pacnem-invoice-prefix").val();
+        var $number = $("#" + prefix + "-id");
+        var $recipient = $("#" + prefix + "-recipient");
+        var $amount    = $("#" + prefix + "-amount");
+        var $message   = $("#" + prefix + "-message");
+        var $receiving = $("#" + prefix + "-receiving ");
+        var $status    = $("#" + prefix + "-status ");
+        var $paid      = $("#" + prefix + "-amountPaid .amount");
+        var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
+        var fmtAmount  = (data.invoice.amount / 1000000) + " XEM";
+
+        var rcvHeartsHtml = '<div><div class="label label-success label-mosaic"><b>' + data.invoice.countHearts + '&nbsp;<i class="glyphicon glyphicon-heart"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:heart</a></div>';
+        var rcvPlayerHtml = '<div><div class="label label-default label-mosaic"><b>1&nbsp;<i class="glyphicon glyphicon-user"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:player</a></div>';
+        var rcvBetaHtml   = '<div><div class="label label-primary label-mosaic"><b>1&nbsp;<i class="glyphicon glyphicon-star-empty"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:beta-player</a></div>';
+
+        $number.html(data.invoice.number);
+        $recipient.html(data.invoice.recipientXEM);
+        $amount.html(fmtAmount);
+        $message.html(data.invoice.number);
+        $receiving.html(rcvHeartsHtml + rcvPlayerHtml + rcvBetaHtml);
+        $status.text(data.invoice.status).addClass("text-danger");
+
+        var statusClass  = "danger";
+        var statusIcon   = "glyphicon-time";
+
+        if (data.invoice.status == "paid") {
+            statusClass = "success";
+            statusIcon  = "glyphicon-check";
+
+            $paid.text(data.invoice.amountPaid / 1000000);
+            $paid.parents(".wrap-amount").first().show();
+        }
+        else if (data.invoice.status == "paid_partly") {
+            statusClass = "success";
+            statusIcon  = "glyphicon-time";
+
+            $paid.text(data.invoice.amountPaid / 1000000);
+            $paid.parents(".wrap-amount").first().show();
+        }
+        else if (data.invoice.status == "unconfirmed") {
+            statusClass = "warning";
+            statusIcon  = "glyphicon-time";
+
+            $unconfirmed.text(data.invoice.amountUnconfirmed / 1000000);
+            $unconfirmed.parents(".wrap-amount").first().show();
+        }
+
+        $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + data.invoice.status + "</span>")
+               .removeClass("text-danger").addClass("text-" + statusClass);
+
+        var qrHtml = kjua({
+            size: 256,
+            text: JSON.stringify(data.qrData),
+            fill: '#000',
+            quiet: 0,
+            ratio: 2
+        });
+        $("#" + prefix + "-qrcode-wrapper").html(qrHtml);
+
+        var $invoiceBox = $(".pacnem-invoice-modal").first();
+        $invoiceBox.modal({
+            backdrop: "static",
+            keyboard: false,
+            show: true
+        });
+
+        if (closeable === true)
+            $(".pacnem-invoice-close-trigger").show();
+
+        $(".pacnem-invoice-close-trigger").off("click");
+        $(".pacnem-invoice-close-trigger").on("click", function()
+        {
+            $(".pacnem-invoice-modal").modal("hide");
+            return false;
+        });
+    };
+
+    this.displayInvoice = function(invoiceNumber)
+    {
+        var self = this;
+        var player = self.getPlayerDetails();
+
+        self.prepareInvoiceBox(function(ui)
+        {
+            API_.getInvoice(player, socket_.id, invoiceNumber, function(data)
+            {
+                self.fillInvoiceModal(data, true);
+            });
+        });
     };
 
     /**
@@ -980,8 +1085,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 var postPaymentCallback = function(ui)
                     {
                         ui.createSession();
+
                         ui.displayPlayerUI();
                         $("#rooms").parent().show();
+                        $(".pacnem-credits-submenu").removeClass("hidden");
                     };
 
                 if (ctrl_.isPlayMode("sponsored")) {
@@ -991,11 +1098,21 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     self.displaySponsorAdvertisement(postPaymentCallback);
                 }
                 else if (ctrl_.isPlayMode("pay-per-play")) {
-                    self.displayInvoice(postPaymentCallback);
+
+                    var player = self.getPlayerDetails();
+                    API_.fetchRemainingHearts(player, function(data)
+                    {
+                        if (data > 0) {
+                            postPaymentCallback(self)
+                        }
+                        else {
+                            self.watchInvoice(postPaymentCallback);
+                        }
+                    });
                 }
-                else {
-                    self.displayShareEngine(postPaymentCallback);
-                }
+                //else {
+                //    self.displayShareEngine(postPaymentCallback);
+                //}
             }
 
             return false;
@@ -1056,6 +1173,72 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     };
 
     /**
+     * Add event listener for Purchase History button
+     *
+     * @return GameUI
+     */
+    this.initPurchasesButtons = function()
+    {
+        var self = this;
+
+        $("#pacnem-invoice-history-trigger").off("click");
+        $("#pacnem-invoice-history-trigger").on("click", function()
+        {
+            var flag = $(this).attr("data-display");
+            var player = self.getPlayerDetails();
+
+            if (! flag || ! flag.length || flag == "0") {
+                $(this).attr("data-display", "1");
+                API_.fetchPurchaseHistory(player, function(history)
+                    {
+                        self.initInvoicesButtons();
+                        self.initBackToPlayButtons();
+                        $(".msgSelectRoom").hide();
+                        //$("#pacnem-current-player-details").hide();
+                        $("#pacnem-invoice-history-wrapper").show();
+                    });
+            }
+            else {
+                $(this).attr("data-display", "0");
+                $(".msgSelectRoom").show();
+                $("#pacnem-invoice-history-wrapper").hide();
+                //$("#pacnem-current-player-details").show();
+            }
+
+            return false;
+        });
+
+        $("#pacnem-invoice-show-trigger").off("click");
+        $("#pacnem-invoice-show-trigger").on("click", function()
+        {
+            self.prepareInvoiceBox(function(ui)
+            {
+                self.watchInvoice(function() {});
+
+                $(".pacnem-invoice-close-trigger").show();
+            });
+
+            return false;
+        });
+    };
+
+    this.initInvoicesButtons = function()
+    {
+        var self = this;
+
+        $(".pacnem-invoice-display-trigger").off("click");
+        $(".pacnem-invoice-display-trigger").on("click", function()
+        {
+            var number = $(this).attr("data-invoice-number");
+            if (number && number.length) {
+                self.displayInvoice(number);
+            }
+
+            return false;
+        });
+    };
+
+    /**
      * Add event listener for game modes trigger.
      *
      * @return GameUI
@@ -1075,8 +1258,12 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             else
                 self.unsetSponsoredUI();
 
-            if ("pay-per-play" == thisMode)
+            if ("pay-per-play" == thisMode) {
+                $(".pacnem-credits-submenu").removeClass("hidden");
                 self.prepareInvoiceBox(function(ui) {});
+            }
+            else
+                $(".pacnem-credits-submenu").removeClass("hidden").addClass("hidden");
 
             // game mode choice has been done now, next is username and address.
             $("#pacnem-save-trigger").prop("disabled", false).removeClass("btn-disabled");
@@ -1098,6 +1285,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         this.initAuthButton();
         this.initPurgeButton();
         this.initScoresButton();
+        this.initPurchasesButtons();
         this.initGameModes();
         this.initBackToPlayButtons();
 
@@ -1109,6 +1297,12 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             self.displayPlayerUI();
 
             $("#rooms").parent().show();
+
+            if (session_.details_.type == "pay-per-play") {
+                $(".pacnem-credits-submenu").removeClass("hidden");
+            }
+
+            // XXX + check game mode and enable/disable buttons with error messages
         }
         else
             $("#rooms").parent().hide();
@@ -1153,6 +1347,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         {
             $("#pacnem-scores-trigger").attr("data-display", "0");
             $("#pacnem-scores-wrapper").hide();
+            $("#pacnem-invoice-history-trigger").attr("data-display", "0");
+            $("#pacnem-invoice-history-wrapper").hide();
             $("#pacnem-current-player-details").show();
 
             var sess = new GameSession(API_);

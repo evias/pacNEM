@@ -196,6 +196,13 @@ var pacnem = function(io, chainDataLayer)
             };
 
             return invoiceData;
+        },
+        getTruncatedRecipient: function()
+        {
+            if (! this.recipientXEM || ! this.recipientXEM.length)
+                return "";
+
+            return this.recipientXEM.substr(0, 6) + "..." + this.recipientXEM.substr(-4);
         }
     };
 

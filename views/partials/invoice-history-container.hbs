@@ -1,0 +1,65 @@
+
+<div id="pacnem_invoice_history" class="row col-md-10 col-md-offset-1">
+    <div class="panel panel-warning">
+        <div class="panel-heading" style="text-align: left;">
+            <span class="glyphicon glyphicon-cloud"></span>&nbsp;
+            <div style="display: inline;">{{t "invoice_history.title"}}</div>
+            <div class="pull-right">
+                <a href="#" class="btn btn-sm btn-default pacnem-back-to-play"><span class="glyphicon glyphicon-eye-close"></span>&nbsp;{{t "invoice_history.hide_button"}}</a>
+            </div>
+        </div>
+        <div class="panel-body">
+            <p class="text-justify">{{t "invoice_history.explain"}}</p>
+
+            <table class="table table-condensed">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{{t "invoice_history.recipient_label"}}</th>
+                        <th>{{t "invoice_history.amount_label"}}</th>
+                        <th>{{t "invoice_history.amountPaid_label"}}</th>
+                        <th>{{t "invoice_history.status_label"}}</th>
+                        <th>{{t "invoice_history.createdAt_label"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                {{#unless data.length}}
+                    <tr class="table-info">
+                        <td colspan="5" class="text-center">
+                            <span>{{t "invoice_history.empty_invoice_history"}}</span>
+                        </td>
+                    </tr>
+                {{/unless}}
+
+                {{#if data.length}}
+
+                    {{#each data}}
+
+                    <tr class="table-success">
+                        <td>
+                            <a href="#" class="label label-info pacnem-invoice-display-trigger" data-invoice-number="{{number}}">
+                                <i class="glyphicon glyphicon-eye-open"></i>&nbsp;<span>{{number}}</span></a>
+                        </td>
+                        <td>
+                            <a class="label label-sm label-info"
+                                target="_blank"
+                                href="http://bob.nem.ninja:7890/account/get?address={{recipient}}">
+                                    <i class="glyphicon glyphicon-search"></i>&nbsp;<span>{{truncRecipient}}</span>
+                            </a>
+                        </td>
+                        <td>{{amount}} XEM</td>
+                        <td>{{amountPaid}} XEM</td>
+                        <td><span class="label {{statusLabelClass}}"><i class="{{statusLabelIcon}}"></i>&nbsp;{{status}}</span></td>
+                        <td>{{createdAt}}</td>
+                    </tr>
+
+                    {{/each}}
+
+                {{/if}}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
