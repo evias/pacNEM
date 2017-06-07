@@ -818,7 +818,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                         $(".pacnem-invoice-close-trigger").show();
 
                         var $invoiceBox = $(".pacnem-invoice-modal").first();
-                        $invoiceBox.modal("hide");
+
+                        //XXX do not close modal automatically anymore.
+                        //$invoiceBox.modal("hide");
 
                         if (callback)
                             return callback(ui);
@@ -1099,7 +1101,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     self.displaySponsorAdvertisement(postPaymentCallback);
                 }
                 else if (ctrl_.isPlayMode("pay-per-play")) {
-                    self.watchInvoice(postPaymentCallback);
+
+                    var player = self.getPlayerDetails();
+                    API_.fetchRemainingHearts(player, function(data)
+                    {
+                        if (data > 0) {
+                            postPaymentCallback(self)
+                        }
+                        else {
+                            self.watchInvoice(postPaymentCallback);
+                        }
+                    });
                 }
                 //else {
                 //    self.displayShareEngine(postPaymentCallback);

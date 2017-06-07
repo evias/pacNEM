@@ -108,7 +108,7 @@
         "label_amount_paid": "Amount Paid:",
         "label_amount_unconfirmed": "Pending confirmation:",
         "button_already_have_credits": "Close this window",
-        "flow_after_paid_explain": "PacNEM will process your Payment automatically. Because we use Game Credits published as Mosaics on the NEM Blockchain, you have to wait up to 1 minute after your Payment is completed so that you receive the said Mosaics. A Listing of Transactions matched to Invoices can be found under your Purchases History."
+        "flow_after_paid_explain": "PacNEM will process your Payment automatically. When we have received your Payment we will send you the listed Mosaics using the NEM Blockchain. A Listing of Transactions matched to Invoices can be found under your Purchases History."
     },
     "invoice_history": {
         "title": "Your <span>Pac</span><span class='NEMifiedText'>nem</span> Purchases History",

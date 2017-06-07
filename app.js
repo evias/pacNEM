@@ -589,9 +589,6 @@ app.get("/api/v1/credits/remaining", function(req, res)
 				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
 			}
 
-			// this will issue a pacnem_heart_sync event to the frontend.
-			chainDataLayer.fetchHeartsByGamer(player);
-
 			// get a "last credit state from db"
 			player.credits(function(err, credit)
 			{
