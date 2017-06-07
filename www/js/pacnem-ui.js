@@ -230,9 +230,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     {
         var $button = $(".roomCreateNew").first();
 
-        if (! ctrl_.getSession() || ! ctrl_.getSession().details_.hearts)
-            return this;
-
         $button.removeAttr("disabled").removeClass("disabled");
         $button.off("click");
         $button.on("click", function() { socket_.emit("create_room"); });
