@@ -428,7 +428,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 		};
 
 		// when no invoiceNumber is given, create or retrieve in following statuses
-		dbConditions["status"] = { $in: ["not_paid", "unconfirmed", "paid_partly"] };
+		dbConditions["status"] = { $in: ["not_paid", "identified", "unconfirmed", "paid_partly"] };
 		if (invoiceNumber && invoiceNumber.length) {
 			// load invoice by number
 			dbConditions["number"] = decodeURIComponent(invoiceNumber);

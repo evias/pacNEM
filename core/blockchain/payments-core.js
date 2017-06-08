@@ -175,8 +175,10 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
                         return false;
                     }
 
-                    if (data.status == "paid" && invoice.isPaid === true) {
-                        self.closePaymentChannel(invoice);
+                    if (data.status == "paid" || data.status == "unconfirmed") {
+                        if ((invoice.isPaid && !invoice.hasSentHearts)
+                            || (!invoice.isPaid && !invoice.hasSentHearts && invoice.getTotalIncoming() >= invoice.amount))
+                            self.closePaymentChannel(invoice);
                     }
                 });
             }

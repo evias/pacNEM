@@ -203,6 +203,10 @@ var pacnem = function(io, chainDataLayer)
                 return "";
 
             return this.recipientXEM.substr(0, 6) + "..." + this.recipientXEM.substr(-4);
+        },
+        getTotalIncoming: function()
+        {
+            return this.amountPaid + this.amountUnconfirmed;
         }
     };
 

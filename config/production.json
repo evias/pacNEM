@@ -5,7 +5,7 @@
         "application": "TBPGYGLO4QMZLVR4TZF7GSL5IHJAUNPFXFNEEP4V",
         "applicationSecret": "",
         "namespace": "evias-tests.pacnem",
-        "invoicePrefix": "PACNEM-T-",
+        "invoicePrefix": "PACNEM-X-",
         "bots": {
             "paymentBot": "ws://nem-nodejs-bot.herokuapp.com:29081"
         },
