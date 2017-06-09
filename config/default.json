@@ -30,6 +30,7 @@
         ]
     },
     "prices": {
-        "heart": 0.75
+        "entry": 50,
+        "heart": 1.2
     }
 }

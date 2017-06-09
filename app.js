@@ -30,7 +30,8 @@ var app = require('express')(),
 	i18n = require("i18next"),
     i18nFileSystemBackend = require('i18next-node-fs-backend'),
     i18nMiddleware = require('i18next-express-middleware'),
-    fs = require("fs");
+    fs = require("fs"),
+    csurf = require("csurf");
 
 // core dependencies
 var logger = require('./core/logger.js'),
@@ -192,7 +193,63 @@ app.get('/resources/templates/:name', function(req, res)
  *
  * This part of the game is where the end-user is active.
  */
-app.get("/:lang", function(req, res)
+app.get("/sponsor", function(req, res)
+	{
+		var currentLanguage = i18n.language;
+		var currentNetwork  = chainDataLayer.getNetwork();
+
+		var viewData = {
+			currentNetwork: currentNetwork,
+			currentLanguage: currentLanguage,
+			PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+			errors: {}
+		};
+
+		res.render("sponsor", viewData);
+	})
+.post("/sponsor", function(req, res)
+	{
+		var currentLanguage = i18n.language;
+		var currentNetwork  = chainDataLayer.getNetwork();
+
+		var viewData = {
+			currentNetwork: currentNetwork,
+			currentLanguage: currentLanguage,
+			PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+			errors: {}
+		};
+
+		var input = {
+			"realname" : req.body.realname ? req.body.realname.replace(/[^A-Za-z0-9\-_\.]/g, "") : "",
+			"email" : req.body.email ? req.body.email.replace(/[^A-Za-z0-9\-_\.@]/g, "") : "",
+			"sponsorname" : req.body.sponsorname ? req.body.sponsorname.replace(/[^A-Za-z0-9\-_\.]/g, "") : "",
+			"url" : req.body.url ? req.body.url.replace(/[^A-Za-z0-9\-_\.]/g, "") : "",
+			"type" : req.body.type_advertizing ?req.body.type_advertizing : "",
+			"description": req.body.description ? req.body.description.replace(/[^A-Za-z0-9\-_\.\s@\+#"'!\?]/g, "") : ""
+		};
+
+		var errors  	= {};
+		var isFormValid = true;
+		var mandatories = ["realname", "email", "sponsorname", "type", "description"];
+		for (var i in mandatories) {
+			var field = mandatories[i];
+			if (! input[field] || input[field].length) {
+				errors[field] = i18n.t("sponsor_engine.error_missing_mandatory_field");
+				isFormValid = false;
+			}
+		}
+
+		if (! isFormValid) {
+			viewData["errors"] = errors;
+			return res.render("sponsor", viewData);
+		}
+
+		// Form input is valid!
+
+		//XXX add success message
+		res.redirect("/");
+	})
+.get("/:lang", function(req, res)
 	{
 		var currentLanguage = req.params.lang;
 		var currentNetwork  = chainDataLayer.getNetwork();
@@ -396,9 +453,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		var amount = req.query.amount ? parseInt(req.query.amount) : 16; // 16 XEM to Pay for Pay per Play.
-		if (isNaN(amount) || amount <= 0)
-			return res.send(JSON.stringify({"status": "error", "message": "Mandatory field `amount` is invalid."}));
+		var amount = parseFloat(config.get("prices.entry"));
 
 		var clientSocketId = req.query.usid ? req.query.usid : null;
 		if (! clientSocketId || ! clientSocketId.length)

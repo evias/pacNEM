@@ -25,6 +25,7 @@
         "i18next-express-middleware": "~1.0.3",
         "kjua": "~0.1.1",
         "cron": "~1.2.1",
+        "csurf": "latest",
 
         "grunt": "~0.4.5",
         "grunt-coveralls": "~1.0.0",

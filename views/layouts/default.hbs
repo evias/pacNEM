@@ -91,17 +91,6 @@ Handlebars.registerHelper('t', function(key, sub)
 
                     <div class="custom-navbar">
                         <ul class="nav navbar-nav">
-                            <li id="currentHearts" class="dropdown" style="display: none;">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <span class="glyphicon glyphicon-heart"></span>&nbsp;
-                                    <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>&nbsp;
-                                    <span class="caret pacnem-credits-submenu hidden"></span>
-                                </a>
-                                <ul class="dropdown-menu pacnem-credits-submenu hidden">
-                                    <li><a href="#" id="pacnem-invoice-show-trigger" class="text-danger"><span class="glyphicon glyphicon-plus"></span>&nbsp;<span>{{t "menus.buy_credits"}}</span></a></li>
-                                    <li><a href="#" id="pacnem-invoice-history-trigger" class="text-danger"><span class="glyphicon glyphicon-time"></span>&nbsp;<span>{{t "menus.invoice_history"}}</span></a></li>
-                                </ul>
-                            </li>
                             <li id="currentUser" class="dropdown" style="display: none;">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <span class="glyphicon glyphicon-user"></span>&nbsp;
@@ -114,12 +103,24 @@ Handlebars.registerHelper('t', function(key, sub)
                                 <input type="hidden" id="pacNEM-sessionId" value="" />
                                 <input type="hidden" id="pacNEM-needs-payment" value="" />
                             </li>
+                            <li id="currentHearts" class="dropdown" style="display: none;">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <span class="glyphicon glyphicon-heart"></span>&nbsp;
+                                    <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>&nbsp;
+                                    <span class="caret pacnem-credits-submenu hidden"></span>
+                                </a>
+                                <ul class="dropdown-menu pacnem-credits-submenu hidden">
+                                    <li><a href="#" id="pacnem-invoice-show-trigger" class="text-danger"><span class="glyphicon glyphicon-plus"></span>&nbsp;<span>{{t "menus.buy_credits"}}</span></a></li>
+                                    <li><a href="#" id="pacnem-invoice-history-trigger" class="text-danger"><span class="glyphicon glyphicon-time"></span>&nbsp;<span>{{t "menus.invoice_history"}}</span></a></li>
+                                </ul>
+                            </li>
+                            <li id="currentMosaics" style="display: none;"></li>
                         </ul>
                     </div>
 
                     <div class="custom-navbar">
                         <ul class="nav navbar-nav">
-                            <li class="active pacnem-back-to-play"><a href="#"><span class="glyphicon glyphicon-home"></span>&nbsp;<span>{{t "menus.play"}}</span></a></li>
+                            <li class="active pacnem-back-to-play"><a href="/"><span class="glyphicon glyphicon-home"></span>&nbsp;<span>{{t "menus.play"}}</span></a></li>
                             <li><a id="pacnem-scores-trigger" href="#" data-display="0"><span class="glyphicon glyphicon-calendar"></span>&nbsp;<span>{{t "menus.high_scores"}}</span></a></li>
                             <li id="currentLanguage" class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -139,6 +140,7 @@ Handlebars.registerHelper('t', function(key, sub)
                                     <span id="currentBlockchain-network"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
                                 </a>
                             </li>
+                            <li><a href="/sponsor"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;<span>{{t "menus.become_sponsor"}}</span></a></li>
                         </ul>
                     </div>
                 </div>

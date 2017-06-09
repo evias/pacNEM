@@ -220,10 +220,12 @@ var pacnem = function(io, chainDataLayer)
     this.pacNEMSponsor_ = new mongoose.Schema({
         slug: String,
         name: String,
-        xem: String,
+        sponsorName: String,
         description: String,
-        imageUrl: String,
-        websiteUrl: String
+        websiteUrl: String,
+        contentUrl: String,
+        createdAt: {type: Number, min: 0},
+        updatedAt: {type: Number, min: 0}
     });
 
     this.pacNEMPayout_ = new mongoose.Schema({
