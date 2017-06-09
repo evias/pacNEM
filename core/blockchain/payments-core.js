@@ -175,15 +175,36 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
                         return false;
                     }
 
-                    if (data.status == "paid" || data.status == "unconfirmed") {
-                        if ((invoice.isPaid && !invoice.hasSentHearts)
-                            || (!invoice.isPaid && !invoice.hasSentHearts && invoice.getTotalIncoming() >= invoice.amount))
-                            self.closePaymentChannel(invoice);
+                    if (data.status != "paid" && data.status != "unconfirmed")
+                        return false;
+
+                    if (invoice.hasSentHearts === true)
+                        return false;
+
+                    if (invoice.isPaid || invoice.getTotalIncoming() >= invoice.amount) {
+                        self.db_.NEMAppsPayout.findOne({xem: data.sender, reference: invoice.number}, function(err, payout)
+                        {
+                            if (! err && !payout) {
+
+                                var creation = new self.db_.NEMAppsPayout({
+                                    xem: data.sender,
+                                    reference: invoice.number,
+                                    createdAt: new Date().valueOf()
+                                });
+                                creation.save(function(err) {
+
+                                    // only send hearts in case it was not done before.
+
+                                    self.closePaymentChannel(invoice);
+                                });
+                            }
+                        });
                     }
+
                 });
             }
         });
-    }
+    };
 
     this.closePaymentChannel = function(paymentChannel)
     {

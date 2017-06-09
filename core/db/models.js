@@ -226,12 +226,21 @@ var pacnem = function(io, chainDataLayer)
         websiteUrl: String
     });
 
+    this.pacNEMPayout_ = new mongoose.Schema({
+        reference: String,
+        xem: String,
+        metaDataPair: Object,
+        createdAt: {type: Number, min: 0},
+        updatedAt: {type: Number, min: 0}
+    });
+
     // bind our Models classes
     this.NEMGameCredit = mongoose.model("NEMGameCredit", this.NEMGameCredit_);
     this.NEMGamer      = mongoose.model("NEMGamer", this.NEMGamer_);
     this.NEMSponsor    = mongoose.model("NEMSponsor", this.pacNEMSponsor_);
     this.NEMPaymentChannel = mongoose.model("NEMPaymentChannel", this.NEMPaymentChannel_);
     this.NEMBot = mongoose.model("NEMBot", this.NEMBot_);
+    this.NEMAppsPayout = mongoose.model("NEMAppsPayout", this.pacNEMPayout_);
 };
 
 module.exports.pacnem = pacnem;
@@ -239,6 +248,7 @@ module.exports.NEMGameCredit = pacnem.NEMGameCredit;
 module.exports.NEMGamer      = pacnem.NEMGamer;
 module.exports.NEMSponsor    = pacnem.NEMSponsor;
 module.exports.NEMPaymentChannel = pacnem.NEMPaymentChannel;
+module.exports.NEMAppsPayout = pacnem.NEMAppsPayout;
 module.exports.NEMBot = pacnem.NEMBot;
 }());
 
