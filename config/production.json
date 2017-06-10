@@ -5,11 +5,13 @@
         "application": "TBPGYGLO4QMZLVR4TZF7GSL5IHJAUNPFXFNEEP4V",
         "applicationSecret": "",
         "namespace": "evias-tests.pacnem",
-        "invoicePrefix": "PACNEM-T-",
+        "invoicePrefix": "PACNEM-X-",
+        "sponsorPrefix": "PACNEM-SP-",
         "bots": {
             "paymentBot": "ws://nem-nodejs-bot.herokuapp.com:29081"
         },
-        "isBeta": true
+        "isBeta": true,
+        "secretKey": "PacNEMByGrégorySaive_NotSoSecretKey"
     },
     "nem": {
         "isTestMode": true,
@@ -30,6 +32,7 @@
         ]
     },
     "prices": {
-        "heart": 0.75
+        "entry": 50,
+        "heart": 1.2
     }
 }

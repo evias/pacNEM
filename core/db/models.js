@@ -203,6 +203,10 @@ var pacnem = function(io, chainDataLayer)
                 return "";
 
             return this.recipientXEM.substr(0, 6) + "..." + this.recipientXEM.substr(-4);
+        },
+        getTotalIncoming: function()
+        {
+            return this.amountPaid + this.amountUnconfirmed;
         }
     };
 
@@ -215,11 +219,30 @@ var pacnem = function(io, chainDataLayer)
 
     this.pacNEMSponsor_ = new mongoose.Schema({
         slug: String,
-        name: String,
-        xem: String,
+        email: String,
+        realName: String,
+        sponsorName: String,
         description: String,
-        imageUrl: String,
-        websiteUrl: String
+        websiteUrl: String,
+        advertType: String,
+        contentUrl: String,
+        isApproved: {type: Boolean, default: false},
+        createdAt: {type: Number, min: 0},
+        updatedAt: {type: Number, min: 0}
+    });
+
+    this.pacNEMSponsor_.plugin(increment, {
+        modelName: "NEMSponsor",
+        fieldName: "reference",
+        prefix: config.get("pacnem.sponsorPrefix")
+    });
+
+    this.pacNEMPayout_ = new mongoose.Schema({
+        reference: String,
+        xem: String,
+        metaDataPair: Object,
+        createdAt: {type: Number, min: 0},
+        updatedAt: {type: Number, min: 0}
     });
 
     // bind our Models classes
@@ -228,6 +251,7 @@ var pacnem = function(io, chainDataLayer)
     this.NEMSponsor    = mongoose.model("NEMSponsor", this.pacNEMSponsor_);
     this.NEMPaymentChannel = mongoose.model("NEMPaymentChannel", this.NEMPaymentChannel_);
     this.NEMBot = mongoose.model("NEMBot", this.NEMBot_);
+    this.NEMAppsPayout = mongoose.model("NEMAppsPayout", this.pacNEMPayout_);
 };
 
 module.exports.pacnem = pacnem;
@@ -235,6 +259,7 @@ module.exports.NEMGameCredit = pacnem.NEMGameCredit;
 module.exports.NEMGamer      = pacnem.NEMGamer;
 module.exports.NEMSponsor    = pacnem.NEMSponsor;
 module.exports.NEMPaymentChannel = pacnem.NEMPaymentChannel;
+module.exports.NEMAppsPayout = pacnem.NEMAppsPayout;
 module.exports.NEMBot = pacnem.NEMBot;
 }());
 

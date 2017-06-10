@@ -30,9 +30,12 @@ var app = require('express')(),
 	i18n = require("i18next"),
     i18nFileSystemBackend = require('i18next-node-fs-backend'),
     i18nMiddleware = require('i18next-express-middleware'),
-    fs = require("fs");
+    fs = require("fs"),
+    flash = require("connect-flash"),
+    session = require("express-session"),
+    validator = require("express-validator");
 
-// core dependencies
+// internal core dependencies
 var logger = require('./core/logger.js'),
 	__room = require('./core/room/room.js'),
 	Room = __room.Room,
@@ -86,6 +89,30 @@ var basicAuth = auth.basic({
 app.use(auth.connect(basicAuth));
 /**
  * End Basic HTTP Authentication BLOCK
+ */
+
+/**
+ * Configure Express Application Middlewares:
+ * - flash (connect-flash) notifications helper
+ * - session (express-session)
+ * - validator (express-validator)
+ *
+ * Used for Notifications across the game, input validation
+ * and cross-request messages.
+ */
+app.configure(function() {
+	app.use(session({
+		cookie: {maxAge: 60000},
+		secret: config.get("pacnem.secretKey"),
+		resave: false,
+		saveUninitialized: false
+	}));
+
+	app.use(flash());
+	app.use(validator());
+});
+/**
+ * End Application Middlewares
  */
 
 // configure blockchain layer
@@ -192,17 +219,134 @@ app.get('/resources/templates/:name', function(req, res)
  *
  * This part of the game is where the end-user is active.
  */
-app.get("/:lang", function(req, res)
+app.get("/sponsor", function(req, res)
+	{
+		var currentLanguage = i18n.language;
+		var currentNetwork  = chainDataLayer.getNetwork();
+
+		var viewData = {
+			currentNetwork: currentNetwork,
+			currentLanguage: currentLanguage,
+			PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+			errors: {},
+			values: {}
+		};
+
+		res.render("sponsor", viewData);
+	})
+.post("/sponsor", function(req, res)
+	{
+		var currentLanguage = i18n.language;
+		var currentNetwork  = chainDataLayer.getNetwork();
+
+		var viewData = {
+			currentNetwork: currentNetwork,
+			currentLanguage: currentLanguage,
+			PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+			errors: {},
+			values: {}
+		};
+
+		var mandatoryFieldError = i18n.t("sponsor_engine.error_missing_mandatory_field");
+
+		//req.check("realname", mandatoryFieldError).notEmpty();
+		//req.check("email", mandatoryFieldError).notEmpty();
+		//req.check("email", mandatoryFieldError).isEmail();
+		//req.check("sponsorname", mandatoryFieldError).notEmpty();
+		//req.check("type_advertizing", mandatoryFieldError).notEmpty();
+		//req.check("description", mandatoryFieldError).notEmpty();
+
+		var input = {
+			"realname" : req.body.realname,
+			"email" : req.body.email,
+			"sponsorname" : req.body.sponsorname,
+			"url" : req.body.url ? req.body.url.replace(/[^A-Za-z0-9\-_\.]/g, "") : "",
+			"type_advertizing" : req.body.type_advertizing,
+			"description": req.body.description
+		};
+
+		//var errors = req.validationErrors();
+
+		//if (errors) {
+			//XXX errors will be indexed by field name
+
+		var errors  	= {};
+		var isFormValid = true;
+		var mandatories = ["realname", "email", "sponsorname", "type_advertizing", "description"];
+		for (var i in mandatories) {
+			var field = mandatories[i];
+			if (! input[field] || ! input[field].length) {
+				errors[field] = i18n.t("sponsor_engine.error_missing_mandatory_field");
+				isFormValid   = false;
+			}
+		}
+
+		if (! isFormValid) {
+			viewData["errors"] = errors;
+			viewData["values"] = input;
+			return res.render("sponsor", viewData);
+		}
+		//}
+
+		//serverLog(req, JSON.stringify(input), "[DEBUG]");
+		//serverLog(req, JSON.stringify(errors), "[DEBUG]");
+		//serverLog(req, JSON.stringify(isFormValid), "[DEBUG]");
+
+		// Form input is valid!
+
+		dataLayer.NEMSponsor.findOne({email: input.email}, function(err, sponsor)
+		{
+			if (err) {
+				// error reading sponsor
+				viewData.errors = {general: err};
+				return res.render("sponsor", viewData);
+			}
+
+			if (sponsor) {
+				// sponsor by email already exists!
+				viewData.errors = {general: i18n.t("sponsor_engine.error_email_unique")};
+				return res.render("sponsor", viewData);
+			}
+
+			var sponsorSlug = input.sponsorname.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
+
+			sponsor = new dataLayer.NEMSponsor({
+				slug: sponsorSlug,
+				realName: input.realname,
+				sponsorName: input.sponsorname,
+				email: input.email,
+				description: input.description,
+				websiteUrl: input.url,
+				advertType: input.type_advertizing,
+				createdAt: new Date().valueOf()
+			});
+
+			sponsor.save(function(err) {
+				if (err) {
+					// error saving sponsor
+					viewData.errors = {general: err};
+					return res.render("sponsor", viewData);
+				}
+
+				req.flash("info", i18n.t("sponsor_engine.registered_success"));
+				return res.redirect("/");
+			})
+		});
+	})
+.get("/:lang", function(req, res)
 	{
 		var currentLanguage = req.params.lang;
 		var currentNetwork  = chainDataLayer.getNetwork();
 
 		i18n.changeLanguage(currentLanguage);
 
+		var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
+
 		var viewData = {
 			currentNetwork: currentNetwork,
 			currentLanguage: currentLanguage,
-			PacNEM_Frontend_Config: PacNEM_Frontend_Config
+			PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+			notificationMessage: notificationMessage
 		};
 
 		res.render("play", viewData);
@@ -212,10 +356,13 @@ app.get("/:lang", function(req, res)
 		var currentLanguage = i18n.language;
 		var currentNetwork  = chainDataLayer.getNetwork();
 
+		var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
+
 		var viewData = {
 			currentNetwork: currentNetwork,
 			currentLanguage: currentLanguage,
-			PacNEM_Frontend_Config: PacNEM_Frontend_Config
+			PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+			notificationMessage: notificationMessage
 		};
 
 		res.render("play", viewData);
@@ -396,9 +543,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		var amount = req.query.amount ? parseInt(req.query.amount) : 16; // 16 XEM to Pay for Pay per Play.
-		if (isNaN(amount) || amount <= 0)
-			return res.send(JSON.stringify({"status": "error", "message": "Mandatory field `amount` is invalid."}));
+		var amount = parseFloat(config.get("prices.entry"));
 
 		var clientSocketId = req.query.usid ? req.query.usid : null;
 		if (! clientSocketId || ! clientSocketId.length)
@@ -428,7 +573,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 		};
 
 		// when no invoiceNumber is given, create or retrieve in following statuses
-		dbConditions["status"] = { $in: ["not_paid", "unconfirmed", "paid_partly"] };
+		dbConditions["status"] = { $in: ["not_paid", "identified", "unconfirmed", "paid_partly"] };
 		if (invoiceNumber && invoiceNumber.length) {
 			// load invoice by number
 			dbConditions["number"] = decodeURIComponent(invoiceNumber);

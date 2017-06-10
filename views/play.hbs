@@ -15,9 +15,16 @@
     });
 </script>
 
+{{#if notificationMessage.length}}
+<div class="alert alert-success col-md-8 col-md-offset-2">
+    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+    <i class="glyphicon glyphicon-ok"></i>&nbsp;<span>{{notificationMessage}}</span>
+</div>
+{{/if}}
+
 <div id="pacnem-main-wrapper" class="col-md-7 col-md-offset-1">
     <h4 class="wrapper-title text-left show-on-auth" style="display: none;">
-        <i class="glyphicon glyphicon-cog"></i>&nbsp;Your Details
+        <i class="glyphicon glyphicon-cog"></i>&nbsp;{{t "guest.logged_in_title"}}
     </h4>
 
     <div id="pacnem-current-player-details">
