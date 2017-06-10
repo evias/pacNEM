@@ -6,10 +6,12 @@
         "applicationSecret": "592b1c5a8b1a8bc8e4a38bc8da2baf0f4a0866c0f0c15b0548d8d273d5875615",
         "namespace": "evias-tests.pacnem",
         "invoicePrefix": "PACNEM-T-",
+        "sponsorPrefix": "PACNEM-TSP-",
         "bots": {
             "paymentBot": "ws://localhost:29081"
         },
-        "isBeta": true
+        "isBeta": true,
+        "secretKey": "PacNEMByGrégorySaive_NotSoSecretKey"
     },
     "nem": {
         "isTestMode": true,

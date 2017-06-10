@@ -36,10 +36,9 @@
         "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> wird Ihnen nie nach Ihren privaten Daten fragen wie Ihr Wallet Passwort oder Ihr Wallet Private Key.</span>"
     },
     "sponsor_engine": {
-        "logged_in_title": "Your Details",
+        "logged_in_title": "Ihre Details",
         "title_blue_box": "Be a PacNEM Sponsor!",
-        "welcome_paragraph_1_1": "<span>Welcome to the </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Game Sponsor Engine. This game is a Free &amp; Open Source Node.js <b>Autonomous Game</b> using the <span class='NEMifiedText'>nem</span><span> Blockchain</span><span>. As a Sponsor, you will receive <b>instant Mosaic Payouts</b> whenever your Advertizement is being watched by Players using the Sponsored Play PacNEM Game Mode.</span><span>The PacNEM Sponsor Engine lets Gaming Industry <b>Sponsors Earn Money</b> through Advertizing. Publishing Content on the PacNEM Sponsor Engine will go through a Compliance Process.</span>",
-        "enter_data_to_join": "<span>If you wish to become a PacNEM Sponsor, please fill the form below with your Contact Details and our Team will come back to you. <b>It is important to Note that any Payment starting from 250 XEM will be accepted for Sponsors</b>, we do not want to make this experience too expensive for Sponsors as it should be used only as a Proof of Concept Game</span>",
+        "explain_sponsor_engine": "<span>If you wish to become a PacNEM Sponsor, please fill the form below with your Contact Details and our Team will come back to you. As a Sponsor, you will receive <b>instant Mosaic Payouts</b> whenever your Advertizement is being watched by Players using the Sponsored Play PacNEM Game Mode.</span><span>The PacNEM Sponsor Engine lets Gaming Industry <b>Sponsors Earn Money</b> through Advertizing. Publishing Content on the PacNEM Sponsor Engine will go through a Compliance Process.</span>",
         "label_realname": "Your Real Name",
         "label_email": "Your E-Mail Address",
         "label_sponsorname": "Sponsor Name (Display)",

@@ -219,13 +219,22 @@ var pacnem = function(io, chainDataLayer)
 
     this.pacNEMSponsor_ = new mongoose.Schema({
         slug: String,
-        name: String,
+        email: String,
+        realName: String,
         sponsorName: String,
         description: String,
         websiteUrl: String,
+        advertType: String,
         contentUrl: String,
+        isApproved: {type: Boolean, default: false},
         createdAt: {type: Number, min: 0},
         updatedAt: {type: Number, min: 0}
+    });
+
+    this.pacNEMSponsor_.plugin(increment, {
+        modelName: "NEMSponsor",
+        fieldName: "reference",
+        prefix: config.get("pacnem.sponsorPrefix")
     });
 
     this.pacNEMPayout_ = new mongoose.Schema({

@@ -6,10 +6,12 @@
         "applicationSecret": "",
         "namespace": "evias-tests.pacnem",
         "invoicePrefix": "PACNEM-X-",
+        "sponsorPrefix": "PACNEM-SP-",
         "bots": {
             "paymentBot": "ws://nem-nodejs-bot.herokuapp.com:29081"
         },
-        "isBeta": true
+        "isBeta": true,
+        "secretKey": "PacNEMByGrégorySaive_NotSoSecretKey"
     },
     "nem": {
         "isTestMode": true,
