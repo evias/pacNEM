@@ -98,6 +98,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         socket_.on("pacnem_heart_sync", function(rawdata)
         {
             var data = JSON.parse(rawdata);
+            var player = self.getPlayerDetails();
+
+            if (! player.address || ! player.address.length)
+                return false;
+
+            if (player.address !== data.address)
+                // this update is not for this session
+                return false;
+
+            var credits = data.credits;
 
             // we will display the `data` (count of hearts available read from
             // blockchain) in the top bar.
@@ -105,16 +115,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             var $data = $("#currentHearts-hearts").first();
 
             $wrap.show();
-            self.animateHeartsCounter($data, 0, data, " Credits");
+            self.animateHeartsCounter($data, 0, credits, " Credits");
 
-            if (data > 0) {
+            if (credits > 0) {
                 $("#pacNEM-needs-payment").val("0");
             }
             else
                 $("#pacNEM-needs-payment").val("1");
 
             if (typeof session_ != 'undefined' && session_.details_.hearts != data) {
-                session_.details_.hearts = data;
+                session_.details_.hearts = credits;
                 session_.store(false); // do not re-validate with blockchain, we just did that!
             }
 
@@ -479,7 +489,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             return {"username": "", "address": ""};
         }
 
-        return {"username": username, "address": address};
+        return {"username": username, "address": address.replace(/-/g, '')};
     };
 
     /**

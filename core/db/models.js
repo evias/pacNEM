@@ -142,7 +142,7 @@ var pacnem = function(io, chainDataLayer)
                     credits.save();
                 }
 
-                socket_.emit("pacnem_heart_sync", credits.countHearts);
+                socket_.emit("pacnem_heart_sync", JSON.stringify({address: credits.xem, credits: credits.countHearts}));
             });
         }
     };

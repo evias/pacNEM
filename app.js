@@ -249,6 +249,8 @@ app.get("/sponsor", function(req, res)
 
 		var mandatoryFieldError = i18n.t("sponsor_engine.error_missing_mandatory_field");
 
+		//XXX SANITIZE
+
 		//req.check("realname", mandatoryFieldError).notEmpty();
 		//req.check("email", mandatoryFieldError).notEmpty();
 		//req.check("email", mandatoryFieldError).isEmail();
@@ -260,7 +262,7 @@ app.get("/sponsor", function(req, res)
 			"realname" : req.body.realname,
 			"email" : req.body.email,
 			"sponsorname" : req.body.sponsorname,
-			"url" : req.body.url ? req.body.url.replace(/[^A-Za-z0-9\-_\.]/g, "") : "",
+			"url" : req.body.url,
 			"type_advertizing" : req.body.type_advertizing,
 			"description": req.body.description
 		};
