@@ -195,11 +195,20 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         for (var i = 0 ; i < players.length ; i++) {
             var $row  = $userRow.clone().removeClass("hidden").addClass("player-row");
-            var color = GHOSTS_COLORS[i % GHOSTS_COLORS.length];
+            var color = PACMAN_COLORS[i % PACMAN_COLORS.length];
+
+            var hex = color.replace(/#/, '');
+            var rgb = [
+                parseInt(hex.substring(0, hex.length/3), 16),
+                parseInt(hex.substring(hex.length/3, 2*hex.length/3), 16),
+                parseInt(hex.substring(2*hex.length/3, 3*hex.length/3), 16)
+            ];
 
             // set player name and add to DOM
             $row.find(".player").first().text(players[i]);
+            $row.find(".list-group-item-heading").first().css("background-color", "rgba(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", 0.4)");
             $row.find(".glyphicon").first().css("color", color);
+
             $row.appendTo($details);
         }
 

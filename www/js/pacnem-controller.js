@@ -28,6 +28,7 @@ var LEFT = 0,
 
 var SIZE = 16;
 var GHOSTS_COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ff7700"];
+var PACMAN_COLORS = ["#ff8000", "#d7df01", "#cc2efa", "#b40431"]
 
 // Updated based on server's values
 var FPS = 20;
@@ -195,9 +196,9 @@ var GameController = function(config, socket, nem, chainId)
         var $items = $("#pacnem-current-room-wrapper .player-row");
         for (var i = 0 ; i != data['pacmans'].length ; i++) {
             var pacman = data['pacmans'][i];
-            drawPacMan(canvas, ctx, frame_, pacman, data['pacmans'].length == 1 ? "#777700" : GHOSTS_COLORS[i %GHOSTS_COLORS.length]);
+            drawPacMan(canvas, ctx, frame_, pacman, data['pacmans'].length == 1 ? "#777700" : PACMAN_COLORS[i %PACMAN_COLORS.length]);
             $($items[i]).find(".pc-score").text(pacman["score"]);
-            $($items[i]).find(".pc-lifes").text(pacman["lifes"] + "❤");
+            $($items[i]).find(".pc-lifes").text(pacman["lifes"]);
             $($items[i]).find(".pc-combo").text("x" + (pacman["combo"] +1));
         }
         for (var i = 0 ; i != data['ghosts'].length ; i++) {
