@@ -506,6 +506,16 @@ var service = function(io, nemSDK, logger)
         return transactionMetaDataPair.meta.id;
     };
 
+    /**
+     * This method will recursively read transactions from the blockchain.
+     * 
+     * NIS endpoints only allow up to 25 transactions in one request, so we
+     * need a recursive call to check for additional transactions.
+     * 
+     * @param {integer} lastTrxRead     Transaction ID
+     * @param {callable} callback 
+     * @return void
+     */
     this.fetchBlockchainHallOfFame = function(lastTrxRead = null, callback = null)
     {
         var self = this;
@@ -521,7 +531,7 @@ var service = function(io, nemSDK, logger)
 
             var transactions = res;
 
-            lastTrxRead = self.saveHallOfFameEntries(transactions);
+            lastTrxRead = self.processHallOfFameTransactions(transactions);
 
             if (lastTrxRead !== false && 25 == transactions.length) {
                 // recursion..
@@ -533,12 +543,13 @@ var service = function(io, nemSDK, logger)
                 self.fetchBlockchainHallOfFame(lastTrxRead, callback);
             }
 
-            if (callback && (lastTrxRead === false || transactions.length < 25)) {
+            if (lastTrxRead === false || transactions.length < 25) {
                 // done.
-
                 // sort the history into the ranking now to have a hall of fame.
                 self.buildHallOfFameRanking();
-                callback(gameHallOfFame_);
+
+                if (callback) 
+                    callback(gameHallOfFame_);
             }
 
         }, function(err) {
@@ -547,7 +558,16 @@ var service = function(io, nemSDK, logger)
         });
     };
 
-    this.saveHallOfFameEntries = function(transactions)
+    /**
+     * Read some transactions from the blockchain and interpret the content.
+     * 
+     * Only multisignature and transfer transactions are read because only those
+     * can contain evias.pacnem:cheese mosaics.
+     * 
+     * @param {array} transactions
+     * @return integer  - Last transaction ID
+     */
+    this.processHallOfFameTransactions = function(transactions)
     {
         var self = this;
         var cheeseMosaicSlug = pacNEM_NS_ + ":cheese";
@@ -587,11 +607,17 @@ var service = function(io, nemSDK, logger)
             // should have a divisibility of 6.
 
             var recipient = mosaicStake.recipient;
+            if (recipient === false)
+                continue;
+
             if (! gameHallOfFame_.history.hasOwnProperty(recipient))
                 gameHallOfFame_.history[recipient] = [];
 
-            // score in human readable format
-            var score = mosaicStake.totalMosaic * Math.pow(10, 6);
+            // The total cheese mosaics in this transaction 
+            // represents the total score of the player.
+            var score = mosaicStake.totalMosaic;
+
+            //logger_.info("[DEBUG]", "[PACNEM HOF]", "Score Found: " + score + " for " + recipient);
 
             gameHallOfFame_.history[recipient].push(
                 {"player": recipient, "score": score});
@@ -600,6 +626,15 @@ var service = function(io, nemSDK, logger)
         return lastTrxRead;
     };
 
+    /**
+     * Create an up to date Hall Of Fame ranking from the read
+     * scores history.
+     * 
+     * This method is called internally after reading all data with
+     * `fetchBlockchainHallOfFame`. 
+     * 
+     * @return array
+     */
     this.buildHallOfFameRanking = function()
     {
         var allScores = [];
@@ -616,7 +651,7 @@ var service = function(io, nemSDK, logger)
             allScores.sort(scrcmp).reverse();
             gameHallOfFame_.ranking = allScores.length > 10 ? allScores.splice(10) : allScores;
 
-            logger_.info("[DEBUG]", "[PACNEM HOF]", "Ranking Built: " + JSON.stringify(gameHallOfFame_.ranking));
+            //logger_.info("[DEBUG]", "[PACNEM HOF]", "Ranking built: " + JSON.stringify(gameHallOfFame_.ranking));
         }
 
         return allScores;
