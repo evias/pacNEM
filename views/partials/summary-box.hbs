@@ -1,0 +1,36 @@
+
+<div class="modal fade pacnem-summary-modal" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">{{t "summary.title_game_summary"}}</h4>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Score</th>
+                    </thead>
+                    <tbody>
+                    {{#each pacmans}}
+                        <tr>
+                            <td>{{counter @index}}</td>
+                            <td>{{username}}</td>
+                            <td>{{score}}</td>
+                            <td>{{address}}</td>
+                        </tr>
+                    {{/each}}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <div class="row text-center">
+                    <button class="btn btn-default" role="button" data-dismiss="modal">
+                        <span>{{t "summary.button_close"}}</span>&nbsp;
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

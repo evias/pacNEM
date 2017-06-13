@@ -69,6 +69,15 @@ Handlebars.registerHelper('t', function(key, sub)
 
     return new Handlebars.SafeString(window.i18next.t(key));
 });
+
+/**
+ * Handlebars counter() helper implementation for frontend
+ * templates
+ */
+Handlebars.registerHelper("counter", function (index)
+{
+    return index + 1;
+});
         </script>
 
         <script src="/js/jquery-hbs-file-template.js"></script>

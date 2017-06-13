@@ -32,7 +32,8 @@ var RoomManager = function(io) {
 	var last_room_id_ = 0;
 
 	var map_member_username_ = {};
-	var map_member_roomid_ = {};
+	var map_member_address_  = {};
+	var map_member_roomid_   = {};
 	var map_id_rooms_ = {};
 
 	// Notify RoomManager members of changes in Room
@@ -45,10 +46,11 @@ var RoomManager = function(io) {
 			rooms.push(dict);
 		}
 		var sid_list = sid === undefined ? Object.keys(map_member_roomid_) : [sid];
-		for (var i = 0 ; i!=sid_list.length ; i++) {
+		for (var i = 0 ; i < sid_list.length ; i++) {
 			io.sockets.to(sid_list[i]).emit('rooms_update', JSON.stringify({
 				'sid': sid_list[i],
 				'users': map_member_username_,
+				'addresses': map_member_address_,
 				'rooms': rooms,
 				'time': Date.now() - start_time_,
 			}));
@@ -59,18 +61,24 @@ var RoomManager = function(io) {
 	this.register = function(sid) {
 		assert(! map_member_roomid_.hasOwnProperty(sid));
 		assert(! map_member_username_.hasOwnProperty(sid));
+		assert(! map_member_address_.hasOwnProperty(sid));
 
 		map_member_roomid_[sid] = undefined; // no room has been defined so far
 		map_member_username_[sid] = undefined;
+		map_member_address_[sid] = undefined;
 		self.notifyChanges(sid);
 	};
 
 	// Change the username for sid
-	this.changeUsername = function(sid, username) {
+	this.changeUsername = function(sid, details) {
 		assert(map_member_roomid_.hasOwnProperty(sid));
 		assert(map_member_username_.hasOwnProperty(sid));
+		assert(map_member_address_.hasOwnProperty(sid));
+		assert(details.hasOwnProperty("username"));
+		assert(details.hasOwnProperty("address"));
 
-		map_member_username_[sid] = username.substr(0, 20);
+		map_member_username_[sid] = details.username.substr(0, 20);
+		map_member_address_[sid]  = details.address;
 		if (map_member_roomid_[sid] !== undefined) {
 			self.notifyChanges();
 		}
@@ -89,24 +97,24 @@ var RoomManager = function(io) {
 	};
 
 	// Join a room
-	this.joinRoom = function(sid, room_id) {
+	this.joinRoom = function(sid, room_id, details) {
 		assert(map_member_roomid_.hasOwnProperty(sid));
 		assert.strictEqual(map_member_roomid_[sid], undefined);
 		assert(map_id_rooms_.hasOwnProperty(room_id));
 
-		if (map_id_rooms_[room_id].join(sid)) {
+		if (map_id_rooms_[room_id].join(sid, details)) {
 			map_member_roomid_[sid] = room_id;
 			self.notifyChanges();
 		}
 	};
 
 	// Create a new room
-	this.createRoom = function(sid) {
+	this.createRoom = function(sid, details) {
 		assert(map_member_roomid_.hasOwnProperty(sid));
 
 		var room_id = last_room_id_++;
 		var room = new Room(io, self);
-		var hasJoined = room.join(sid);
+		var hasJoined = room.join(sid, details);
 		assert(hasJoined);
 	   	map_member_roomid_[sid] = room_id;
 		map_id_rooms_[room_id] = room;
@@ -154,6 +162,7 @@ var RoomManager = function(io) {
 		}
 		delete map_member_roomid_[sid];
 		delete map_member_username_[sid];
+		delete map_member_address_[sid];
 	};
 };
 

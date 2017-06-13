@@ -158,7 +158,6 @@ var GameController = function(config, socket, nem, chainId)
         TransitionHelper(function() {
             socket_.emit('start');
         });
-
         return this;
     };
 
@@ -227,8 +226,10 @@ var GameController = function(config, socket, nem, chainId)
         return this;
     };
 
-    this.serverEndOfGame = function()
+    this.serverEndOfGame = function(rawdata)
     {
+        var data = JSON.parse(rawdata);
+
         ongoing_game_ = false;
         return this;
     };

@@ -791,21 +791,25 @@ io.sockets.on('connection', function(socket)
 	});
 
 	// Rename the user
-	socket.on('change_username', function(username) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] change_username(' + username + ')');
-		room_manager.changeUsername(socket.id, username);
+	socket.on('change_username', function(details) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] change_username(' + details + ')');
+		room_manager.changeUsername(socket.id, details);
 	});
 
 	// Join an existing room
-	socket.on('join_room', function(room_id) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] join_room(' + room_id + ')');
-		room_manager.joinRoom(socket.id, room_id);
+	socket.on('join_room', function(json) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] join_room(' + json + ')');
+
+		var parsed = JSON.parse(json);
+		room_manager.joinRoom(socket.id, parsed.room_id, parsed.details);
 	});
 
 	// Create a new room
-	socket.on('create_room', function() {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] create_room()');
-		room_manager.createRoom(socket.id);
+	socket.on('create_room', function(details) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] create_room(' + details + ')');
+
+		var parsed = JSON.parse(details);
+		room_manager.createRoom(socket.id, details);
 	});
 
 	// Leave a room

@@ -1,0 +1,90 @@
+# Coffee Time - Multiplayer PacNEMadness - Call to Sponsors
+
+Dear NEMbers,
+
+### Introduction
+
+I am a developer, completely bitten by nem. I'm infected, deeply. And been working around a little game with a lot of blockchain features to make myself fit with blockchain technology and 2nd layer application development.
+
+*For the ones unaware, the game is still under active development and **should not be publicly advertized yet**, please.*
+
+Please note that I am not planning to make money by running this Game. I developed the game out of passion for the nem blockchain and want to showcase the easiness of implementation of trustless systems when it comes to nem as well as write a blog post illustrating the experience.
+
+Mijin, with its 0 fees possibility, would probably be a better alternative for this game but I want the entire community to take part of this little bounty. If people play this game, it will give us some transactions on the network and we'll all have fun together because the game is Multiplayer. :P
+
+### Call to Sponsors
+
+**I am now looking for Sponsors who will benefit of the visibility when the game is published to Xarcade and Facebook platforms**.
+
+Any money you will be paying as a Sponsor should be seen as a *donation to the [**PacNEM**](https://pacnem.herokuapp.com) project* as this will send your money to a dedicated so-called *pre-paid Sponsored Wallet*. Nonetheless, you can at any time jump off the train, I will make sure to add a way for you to get the Private Key of your Sponsored Wallet so that you can get back the money you sent to the pre-paid wallet.
+
+### PacNEM / Details
+
+Currently the game is available only with a username and password combination: username is **demo** and password is **opendev**. Please follow this URL to the game: [**PacNEM**](https://pacnem.herokuapp.com): https://pacnem.herokuapp.com.
+
+PacNEM works with 2 different Play Modes: **sponsored-play** and **pay-per-play**.
+
+* **pay-per-play** costs **50 XEM** and the player will receive 50 game credits *potentially exchangeable on xarcade*.
+  * alternative for XAR (Xarcade) yet to be evaluated and discussed.
+  * at current prices, 50 XEM is already 5 USD. That is a lot for playing a little game online and that's basically why I'm calling out for sponsors! If I can reach out to enough people who would be accepting to be added as sponsors and pay the fee, I will be able to decrease the price..
+* **sponsored-play** is free for the player, the game credits used in this play mode are the ones from your dedicated pre-paid sponsor wallet.
+
+*Pay-per-play mode will be **disabled** in case the system cannot send Transactions anymore. Only sponsored-play will remain in this case. This is to make sure that when Sponsors quit paying their monthly fee, the game can still run.*
+
+Featuring following Blockchain *plugins*:
+
+* showcasing NEM-sdk and nem-api packages
+* player identification with blockchain technology
+* sponsored-play system
+  * instant Pay-Per-View advertising Payouts
+  * free play mode, can be used for Facebook & Microsoft Games platforms
+  * no user authentication needed, player uses a Sponsored Pre-Paid wallet.
+* pay-per-play system
+  * showcasing payment processor ease of implementation with NEM-sdk/nem-api
+  * showcasing **secure** payment processing with the NEM blockchain.
+  * showcasing **secure** multi signature transaction handling
+  * showcasing authentication with blockchain technology - *not so secure*
+  * paying players get rewarded with multiple achievements in the game:
+    * noob, afficionado, ghostbuster: linked to frequency of visit
+    * multikill, rampage: linked to in-game ghost killing skills
+    * player, beta-player: linked to player type
+* high score blockchain saving system to illustrate a different entry point in terms of Mosaics.
+
+### Cost Estimation
+
+Now here is a roughly evaluated cost estimation:
+
+* sending game credits to pay-per-play players : **cost 21 XEM**
+* sending achievements to players: **cost** min. **14 XEM**, max. **16 XEM** per player with new achievement(s). (achievements will be awarded carefully to not payout too much!)
+* saving a High Score to the blockchain: **14 XEM**
+
+Following can be calculated from the amounts above:
+```
+With 1 pay-per-play Player per day :
+    - income of 50 XEM
+    - minimum cost of 16 XEM per day
+    - maximum cost of 34 XEM per day
+
+With 10 pay-per-play Players per day:
+    - income of 500 XEM
+    - minimum cost of 160 XEM per day
+    - maximum cost of 340 XEM per day
+
+With 100 pay-per-play Players per day:
+    - income of 5000 XEM
+    - minimum cost of 1600 XEM per day
+    - maximum cost of 3400 XEM per day
+```
+
+### Conclusion
+
+I would love to be able to decrease the entry price to 16 XEM for pay-per-play users. Transactions sent from PacNEM are **good for the community** in that they are multisignature mosaic transfer transactions (mainly), this makes up for a minimum of 8 XEM fee per transaction that the game sends to Players. I believe this has great appeal for harvesters in some way :)
+
+I am also realistic, and don't want to turn this into an ICO... I will finish up a Sponsor registration page in the upcoming week and keep you updated about it, but **you will be able to pay as much as you want** - 100 XEM is already a very good start and as I said before, all funds are used in the PacNEM game itself. I would like to limit this ICO effect by making personal contact with everyone who wishes to be a Sponsor. I don't bite, and I just want a little help getting that thing sustainable as I'm not an expert with financial plans.
+
+Also, I do not have a lot of money, and can't really sponsor that game by myself.. I want it to be a good showcase of nem blockchain possibilities (Multisig security for the game platform, multiple Mosaics use case in-game). I believe now is the time that you help me get some Sponsors :)
+
+Hope this reach out turns out well, and can't wait to have a feedback.
+
+NEMagically,
+Greg.

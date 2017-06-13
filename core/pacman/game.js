@@ -107,6 +107,9 @@ var PACMAN_STARTS = [
 	],
 ];
 
+var GAME_OVER_TEXT_X = 8;
+var GAME_OVER_TEXT_Y = 23;
+
 /*
  * Possible starting points for ghosts
  * Computed from GRID
@@ -178,8 +181,10 @@ var Game = function(io, sids, room) {
 		}
 		if (one_is_alive) {
 			// Prepare the game configuration
-			// Map
+
 			if (num_cheeses_ == 0 || num_cheeses_ == -1) {
+				// Next Round: reset map
+
 				num_rounds_++;
 				num_cheeses_ = 0;
 				map_ = new Array();
@@ -223,18 +228,22 @@ var Game = function(io, sids, room) {
 
 			for (var i = 0 ; i != sids_.length ; i++) {
 				io.sockets.to(sids_[i]).emit('ready', JSON.stringify({
-						'constants':
-						{
-							'FRAMES_PER_CELL': FRAMES_PER_CELL,
-							'FPS': FPS,
-							'CHEESE_EFFECT_FRAMES': CHEESE_EFFECT_FRAMES,
-						},
-						'map': map_,
+					'constants':
+					{
+						'FRAMES_PER_CELL': FRAMES_PER_CELL,
+						'FPS': FPS,
+						'CHEESE_EFFECT_FRAMES': CHEESE_EFFECT_FRAMES,
+					},
+					'map': map_
 				}));
 			}
-		} else {
+		}
+		else {
 			for (var i = 0 ; i != sids_.length ; i++) {
-				io.sockets.to(sids_[i]).emit('end_of_game');
+				io.sockets.to(sids_[i]).emit('end_of_game', JSON.stringify({
+					"pacmans": pacmans_,
+					"map": map_
+				}));
 			}
 			room_.notifyEnd();
 		}
@@ -464,13 +473,21 @@ var Game = function(io, sids, room) {
 		clearTimeout(last_timeout_);
 		last_timeout_ = undefined;
 		for (var i = 0 ; i != sids_.length ; i++) {
-			io.sockets.to(sids_[i]).emit('end_of_game');
+			io.sockets.to(sids_[i]).emit('end_of_game', JSON.stringify({
+				"pacmans": pacmans_,
+				"map": map_
+			}));
 		}
 	};
 
 	{
-		for (var i=0 ; i!=sids_.length ; i++) {
-			pacmans_.push(new PacMan());
+		for (var i=0 ; i < sids_.length ; i++) {
+			var sid = sids[i];
+			var man = new PacMan();
+			man.setAddress(room_.getAddress(sid));
+			man.setUsername(room_.getUsername(sid));
+
+			pacmans_.push(man);
 		}
 		for (var i=0 ; i!=NUM_GHOSTS ; i++) {
 			ghosts_.push(new Ghost());
