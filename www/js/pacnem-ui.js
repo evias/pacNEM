@@ -222,6 +222,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     {
         var self = this;
         var data = JSON.parse(rawdata);
+        console.log(data["pacmans"][0]);
 
         if ($(".pacnem-summary-modal").length) {
             // need refresh of summary modal.
@@ -604,7 +605,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     ui.displaySponsorAdvertisement(function(ui)
                     {
                         // and finally, emit the session creation
-                        socket_.emit('change_username', details);
+                        socket_.emit('change_username', JSON.stringify(details));
                         socket_.emit("notify");
                     });
                 });
@@ -614,7 +615,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         // we can safely emit the session creation, this user is
         // either a pay-per-play or share-per-play (not yet implemented)
-        socket_.emit('change_username', details);
+        socket_.emit('change_username', JSON.stringify(details));
         socket_.emit("notify");
 
         // return whether an invoice is needed or not

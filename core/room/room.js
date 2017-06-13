@@ -24,7 +24,8 @@ var assert = require('assert');
 var pc = require('../pacman/configuration.js');
 var Game = require('../pacman/game.js').Game;
 
-var Room = function(io, manager) {
+var Room = function(io, manager, withMembers) 
+{
 	assert(io);
 	assert(manager);
 
@@ -145,13 +146,14 @@ var Room = function(io, manager) {
 	// @return true if the player was successfully added
 	this.join = function(sid, details) {
 		assert.equal(status_, Room.STATUS_JOIN);
-		assert.equal(members_.indexOf(sid), -1);
 
 		if (self.isFull()) {
 			return false;
 		}
 
-		members_.push(sid);
+		if (members_.indexOf(sid) === -1)
+			members_.push(sid);
+
 		usernames_[sid] = details.username;
 		addresses_[sid] = details.address;
 
@@ -213,6 +215,20 @@ var Room = function(io, manager) {
 			game_.setPacmanDirection(arrow, id);
 		}
 	};
+
+	{
+		if (typeof withMembers != 'undefined') {
+			var sids = Object.getOwnPropertyNames(withMembers);
+			for (var i in sids) {
+				var sid = sids[i];
+				var details = withMembers[sid];
+
+				members_.push(sid);
+				usernames_[sid] = details.username;
+				addresses_[sid] = details.address;
+			}
+		}
+	}
 };
 
 module.exports.Room = Room;

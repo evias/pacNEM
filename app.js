@@ -793,7 +793,9 @@ io.sockets.on('connection', function(socket)
 	// Rename the user
 	socket.on('change_username', function(details) {
 		logger.info(__smartfilename, __line, '[' + socket.id + '] change_username(' + details + ')');
-		room_manager.changeUsername(socket.id, details);
+
+		var parsed = JSON.parse(details);
+		room_manager.changeUsername(socket.id, parsed);
 	});
 
 	// Join an existing room
@@ -809,7 +811,7 @@ io.sockets.on('connection', function(socket)
 		logger.info(__smartfilename, __line, '[' + socket.id + '] create_room(' + details + ')');
 
 		var parsed = JSON.parse(details);
-		room_manager.createRoom(socket.id, details);
+		room_manager.createRoom(socket.id, parsed);
 	});
 
 	// Leave a room
@@ -829,6 +831,7 @@ io.sockets.on('connection', function(socket)
 	socket.on('run_game', function() {
 		logger.info(__smartfilename, __line, '[' + socket.id + '] run_game()');
 		var room = room_manager.getRoom(socket.id);
+
 		if (room) {
 			room.runGame();
 		}

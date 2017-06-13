@@ -112,8 +112,11 @@ var RoomManager = function(io) {
 	this.createRoom = function(sid, details) {
 		assert(map_member_roomid_.hasOwnProperty(sid));
 
+		var members = {};
+		members[sid] = details;
+
 		var room_id = last_room_id_++;
-		var room = new Room(io, self);
+		var room = new Room(io, self, members);
 		var hasJoined = room.join(sid, details);
 		assert(hasJoined);
 	   	map_member_roomid_[sid] = room_id;
