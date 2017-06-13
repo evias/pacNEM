@@ -3,24 +3,26 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">
-                    <div><img src="/img/pacnem_logo.png" alt="PacNEM" title="PacNEM"/></div>
-                </h4>
+                <div class="modal-title">
+                    <blockquote class="row bq-minimal-centered text-left">
+                        <div class="col-md-2">
+                            <img src="/img/yoda_white.png" style="height: 52px;" alt="Master Yoda" title="Master Yoda" />
+                        </div>
+                        <div class="col-md-10">
+                            <div>{{t yodaQuote}} – Yoda</div>
+                        </div>
+                    </blockquote>
+                </div>
             </div>
             <div class="modal-body">
 
                 {{#if isWinner}}
-                    <h1 class="text-success game-end-title winner" style="text-transform: uppercase;">{{t "summary.you_won"}}</h1>
+                    <div class="summary-bg-wrapper">
+                        <h1 class="text-success game-end-title winner" 
+                            style="text-transform: uppercase;">{{t "summary.you_won"}}</h1>
+                    </div>
                     <p class="text-success text-justify">
                         <span>{{t "summary.congratulations"}}<br />
-                        <blockquote class="row bq-minimal-centered text-left">
-                            <div class="col-md-2">
-                                <img src="/img/yoda_white.png" style="height: 52px;" alt="Master Yoda" title="Master Yoda" />
-                            </div>
-                            <div class="col-md-10">
-                                <div>{{t yodaQuote}} – Yoda</div>
-                            </div>
-                        </blockquote>
                     </p>
                 {{/if}}
 
@@ -28,14 +30,6 @@
                     <h1 class="text-danger game-end-title loser" style="text-transform: uppercase;">{{t "summary.loser"}}</h1>
                     <p class="text-danger text-justify">
                         <span>{{t "summary.maybe_next_time"}}</span><br/>
-                        <blockquote class="row bq-minimal-centered text-left">
-                            <div class="col-md-2">
-                                <img src="/img/yoda_white.png" style="height: 52px;" alt="Master Yoda" title="Master Yoda" />
-                            </div>
-                            <div class="col-md-10">
-                                <div>{{t yodaQuote}} – Yoda</div>
-                            </div>
-                        </blockquote>
                     </p>
                 {{/if}}
                 <hr />

@@ -271,3 +271,8 @@ blockquote.bq-minimal-centered {
 
 .game-end-title.winner {text-shadow: 3px 3px 0px #4fe15b;}
 .game-end-title.loser {text-shadow: 3px 3px 0px #f7a800;}
+
+.summary-bg-wrapper {
+    background: url(/img/pacnem_placeholder_white-small.png) no-repeat 0;
+    height: 270px;
+}
