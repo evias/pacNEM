@@ -66,7 +66,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         socket_.on('end_of_game', function(rawdata) {
             ctrl_.serverEndOfGame(rawdata);
-
             self.displayGameSummary(rawdata);
         });
 
@@ -218,6 +217,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         return this;
     };
 
+    /**
+     * Display a modal box containing data about the
+     * finished game. `rawdata` must contain a 
+     * `pacmans` with `score` fields.
+     * 
+     * @param  {string} rawdata
+     * @return void
+     */
     this.displayGameSummary = function(rawdata)
     {
         var self = this;

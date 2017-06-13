@@ -118,6 +118,7 @@ app.configure(function() {
 // configure blockchain layer
 var blockchain = require('./core/blockchain/service.js');
 var chainDataLayer = new blockchain.service(io, nem, logger);
+chainDataLayer.fetchBlockchainHallOfFame();
 
 // configure database layer
 var models = require('./core/db/models.js');
@@ -835,6 +836,16 @@ io.sockets.on('connection', function(socket)
 		if (room) {
 			room.runGame();
 		}
+	});
+
+	socket.on("end_of_game", function(rawdata) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] end_of_game(' + rawdata + ')');
+
+		var details = JSON.parse(rawdata);
+		if (typeof details.pacmans == 'undefined' || ! details.pacmans.length)
+			return false;
+
+		chainDataLayer.processGameScores(details.pacmans);
 	});
 
 	// Cancel game

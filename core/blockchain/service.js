@@ -34,6 +34,14 @@ var pacNEM_mosaics = {
     "godlike-101010": true
 };
 
+// score compare function for fast sorting
+var scrcmp = function(a, b) {
+    if (a.score < b.score) return -1;
+    if (a.score > b.score) return 1;
+
+    return 0;
+};
+
 /**
  * class service provides a business layer for
  * blockchain data queries used in the pacNEM game.
@@ -71,6 +79,7 @@ var service = function(io, nemSDK, logger)
     var pacNEM_NS_ = (process.env["APP_NAMESPACE"] || config.get("pacnem.namespace"));
 
     var gameCreditsHistory_ = {};
+    var gameHallOfFame_ = {"ranking": [], "history": {}, "trxIdList": {}};
 
     /**
      * Get the NEM Namespace used for this application.
@@ -486,10 +495,137 @@ var service = function(io, nemSDK, logger)
         return trxHash;
     };
 
+    /**
+     * Read blockchain transaction ID from TransactionMetaDataPair
+     *
+     * @param  [TransactionMetaDataPair]{@link http://bob.nem.ninja/docs/#transactionMetaDataPair} transactionMetaDataPair
+     * @return {integer}
+     */
     this.getTransactionId = function(transactionMetaDataPair)
     {
         return transactionMetaDataPair.meta.id;
-    }
+    };
+
+    this.fetchBlockchainHallOfFame = function(lastTrxRead = null, callback = null)
+    {
+        var self = this;
+        var cheesePayer = self.getPublicWallet();
+
+        // read outgoing transactions of the account and check for the given mosaic to build a
+        // blockchain-trust mosaic history.
+
+        nem_.com.requests.account.outgoingTransactions(node_, cheesePayer, null, lastTrxRead)
+            .then(function(res)
+        {
+            //logger_.info("[DEBUG]", "[PACNEM HOF]", "Result from NIS API account.outgoingTransactions: " + JSON.stringify(res));
+
+            var transactions = res;
+
+            lastTrxRead = self.saveHallOfFameEntries(transactions);
+
+            if (lastTrxRead !== false && 25 == transactions.length) {
+                // recursion..
+                // there may be more transactions in the past (25 transactions
+                // is the limit that the API returns). If we specify a hash or ID it
+                // will look for transactions BEFORE this hash or ID (25 before ID..).
+                // We pass transactions IDs because all NEM nodes support those, hashes are
+                // only supported by a subset of the NEM nodes.
+                self.fetchBlockchainHallOfFame(lastTrxRead, callback);
+            }
+
+            if (callback && (lastTrxRead === false || transactions.length < 25)) {
+                // done.
+
+                // sort the history into the ranking now to have a hall of fame.
+                self.buildHallOfFameRanking();
+                callback(gameHallOfFame_);
+            }
+
+        }, function(err) {
+            // NO Transactions available / wrong Network for address / Unresolved Promise Errors
+            logger_.info("[DEBUG]", "[ERROR]", "Error in NIS API account.outgoingTransactions: " + JSON.stringify(err));
+        });
+    };
+
+    this.saveHallOfFameEntries = function(transactions)
+    {
+        var self = this;
+        var cheeseMosaicSlug = pacNEM_NS_ + ":cheese";
+
+        var lastTrxRead = null;
+        var lastTrxHash = null;
+        for (var i = 0; i < transactions.length; i++) {
+            var content    = transactions[i].transaction;
+            var meta       = transactions[i].meta;
+
+            // save transaction id
+            lastTrxRead = self.getTransactionId(transactions[i]);
+            lastTrxHash = self.getTransactionHash(transactions[i]);
+
+            if (gameHallOfFame_.trxIdList.hasOwnProperty(lastTrxHash))
+                // stopping the loop, reading data we already know about.
+                return false;
+
+            gameHallOfFame_.trxIdList[lastTrxHash] = true;
+
+            if (content.type != nem_.model.transactionTypes.transfer
+                && content.type != nem_.model.transactionTypes.multisigTransaction)
+                // we are interested only in transfer transactions
+                // and multisig transactions because only those might
+                // contain the evias.pacnem:chese Mosaic
+                continue;
+
+            // get the searched for mosaic stake
+            var mosaicStake = self.extractMosaicFromTransactionData_(content, cheeseMosaicSlug);
+
+            if (mosaicStake === false)
+                continue;
+
+            // in the hall of fame, the amount of cheese will represent 
+            // the exact score of the user such as :
+            // `0.045678` represents a score of `45678`. The mosaic evias-tests.pacnem:cheese
+            // should have a divisibility of 6.
+
+            var recipient = mosaicStake.recipient;
+            if (! gameHallOfFame_.history.hasOwnProperty(recipient))
+                gameHallOfFame_.history[recipient] = [];
+
+            // score in human readable format
+            var score = mosaicStake.totalMosaic * Math.pow(10, 6);
+
+            gameHallOfFame_.history[recipient].push(
+                {"player": recipient, "score": score});
+        }
+
+        return lastTrxRead;
+    };
+
+    this.buildHallOfFameRanking = function()
+    {
+        var allScores = [];
+        var players = Object.getOwnPropertyNames(gameHallOfFame_.history);
+        for (var i = 0; i < players.length; i++) {
+            var pAddress = players[i];
+            var pHistory = gameHallOfFame_.history[pAddress];
+
+            for (var j = 0; j < pHistory.length; j++)
+                allScores.push(pHistory[j]);
+        }
+
+        if (allScores.length) {
+            allScores.sort(scrcmp).reverse();
+            gameHallOfFame_.ranking = allScores.length > 10 ? allScores.splice(10) : allScores;
+
+            logger_.info("[DEBUG]", "[PACNEM HOF]", "Ranking Built: " + JSON.stringify(gameHallOfFame_.ranking));
+        }
+
+        return allScores;
+    };
+
+    this.processGameScores = function(pacmans)
+    {
+
+    };
 
     /**
      * This will read `slugToExtract` Mosaic amounts from the given Transaction
@@ -504,7 +640,7 @@ var service = function(io, nemSDK, logger)
      * @param  {string} slugToExtract - Which mosaic ID to extract (i.e.: evias.pacnem:heart)
      * @return {object}
      */
-    this.extractMosaicFromTransactionData_ = function(trxContent, slugToExtract)
+    this.extractMosaicFromTransactionData_ = function(trxContent, slugToExtract, divisibility = 6)
     {
         if (! trxContent || ! slugToExtract || ! slugToExtract.length)
             return {totalMosaic: 0, recipient: false};
@@ -555,7 +691,9 @@ var service = function(io, nemSDK, logger)
             // transaction, the amount field is in fact a QUANTITY. Whereas the `mosaic.quantity`
             // field represents the AMOUNT of Mosaics in the described Attachment.
             var mosAmount   = parseInt(mosaic.quantity);
-            var mosMultiply = trxAmount > 0 ? parseInt(trxAmount / 1000000) : 1; // multiplier field stored in micro XEM in transactions!
+
+             // multiplier field stored in micro XEM in transactions!
+            var mosMultiply = trxAmount > 0 ? parseInt(trxAmount / Math.pow(10, divisibility)) : 1;
             var totalMosaic = mosMultiply * mosAmount;
 
             // found our mosaic in `trxContent`
