@@ -238,6 +238,13 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         // sort by descending score to have high score ranking
         data.pacmans.sort(scrcmp).reverse();
+        data.winnerName = data.pacmans[0].username;
+        data.isWinner   = self.getPlayerDetails().username == data.winnerName;
+        data.isLoser    = ! data.isWinner;
+
+        var rand = Math.floor(Math.random() * 5 + 1);
+        var key  = data.isWinner ? "winner" : "loser";
+        data.yodaQuote = "summary." + key + "_yoda_quote_" + rand;
 
         template_.render("summary-box", function(compileWith)
             {

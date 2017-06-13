@@ -120,5 +120,14 @@
         "updatedAt_label": "Dernière Modification",
         "hide_button": "Masquer",
         "empty_invoice_history": "Il n'y a pas d'Historiques pour votre Compte."
+    },
+    "summary": {
+        "title_game_summary": "Fin",
+        "button_close": "Retour au Lobby",
+        "the_winner_is": "Le Vainqueur est",
+        "label_score": "Score",
+        "label_username": "Nom",
+        "label_address": "XEM"
     }
+
 }

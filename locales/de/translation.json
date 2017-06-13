@@ -143,5 +143,13 @@
         "updatedAt_label": "Letzte Änderung",
         "hide_button": "Ausblenden",
         "empty_invoice_history": "Sie haben noch keine Bestellungen gemacht."
+    },
+    "summary": {
+        "title_game_summary": "Ende",
+        "button_close": "Zurück zur Lobby",
+        "the_winner_is": "Der Gewinner ist",
+        "label_score": "Punkte",
+        "label_username": "Name",
+        "label_address": "XEM"
     }
 }

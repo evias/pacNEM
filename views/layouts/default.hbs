@@ -78,6 +78,19 @@ Handlebars.registerHelper("counter", function (index)
 {
     return index + 1;
 });
+
+/**
+ * Handlebars truncateAddress() helper implementation for frontend
+ * templates - truncate a NEM address in following format:
+ *  TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU
+ *  will be truncated as:
+ *  TCTIMU-...-MPSU
+ */
+Handlebars.registerHelper("truncateAddress", function (address)
+{
+    var truncated = address.substring(0, 6) + "-...-" + address.substring(address.length - 4);
+    return truncated;
+});
         </script>
 
         <script src="/js/jquery-hbs-file-template.js"></script>

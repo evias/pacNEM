@@ -255,3 +255,19 @@ footer {
     margin: 10px;
     background-color: #e7edf2;
 }
+
+blockquote.bq-minimal-centered {
+    /*background: url(/img/blockquote.png) no-repeat 0 0;*/
+    width: 75%; 
+    margin: auto; 
+    border: 0px;
+    font-style: italic;
+}
+
+.game-end-title {
+    font-size: 52px;
+    margin-top: 0px;
+}
+
+.game-end-title.winner {text-shadow: 3px 3px 0px #4fe15b;}
+.game-end-title.loser {text-shadow: 3px 3px 0px #f7a800;}

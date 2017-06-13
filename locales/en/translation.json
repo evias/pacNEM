@@ -152,6 +152,24 @@
     },
     "summary": {
         "title_game_summary": "Game Over",
-        "button_close": "Back to Lounge"
+        "button_close": "Back to Lounge",
+        "the_winner_is": "The Winner is",
+        "label_score": "Score",
+        "label_username": "Name",
+        "label_address": "XEM",
+        "you_won": "YOU WON",
+        "loser": "LOSER",
+        "congratulations": "Congratulations! You have Won this Game Session. You can win Mosaics by Playing PacNEM! Win 5 Multiplayer Game Sessions in a day to win an exclusive Mosaic!",
+        "maybe_next_time": "You have lost this Game Session! Feel free to try again anytime soon! If you don't have any Credits anymore, you can Train in Sponsored Play mode!",
+        "winner_yoda_quote_1": "A Jedi uses the Force for knowledge and defense, never for attack.",
+        "winner_yoda_quote_2": "Already know you that which you need.",
+        "winner_yoda_quote_3": "Always two there are, no more, no less. A master and an apprentice.",
+        "winner_yoda_quote_4": "Always pass on what you have learned.",
+        "winner_yoda_quote_5": "Mind what you have learned. Save you it can.",
+        "loser_yoda_quote_1": "Strong is Vader. Mind what you have learned. Save you it can.",
+        "loser_yoda_quote_2": "You must unlearn what you have learned.",
+        "loser_yoda_quote_3": "You will be. You... will... be. ",
+        "loser_yoda_quote_4": "Fought well you have, my old Padawan ",
+        "loser_yoda_quote_5": "Much to learn, you still have. "
     }
 }

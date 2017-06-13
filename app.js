@@ -861,21 +861,22 @@ io.sockets.on('connection', function(socket)
 
 	// Update the direction of the player
 	socket.on('keydown', function(keycode) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] keydown(' + keycode + ')');
+		// [DEBUG] logger.info(__smartfilename, __line, '[' + socket.id + '] keydown(' + keycode + ')');
+
 		var room = room_manager.getRoom(socket.id);
 		if (! room) {
 			return;
 		}
 
-		if (keycode == 37) {
-			room.receiveKeyboard(socket.id, __room.LEFT);
-		} else if (keycode == 38) {
-			room.receiveKeyboard(socket.id, __room.UP);
-		} else if (keycode == 39) {
-			room.receiveKeyboard(socket.id, __room.RIGHT);
-		} else if (keycode == 40) {
-			room.receiveKeyboard(socket.id, __room.DOWN);
-		}
+		var keyMap = {
+			37: __room.LEFT,
+			38: __room.UP,
+			39: __room.RIGHT,
+			40: __room.DOWN
+		};
+
+		if (keyMap.hasOwnProperty(keycode))
+			room.receiveKeyboard(socket.id, keyMap[keycode]);
 	});
 
 	// notify about any in-room changes
