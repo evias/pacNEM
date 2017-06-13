@@ -1,0 +1,85 @@
+
+<div class="modal fade pacnem-summary-modal" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    <div><img src="/img/pacnem_logo.png" alt="PacNEM" title="PacNEM"/></div>
+                </h4>
+            </div>
+            <div class="modal-body">
+
+                {{#if isWinner}}
+                    <h1 class="text-success game-end-title winner" style="text-transform: uppercase;">{{t "summary.you_won"}}</h1>
+                    <p class="text-success text-justify">
+                        <span>{{t "summary.congratulations"}}<br />
+                        <blockquote class="row bq-minimal-centered text-left">
+                            <div class="col-md-2">
+                                <img src="/img/yoda_white.png" style="height: 52px;" alt="Master Yoda" title="Master Yoda" />
+                            </div>
+                            <div class="col-md-10">
+                                <div>{{t yodaQuote}} – Yoda</div>
+                            </div>
+                        </blockquote>
+                    </p>
+                {{/if}}
+
+                {{#if isLoser}}
+                    <h1 class="text-danger game-end-title loser" style="text-transform: uppercase;">{{t "summary.loser"}}</h1>
+                    <p class="text-danger text-justify">
+                        <span>{{t "summary.maybe_next_time"}}</span><br/>
+                        <blockquote class="row bq-minimal-centered text-left">
+                            <div class="col-md-2">
+                                <img src="/img/yoda_white.png" style="height: 52px;" alt="Master Yoda" title="Master Yoda" />
+                            </div>
+                            <div class="col-md-10">
+                                <div>{{t yodaQuote}} – Yoda</div>
+                            </div>
+                        </blockquote>
+                    </p>
+                {{/if}}
+                <hr />
+
+                <table class="table table-striped">
+                    <thead>
+                        <th>#</th>
+                        <th>{{t "summary.label_score"}}</th>
+                        <th>{{t "summary.label_username"}}</th>
+                        <th>{{t "summary.label_address"}}</th>
+                    </thead>
+                    <tbody>
+                    {{#each pacmans}}
+                        <tr>
+                            <td>{{counter @index}}</td>
+
+                            <td>
+                                <span class="label label-success label-bigger">
+                                    <i class="glyphicon glyphicon-dashboard"></i>&nbsp;{{score}}
+                                </span>
+                            </td>
+
+                            <td>{{username}}</td>
+
+                            <td>
+                                <a class="label label-sm label-info"
+                                    target="_blank"
+                                    href="http://bob.nem.ninja:7890/account/get?address={{address}}">
+                                        <i class="glyphicon glyphicon-search"></i>&nbsp;
+                                        <span>{{truncateAddress address}}</span>
+                                </a>
+                            </td>
+                        </tr>
+                    {{/each}}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <div class="row text-center">
+                    <button class="btn btn-default" role="button" data-dismiss="modal">
+                        <span>{{t "summary.button_close"}}</span>&nbsp;
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

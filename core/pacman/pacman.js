@@ -32,7 +32,8 @@ var __conf = require('./configuration.js'),
  * PacMan
  */
 
-var PacMan = function() {
+var PacMan = function()
+{
 	var self = this;
 
 	var x_ = -1, y_ = -1;
@@ -44,6 +45,8 @@ var PacMan = function() {
 	var combo_ = 0;
 	var score_ = 0;
 	var killed_recently_ = 0;
+	var username_ = "";
+	var address_  = "";
 
 	this.restart = function(x, y, direction) {
 		x_ = x;
@@ -187,17 +190,40 @@ var PacMan = function() {
 		return increase;
 	};
 
-	this.toDictionary = function() {
+	this.setUsername = function(username)
+	{
+		username_ = username;
+	};
+
+	this.getUsername = function()
+	{
+		return username_;
+	};
+
+	this.setAddress = function(address)
+	{
+		address_ = address;
+	};
+
+	this.getAddress = function()
+	{
+		return address_;
+	};
+
+	this.toDictionary = function()
+	{
 		return {
-				'x': x_,
-				'y': y_,
-				'direction': direction_,
-				'combo': combo_,
-				'cheese_power': cheese_power_,
-				'cheese_effect': under_cheese_effect_,
-				'score': score_,
-				'killed_recently': killed_recently_,
-				'lifes': lifes_,
+			'x': x_,
+			'y': y_,
+			'direction': direction_,
+			'combo': combo_,
+			'cheese_power': cheese_power_,
+			'cheese_effect': under_cheese_effect_,
+			'score': score_,
+			'killed_recently': killed_recently_,
+			'lifes': lifes_,
+			'username': username_,
+			'address': address_
 		};
 	};
 };

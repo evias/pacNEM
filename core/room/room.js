@@ -24,7 +24,8 @@ var assert = require('assert');
 var pc = require('../pacman/configuration.js');
 var Game = require('../pacman/game.js').Game;
 
-var Room = function(io, manager) {
+var Room = function(io, manager, withMembers) 
+{
 	assert(io);
 	assert(manager);
 
@@ -41,7 +42,9 @@ var Room = function(io, manager) {
 	var manager_ = manager;
 
 	var status_ = Room.STATUS_JOIN;
-	var members_ = new Array();
+	var members_   = [];
+	var addresses_ = {};
+	var usernames_ = {};
 	var game_ = undefined;
 	var timeout_run_ = undefined;
 	var has_waited_ = 0;
@@ -50,14 +53,16 @@ var Room = function(io, manager) {
 	// @return dictionary representing the room
 	this.toDictionary = function() {
 		return {
-				'status': status_ == Room.STATUS_JOIN
-					? 'join'
-					: (status_ == Room.STATUS_WAIT
-						? 'wait'
-						: 'play'),
-				'wait': status_ == Room.STATUS_WAIT ? (Room.WAIT_TIME_MS-has_waited_)/1000 : 0,
-				'users': members_,
-				'is_full': self.isFull(),
+			'status': status_ == Room.STATUS_JOIN
+				? 'join'
+				: (status_ == Room.STATUS_WAIT
+					? 'wait'
+					: 'play'),
+			'wait': status_ == Room.STATUS_WAIT ? (Room.WAIT_TIME_MS-has_waited_)/1000 : 0,
+			'users': members_,
+			'addresses': addresses_,
+			'usernames': usernames_,
+			'is_full': self.isFull()
 		};
 	};
 
@@ -139,21 +144,25 @@ var Room = function(io, manager) {
 	// Add a player to the Room (if and only if the room is not already full)
 	// Throw an assert if the player if already in the room
 	// @return true if the player was successfully added
-	this.join = function(sid) {
+	this.join = function(sid, details) {
 		assert.equal(status_, Room.STATUS_JOIN);
-		assert.equal(members_.indexOf(sid), -1);
 
 		if (self.isFull()) {
 			return false;
 		}
 
-		members_.push(sid);
+		if (members_.indexOf(sid) === -1)
+			members_.push(sid);
+
+		usernames_[sid] = details.username;
+		addresses_[sid] = details.address;
+
 		return true;
 	};
 
 	// Remove a player from the room
 	this.leave = function(sid) {
-		var id = members_.indexOf(sid);
+		var id  = members_.indexOf(sid);
 		assert.notEqual(id, -1);
 
 		if (status_ == Room.STATUS_WAIT) {
@@ -167,6 +176,22 @@ var Room = function(io, manager) {
 			manager.notifyChanges();
 		}
 		members_.splice(id, 1);
+		delete addresses_[sid];
+		delete usernames_[sid];
+	};
+
+	this.getAddress = function(sid)
+	{
+		assert(addresses_.hasOwnProperty(sid));
+
+		return addresses_[sid];
+	};
+
+	this.getUsername = function(sid)
+	{
+		assert(usernames_.hasOwnProperty(sid));
+
+		return usernames_[sid];
 	};
 
 	// Notification to re-open the room in join mode
@@ -190,6 +215,20 @@ var Room = function(io, manager) {
 			game_.setPacmanDirection(arrow, id);
 		}
 	};
+
+	{
+		if (typeof withMembers != 'undefined') {
+			var sids = Object.getOwnPropertyNames(withMembers);
+			for (var i in sids) {
+				var sid = sids[i];
+				var details = withMembers[sid];
+
+				members_.push(sid);
+				usernames_[sid] = details.username;
+				addresses_[sid] = details.address;
+			}
+		}
+	}
 };
 
 module.exports.Room = Room;

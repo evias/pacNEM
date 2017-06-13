@@ -791,21 +791,27 @@ io.sockets.on('connection', function(socket)
 	});
 
 	// Rename the user
-	socket.on('change_username', function(username) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] change_username(' + username + ')');
-		room_manager.changeUsername(socket.id, username);
+	socket.on('change_username', function(details) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] change_username(' + details + ')');
+
+		var parsed = JSON.parse(details);
+		room_manager.changeUsername(socket.id, parsed);
 	});
 
 	// Join an existing room
-	socket.on('join_room', function(room_id) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] join_room(' + room_id + ')');
-		room_manager.joinRoom(socket.id, room_id);
+	socket.on('join_room', function(json) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] join_room(' + json + ')');
+
+		var parsed = JSON.parse(json);
+		room_manager.joinRoom(socket.id, parsed.room_id, parsed.details);
 	});
 
 	// Create a new room
-	socket.on('create_room', function() {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] create_room()');
-		room_manager.createRoom(socket.id);
+	socket.on('create_room', function(details) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] create_room(' + details + ')');
+
+		var parsed = JSON.parse(details);
+		room_manager.createRoom(socket.id, parsed);
 	});
 
 	// Leave a room
@@ -825,6 +831,7 @@ io.sockets.on('connection', function(socket)
 	socket.on('run_game', function() {
 		logger.info(__smartfilename, __line, '[' + socket.id + '] run_game()');
 		var room = room_manager.getRoom(socket.id);
+
 		if (room) {
 			room.runGame();
 		}
@@ -854,21 +861,22 @@ io.sockets.on('connection', function(socket)
 
 	// Update the direction of the player
 	socket.on('keydown', function(keycode) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] keydown(' + keycode + ')');
+		// [DEBUG] logger.info(__smartfilename, __line, '[' + socket.id + '] keydown(' + keycode + ')');
+
 		var room = room_manager.getRoom(socket.id);
 		if (! room) {
 			return;
 		}
 
-		if (keycode == 37) {
-			room.receiveKeyboard(socket.id, __room.LEFT);
-		} else if (keycode == 38) {
-			room.receiveKeyboard(socket.id, __room.UP);
-		} else if (keycode == 39) {
-			room.receiveKeyboard(socket.id, __room.RIGHT);
-		} else if (keycode == 40) {
-			room.receiveKeyboard(socket.id, __room.DOWN);
-		}
+		var keyMap = {
+			37: __room.LEFT,
+			38: __room.UP,
+			39: __room.RIGHT,
+			40: __room.DOWN
+		};
+
+		if (keyMap.hasOwnProperty(keycode))
+			room.receiveKeyboard(socket.id, keyMap[keycode]);
 	});
 
 	// notify about any in-room changes

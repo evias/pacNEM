@@ -158,7 +158,6 @@ var GameController = function(config, socket, nem, chainId)
         TransitionHelper(function() {
             socket_.emit('start');
         });
-
         return this;
     };
 
@@ -197,9 +196,17 @@ var GameController = function(config, socket, nem, chainId)
         for (var i = 0 ; i != data['pacmans'].length ; i++) {
             var pacman = data['pacmans'][i];
             drawPacMan(canvas, ctx, frame_, pacman, data['pacmans'].length == 1 ? "#777700" : PACMAN_COLORS[i %PACMAN_COLORS.length]);
-            $($items[i]).find(".pc-score").text(pacman["score"]);
-            $($items[i]).find(".pc-lifes").text(pacman["lifes"]);
-            $($items[i]).find(".pc-combo").text("x" + (pacman["combo"] +1));
+
+            if (typeof pacman["score"] == "undefined" || typeof pacman["lifes"] == "undefined")
+                continue; // do not update with empty values
+
+            var score = pacman["score"] ? pacman["score"] : 0;
+            var lifes = pacman["lifes"] < 0 ? 0 : pacman["lifes"];
+            var combo = pacman["combo"] ? pacman["combo"]+1 : 1;
+
+            $($items[i]).find(".pc-score").text(score);
+            $($items[i]).find(".pc-lifes").text(lifes);
+            $($items[i]).find(".pc-combo").text("x" + combo);
         }
         for (var i = 0 ; i != data['ghosts'].length ; i++) {
             drawGhost(canvas, ctx, frame_, data['ghosts'][i], GHOSTS_COLORS[i %GHOSTS_COLORS.length]);
@@ -219,8 +226,10 @@ var GameController = function(config, socket, nem, chainId)
         return this;
     };
 
-    this.serverEndOfGame = function()
+    this.serverEndOfGame = function(rawdata)
     {
+        var data = JSON.parse(rawdata);
+
         ongoing_game_ = false;
         return this;
     };

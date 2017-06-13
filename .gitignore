@@ -30,5 +30,9 @@ jspm_packages
 node_modules
 .coveralls.yml
 
+# Visual Studio Code settings ignore
+.vscode/
+
 # PacNEM specific ignore rules
 config/
+
