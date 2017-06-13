@@ -239,9 +239,14 @@ var Game = function(io, sids, room) {
 			}
 		}
 		else {
+
+			var playersData = [];
+			for (var p in pacmans_)
+				playersData.push(pacmans_[p].toDictionary());
+
 			for (var i = 0 ; i != sids_.length ; i++) {
 				io.sockets.to(sids_[i]).emit('end_of_game', JSON.stringify({
-					"pacmans": pacmans_,
+					"pacmans": playersData,
 					"map": map_
 				}));
 			}
@@ -472,9 +477,14 @@ var Game = function(io, sids, room) {
 	this.quit = function() {
 		clearTimeout(last_timeout_);
 		last_timeout_ = undefined;
+
+		var playersData = [];
+		for (var p in pacmans_)
+			playersData.push(pacmans_[p].toDictionary());
+
 		for (var i = 0 ; i != sids_.length ; i++) {
 			io.sockets.to(sids_[i]).emit('end_of_game', JSON.stringify({
-				"pacmans": pacmans_,
+				"pacmans": playersData,
 				"map": map_
 			}));
 		}

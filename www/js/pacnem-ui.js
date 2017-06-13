@@ -222,7 +222,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     {
         var self = this;
         var data = JSON.parse(rawdata);
-        console.log(data["pacmans"][0]);
 
         if ($(".pacnem-summary-modal").length) {
             // need refresh of summary modal.
@@ -237,8 +236,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             return 0;
         };
 
-        // sort by score comparison
-        data.pacmans.sort(scrcmp);
+        // sort by descending score to have high score ranking
+        data.pacmans.sort(scrcmp).reverse();
 
         template_.render("summary-box", function(compileWith)
             {
