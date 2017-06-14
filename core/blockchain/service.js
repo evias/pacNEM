@@ -18,20 +18,31 @@
 
 (function() {
 
-var config = require("config");
+var config = require("config"),
+    CryptoJS = require("crypto-js");
 
+/**
+ * Configuration of PacNEM Mosaics, the following object will
+ * describe all mosaics used in the game - being Game Credits 
+ * Mosaics, Scores Mosaics and Achievements Mosaics.
+ */
 var pacNEM_mosaics = {
-    "heart": true,
-    "beta-player": true,
-    "player": true,
-    "nember": true,
-    "n00b": true,
-    "afficionado": true,
-    "great-supporter": true,
-    "multikill": true,
-    "rampage": true,
-    "ghostbuster": true,
-    "godlike-101010": true
+    "credits": {"heart": true},
+    "scores": {"cheese": true},
+    "rewards": {
+        "purchases": {"beta-player": true, "player": true},
+        "return_x2": {"n00b": true},
+        "return_x5": {"nember": true},
+        "return_x10": {"afficionado": true},
+        "return_x100": {"great-supporter": true},
+        "high_score": {"hall-of-famer": true, "all-time-best-player": true}
+    },
+    "achievements": {
+        "combo_x3": {"multikill": {"minCombo": 3}},
+        "combo_x5": {"rampage": {"minCombo": 5}},
+        "combo_x7": {"ghostbuster": {"minCombo": 7}},
+        "combo_x10": {"godlike-101010": {"minCombo": 10}}
+    }
 };
 
 // score compare function for fast sorting
@@ -79,7 +90,6 @@ var service = function(io, nemSDK, logger)
     var pacNEM_NS_ = (process.env["APP_NAMESPACE"] || config.get("pacnem.namespace"));
 
     var gameCreditsHistory_ = {};
-    var gameHallOfFame_ = {"ranking": [], "history": {}, "trxIdList": {}};
 
     /**
      * Get the NEM Namespace used for this application.
@@ -96,7 +106,7 @@ var service = function(io, nemSDK, logger)
      *
      * Must not be multisig, could be simple wallet.
      *
-     * @return string   The namespace + subnamespace(s) joined with a dot (.).
+     * @return string
      */
     this.getVendorWallet = function()
     {
@@ -110,11 +120,26 @@ var service = function(io, nemSDK, logger)
      * In case the vendor wallet is not a multi signature account,
      * the vendor and cosignatory wallet will be the same.
      *
-     * @return {[type]} [description]
+     * @return {string}
      */
     this.getPublicWallet = function()
     {
         return pacNEM_;
+    };
+
+    this.getSDK = function()
+    {
+        return nem_;
+    };
+
+    this.getEndpoint = function()
+    {
+        return node_;
+    };
+
+    this.getGameMosaicsConfiguration = function()
+    {
+        return pacNEM_mosaics;
     };
 
     /**
@@ -128,11 +153,26 @@ var service = function(io, nemSDK, logger)
      * Only Co-Signatory NEMBots are private, the Payment Processor Bot
      * can publish read operations to track current invoices, etc.
      *
-     * @return {[type]} [description]
+     * @return {string}
      */
-    this.getSecretKey = function()
+    this.getPublicWalletSecretKey = function()
     {
         return process.env["APP_SECRET"] || config.get("pacnem.applicationSecret");
+    };
+
+    /**
+     * This returns the `pacnem.secretKey` option value.
+     * 
+     * This key can be changed to make the application act
+     * privately on the blockchain
+     * 
+     * XXX PaymentProcessor should use this if enabled, too.
+     * 
+     * @return {string}
+     */
+    this.getEncryptionSecretKey = function()
+    {
+        return config.get("pacnem.secretKey");
     };
 
     /**
@@ -183,7 +223,7 @@ var service = function(io, nemSDK, logger)
     this.fetchHeartsByGamer = function(gamer)
     {
         var self = this;
-        var heartsMosaicSlug = pacNEM_NS_ + ":heart";
+        var heartsMosaicSlug = pacNEM_NS_ + ":" + Object.getOwnPropertyNames(pacNEM_mosaics.credits)[0];
 
         // read Mosaics owned by the given address's XEM wallet
         nem_.com.requests.account.mosaics(node_, gamer.getAddress()).then(function(res)
@@ -378,9 +418,13 @@ var service = function(io, nemSDK, logger)
     {
         var gamerXEM  = paymentChannel.getPayer();
         var countHearts = paymentChannel.countHearts;
-        var privStore = nem_.model.objects.create("common")("", this.getSecretKey());
+        var privStore = nem_.model.objects.create("common")("", this.getPublicWalletSecretKey());
         var mosaicDefPair = nem_.model.objects.get("mosaicDefinitionMetaDataPair");
         var hasBetaMosaic = config.get("pacnem.isBeta");
+
+        var heartsMosaicName  = Object.getOwnPropertyNames(pacNEM_mosaics.credits)[0];
+        var bPlayerMosaicName = Object.getOwnPropertyNames(pacNEM_mosaics.rewards.purchases)[0];
+        var playerMosaicName  = Object.getOwnPropertyNames(pacNEM_mosaics.rewards.purchases)[1];
 
         //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]",
         //DEBUG            "Now sending " + paymentChannel.countHearts + " hearts for invoice " + paymentChannel.number
@@ -392,15 +436,15 @@ var service = function(io, nemSDK, logger)
         transferTransaction.isMultisig = true;
         transferTransaction.multisigAccount = {publicKey: config.get("pacnem.businessPublic")};
 
-        var mosaicAttachHearts = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "heart", countHearts);
-        var mosaicAttachPlayer  = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "player", 1);
-        var mosaicAttachBPlayer = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "beta-player", 1);
+        var mosaicAttachHearts = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, heartsMosaicName, countHearts);
+        var mosaicAttachPlayer  = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, playerMosaicName, 1);
+        var mosaicAttachBPlayer = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, bPlayerMosaicName, 1);
 
         var heartsSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachHearts.mosaicId);
         var playerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachPlayer.mosaicId);
         var bPlayerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachBPlayer.mosaicId);
 
-        logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Using Mosaics: " + heartsSlug + ", " + playerSlug + ", " + bPlayerSlug);
+        //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Using Mosaics: " + heartsSlug + ", " + playerSlug + ", " + bPlayerSlug);
 
         // always receive evias.pacnem:heart and evias.pacnem:player
         transferTransaction.mosaics.push(mosaicAttachHearts);
@@ -416,9 +460,9 @@ var service = function(io, nemSDK, logger)
         nem_.com.requests.namespace
             .mosaicDefinitions(node_, pacNEM_NS_).then(
         function(res) {
-            var heartsDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["heart"]);
-            var playerDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["player"]);
-            var bPlayerDef = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["beta-player"]);
+            var heartsDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, [heartsMosaicName]);
+            var playerDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, [playerMosaicName]);
+            var bPlayerDef = nem_.utils.helpers.searchMosaicDefinitionArray(res, [bPlayerMosaicName]);
 
             if (undefined === heartsDef[heartsSlug] || undefined === playerDef[playerSlug] || undefined === bPlayerDef[bPlayerSlug])
                 return logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition for " + heartsSlug + " - Obligatory for the game, Please fix!");
@@ -507,159 +551,34 @@ var service = function(io, nemSDK, logger)
     };
 
     /**
-     * This method will recursively read transactions from the blockchain.
-     * 
-     * NIS endpoints only allow up to 25 transactions in one request, so we
-     * need a recursive call to check for additional transactions.
-     * 
-     * @param {integer} lastTrxRead     Transaction ID
-     * @param {callable} callback 
-     * @return void
+     * Read blockchain transaction Message from TransactionMetaDataPair
+     *
+     * @param  [TransactionMetaDataPair]{@link http://bob.nem.ninja/docs/#transactionMetaDataPair} transactionMetaDataPair
+     * @return {string}
      */
-    this.fetchBlockchainHallOfFame = function(lastTrxRead = null, callback = null)
+    this.getTransactionMessage = function(transactionMetaDataPair, doDecrypt = false)
     {
-        var self = this;
-        var cheesePayer = self.getPublicWallet();
+        var meta    = transactionMetaDataPair.meta;
+        var content = transactionMetaDataPair.transaction;
 
-        // read outgoing transactions of the account and check for the given mosaic to build a
-        // blockchain-trust mosaic history.
-
-        nem_.com.requests.account.outgoingTransactions(node_, cheesePayer, null, lastTrxRead)
-            .then(function(res)
-        {
-            //logger_.info("[DEBUG]", "[PACNEM HOF]", "Result from NIS API account.outgoingTransactions: " + JSON.stringify(res));
-
-            var transactions = res;
-
-            lastTrxRead = self.processHallOfFameTransactions(transactions);
-
-            if (lastTrxRead !== false && 25 == transactions.length) {
-                // recursion..
-                // there may be more transactions in the past (25 transactions
-                // is the limit that the API returns). If we specify a hash or ID it
-                // will look for transactions BEFORE this hash or ID (25 before ID..).
-                // We pass transactions IDs because all NEM nodes support those, hashes are
-                // only supported by a subset of the NEM nodes.
-                self.fetchBlockchainHallOfFame(lastTrxRead, callback);
-            }
-
-            if (lastTrxRead === false || transactions.length < 25) {
-                // done.
-                // sort the history into the ranking now to have a hall of fame.
-                self.buildHallOfFameRanking();
-
-                if (callback) 
-                    callback(gameHallOfFame_);
-            }
-
-        }, function(err) {
-            // NO Transactions available / wrong Network for address / Unresolved Promise Errors
-            logger_.info("[DEBUG]", "[ERROR]", "Error in NIS API account.outgoingTransactions: " + JSON.stringify(err));
-        });
-    };
-
-    /**
-     * Read some transactions from the blockchain and interpret the content.
-     * 
-     * Only multisignature and transfer transactions are read because only those
-     * can contain evias.pacnem:cheese mosaics.
-     * 
-     * @param {array} transactions
-     * @return integer  - Last transaction ID
-     */
-    this.processHallOfFameTransactions = function(transactions)
-    {
-        var self = this;
-        var cheeseMosaicSlug = pacNEM_NS_ + ":cheese";
-
-        var lastTrxRead = null;
-        var lastTrxHash = null;
-        for (var i = 0; i < transactions.length; i++) {
-            var content    = transactions[i].transaction;
-            var meta       = transactions[i].meta;
-
-            // save transaction id
-            lastTrxRead = self.getTransactionId(transactions[i]);
-            lastTrxHash = self.getTransactionHash(transactions[i]);
-
-            if (gameHallOfFame_.trxIdList.hasOwnProperty(lastTrxHash))
-                // stopping the loop, reading data we already know about.
-                return false;
-
-            gameHallOfFame_.trxIdList[lastTrxHash] = true;
-
-            if (content.type != nem_.model.transactionTypes.transfer
-                && content.type != nem_.model.transactionTypes.multisigTransaction)
-                // we are interested only in transfer transactions
-                // and multisig transactions because only those might
-                // contain the evias.pacnem:chese Mosaic
-                continue;
-
-            // get the searched for mosaic stake
-            var mosaicStake = self.extractMosaicFromTransactionData_(content, cheeseMosaicSlug);
-
-            if (mosaicStake === false)
-                continue;
-
-            // in the hall of fame, the amount of cheese will represent 
-            // the exact score of the user such as :
-            // `0.045678` represents a score of `45678`. The mosaic evias-tests.pacnem:cheese
-            // should have a divisibility of 6.
-
-            var recipient = mosaicStake.recipient;
-            if (recipient === false)
-                continue;
-
-            if (! gameHallOfFame_.history.hasOwnProperty(recipient))
-                gameHallOfFame_.history[recipient] = [];
-
-            // The total cheese mosaics in this transaction 
-            // represents the total score of the player.
-            var score = mosaicStake.totalMosaic;
-
-            //logger_.info("[DEBUG]", "[PACNEM HOF]", "Score Found: " + score + " for " + recipient);
-
-            gameHallOfFame_.history[recipient].push(
-                {"player": recipient, "score": score});
+        var trxRealData = content;
+        if (content.type == nem_.model.transactionTypes.multisigTransaction) {
+            // multisig, message will be in otherTrans
+            trxRealData = content.otherTrans;
         }
 
-        return lastTrxRead;
-    };
+        if (! trxRealData.message || ! trxRealData.message.payload)
+            // no message found in transaction
+            return "";
 
-    /**
-     * Create an up to date Hall Of Fame ranking from the read
-     * scores history.
-     * 
-     * This method is called internally after reading all data with
-     * `fetchBlockchainHallOfFame`. 
-     * 
-     * @return array
-     */
-    this.buildHallOfFameRanking = function()
-    {
-        var allScores = [];
-        var players = Object.getOwnPropertyNames(gameHallOfFame_.history);
-        for (var i = 0; i < players.length; i++) {
-            var pAddress = players[i];
-            var pHistory = gameHallOfFame_.history[pAddress];
+        // decode transaction message and job done
+        var payload = trxRealData.message.payload;
+        var plain   = chainDataLayer.nem().utils.convert.hex2a(payload);
 
-            for (var j = 0; j < pHistory.length; j++)
-                allScores.push(pHistory[j]);
-        }
+        if (doDecrypt === true)
+            plain = CryptoJS.AES.decrypt(plain, this.getEncryptionSecretKey());
 
-        if (allScores.length) {
-            allScores.sort(scrcmp).reverse();
-            gameHallOfFame_.ranking = allScores.length > 10 ? allScores.splice(10) : allScores;
-
-            //logger_.info("[DEBUG]", "[PACNEM HOF]", "Ranking built: " + JSON.stringify(gameHallOfFame_.ranking));
-        }
-
-        return allScores;
-    };
-
-    this.processGameScores = function(pacmans)
-    {
-
+        return plain;
     };
 
     /**

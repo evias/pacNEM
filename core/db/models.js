@@ -245,6 +245,15 @@ var pacnem = function(io, chainDataLayer)
         updatedAt: {type: Number, min: 0}
     });
 
+    this.NEMReward_ = new mongoose.Schema({
+        address: String,
+        encryptedMessage: String,
+        transactionHash: String,
+        rewards: Object,
+        createdAt: {type: Number, min: 0},
+        updatedAt: {type: Number, min: 0}
+    });
+
     // bind our Models classes
     this.NEMGameCredit = mongoose.model("NEMGameCredit", this.NEMGameCredit_);
     this.NEMGamer      = mongoose.model("NEMGamer", this.NEMGamer_);
@@ -252,6 +261,7 @@ var pacnem = function(io, chainDataLayer)
     this.NEMPaymentChannel = mongoose.model("NEMPaymentChannel", this.NEMPaymentChannel_);
     this.NEMBot = mongoose.model("NEMBot", this.NEMBot_);
     this.NEMAppsPayout = mongoose.model("NEMAppsPayout", this.pacNEMPayout_);
+    this.NEMReward = mongoose.model("NEMReward", this.NEMReward_);
 };
 
 module.exports.pacnem = pacnem;
@@ -261,5 +271,6 @@ module.exports.NEMSponsor    = pacnem.NEMSponsor;
 module.exports.NEMPaymentChannel = pacnem.NEMPaymentChannel;
 module.exports.NEMAppsPayout = pacnem.NEMAppsPayout;
 module.exports.NEMBot = pacnem.NEMBot;
+module.exports.NEMReward = pacnem.NEMReward;
 }());
 

@@ -118,7 +118,6 @@ app.configure(function() {
 // configure blockchain layer
 var blockchain = require('./core/blockchain/service.js');
 var chainDataLayer = new blockchain.service(io, nem, logger);
-chainDataLayer.fetchBlockchainHallOfFame();
 
 // configure database layer
 var models = require('./core/db/models.js');
@@ -128,6 +127,10 @@ var dataLayer = new models.pacnem(io, chainDataLayer);
 // processor NEMBot communication
 var PaymentsCore = require("./core/blockchain/payments-core.js").PaymentsCore;
 var PaymentsProtocol = new PaymentsCore(io, logger, chainDataLayer, dataLayer);
+
+var HallOfFameCore = require("./core/blockchain/hall-of-fame.js").HallOfFame;
+var HallOfFame = new HallOfFameCore(io, logger, chainDataLayer, dataLayer);
+HallOfFame.fetchBlockchainHallOfFame();
 
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
 var PacNEM_Crons  = new JobsScheduler(logger, chainDataLayer, dataLayer);
@@ -845,7 +848,7 @@ io.sockets.on('connection', function(socket)
 		if (typeof details.pacmans == 'undefined' || ! details.pacmans.length)
 			return false;
 
-		chainDataLayer.processGameScores(details.pacmans);
+		chainDataLayer.processGameScores(details.pacmans, dataLayer);
 	});
 
 	// Cancel game
