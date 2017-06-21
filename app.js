@@ -841,6 +841,8 @@ io.sockets.on('connection', function(socket)
 		}
 	});
 
+	// When the end_of_game event is pushed, potential hall of famer will
+	// be recognized and stored in the database.
 	socket.on("end_of_game", function(rawdata) {
 		logger.info(__smartfilename, __line, '[' + socket.id + '] end_of_game(' + rawdata + ')');
 
@@ -848,7 +850,7 @@ io.sockets.on('connection', function(socket)
 		if (typeof details.pacmans == 'undefined' || ! details.pacmans.length)
 			return false;
 
-		chainDataLayer.processGameScores(details.pacmans, dataLayer);
+		HallOfFame.processGameScores(details.pacmans);
 	});
 
 	// Cancel game
