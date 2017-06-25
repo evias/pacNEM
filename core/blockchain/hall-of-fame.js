@@ -259,6 +259,9 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
 
             self.sendCheeseForHighScore(pacman, currentTop10MinScore, currentHighScore);
         }
+
+        //XXX make sure next request to /scores API gets latest scores
+        //XXX display received mosaics on game summary screen
     };
 
     /**

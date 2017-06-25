@@ -843,6 +843,9 @@ io.sockets.on('connection', function(socket)
 
 	// When the end_of_game event is pushed, potential hall of famer will
 	// be recognized and stored in the database.
+	// This event listener will also trigger the BURNING of evias.pacnem:heart
+	// Game Credits. There is no way around triggering this event so this should
+	// be a fairly well chosen endpoint for burned game credits.
 	socket.on("end_of_game", function(rawdata) {
 		logger.info(__smartfilename, __line, '[' + socket.id + '] end_of_game(' + rawdata + ')');
 
@@ -850,6 +853,7 @@ io.sockets.on('connection', function(socket)
 		if (typeof details.pacmans == 'undefined' || ! details.pacmans.length)
 			return false;
 
+		chainDataLayer.processGameCreditsBurning(details);
 		HallOfFame.processGameScores(details.pacmans);
 	});
 

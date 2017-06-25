@@ -4,6 +4,7 @@
         "businessPublic": "7e5606db494a485d64f40c41416e43bb9a1405f52ba8dc7dcbe8abeb2dde1f40",
         "application": "TBPGYGLO4QMZLVR4TZF7GSL5IHJAUNPFXFNEEP4V",
         "applicationSecret": "",
+        "creditsSinkAddress": "TBQBOBWEJWU3KDFJWSCNHJW4VFIYRZ5Y7UYAHK3Y",
         "namespace": "evias-tests.pacnem",
         "invoicePrefix": "PACNEM-X-",
         "sponsorPrefix": "PACNEM-SP-",

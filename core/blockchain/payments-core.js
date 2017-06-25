@@ -73,6 +73,9 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
 
         var socket = require("socket.io-client");
         var channelSocket = socket.connect(NEMBot_for_pacNEM.paymentBot.host);
+
+        //XXX channelParams should allow defining a payment Mosaic
+        //    this will allow payments with different mosaics than XEM.
         var channelParams = {
             message: invoice.number,
             sender: invoice.payerXEM,
