@@ -128,6 +128,10 @@ var dataLayer = new models.pacnem(io, chainDataLayer);
 var PaymentsCore = require("./core/blockchain/payments-core.js").PaymentsCore;
 var PaymentsProtocol = new PaymentsCore(io, logger, chainDataLayer, dataLayer);
 
+var HallOfFameCore = require("./core/blockchain/hall-of-fame.js").HallOfFame;
+var HallOfFame = new HallOfFameCore(io, logger, chainDataLayer, dataLayer);
+HallOfFame.fetchBlockchainHallOfFame();
+
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
 var PacNEM_Crons  = new JobsScheduler(logger, chainDataLayer, dataLayer);
 PacNEM_Crons.hourly();
@@ -249,6 +253,8 @@ app.get("/sponsor", function(req, res)
 
 		var mandatoryFieldError = i18n.t("sponsor_engine.error_missing_mandatory_field");
 
+		//XXX SANITIZE
+
 		//req.check("realname", mandatoryFieldError).notEmpty();
 		//req.check("email", mandatoryFieldError).notEmpty();
 		//req.check("email", mandatoryFieldError).isEmail();
@@ -260,7 +266,7 @@ app.get("/sponsor", function(req, res)
 			"realname" : req.body.realname,
 			"email" : req.body.email,
 			"sponsorname" : req.body.sponsorname,
-			"url" : req.body.url ? req.body.url.replace(/[^A-Za-z0-9\-_\.]/g, "") : "",
+			"url" : req.body.url,
 			"type_advertizing" : req.body.type_advertizing,
 			"description": req.body.description
 		};
@@ -789,21 +795,27 @@ io.sockets.on('connection', function(socket)
 	});
 
 	// Rename the user
-	socket.on('change_username', function(username) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] change_username(' + username + ')');
-		room_manager.changeUsername(socket.id, username);
+	socket.on('change_username', function(details) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] change_username(' + details + ')');
+
+		var parsed = JSON.parse(details);
+		room_manager.changeUsername(socket.id, parsed);
 	});
 
 	// Join an existing room
-	socket.on('join_room', function(room_id) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] join_room(' + room_id + ')');
-		room_manager.joinRoom(socket.id, room_id);
+	socket.on('join_room', function(json) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] join_room(' + json + ')');
+
+		var parsed = JSON.parse(json);
+		room_manager.joinRoom(socket.id, parsed.room_id, parsed.details);
 	});
 
 	// Create a new room
-	socket.on('create_room', function() {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] create_room()');
-		room_manager.createRoom(socket.id);
+	socket.on('create_room', function(details) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] create_room(' + details + ')');
+
+		var parsed = JSON.parse(details);
+		room_manager.createRoom(socket.id, parsed);
 	});
 
 	// Leave a room
@@ -823,9 +835,44 @@ io.sockets.on('connection', function(socket)
 	socket.on('run_game', function() {
 		logger.info(__smartfilename, __line, '[' + socket.id + '] run_game()');
 		var room = room_manager.getRoom(socket.id);
+
 		if (room) {
 			room.runGame();
 		}
+	});
+
+	// When the end_of_game event is pushed, potential hall of famer will
+	// be recognized and stored in the database.
+	// This event listener will also trigger the BURNING of evias.pacnem:heart
+	// Game Credits. There is no way around triggering this event so this should
+	// be a fairly well chosen endpoint for burned game credits.
+	socket.on("end_of_game", function(rawdata) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] end_of_game(' + rawdata + ')');
+
+		var details = JSON.parse(rawdata);
+		if (typeof details.pacmans == 'undefined')
+			return false;
+
+		var addresses = [];
+		for (var i in details.pacmans)
+			addresses.push(details.pacmans[i].address);
+
+		if (! addresses.length)
+			return false;
+
+		logger.info(__smartfilename, __line, '[' + socket.id + '] burn_credits([' + addresses.join(", ") + '])');
+
+		// load gamers by address
+		dataLayer.NEMGamer.find({xem: {$in: addresses}}, function(err, gamers)
+		{
+			if (err || ! gamers || ! gamers.length) {
+				//XXX should never happen, add error log, someone sent an EMPTY end_of_game event
+				return false;
+			}
+
+			chainDataLayer.processGameCreditsBurning(gamers);
+			HallOfFame.processGameScores(details.pacmans);
+		});
 	});
 
 	// Cancel game
@@ -852,21 +899,22 @@ io.sockets.on('connection', function(socket)
 
 	// Update the direction of the player
 	socket.on('keydown', function(keycode) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] keydown(' + keycode + ')');
+		// [DEBUG] logger.info(__smartfilename, __line, '[' + socket.id + '] keydown(' + keycode + ')');
+
 		var room = room_manager.getRoom(socket.id);
 		if (! room) {
 			return;
 		}
 
-		if (keycode == 37) {
-			room.receiveKeyboard(socket.id, __room.LEFT);
-		} else if (keycode == 38) {
-			room.receiveKeyboard(socket.id, __room.UP);
-		} else if (keycode == 39) {
-			room.receiveKeyboard(socket.id, __room.RIGHT);
-		} else if (keycode == 40) {
-			room.receiveKeyboard(socket.id, __room.DOWN);
-		}
+		var keyMap = {
+			37: __room.LEFT,
+			38: __room.UP,
+			39: __room.RIGHT,
+			40: __room.DOWN
+		};
+
+		if (keyMap.hasOwnProperty(keycode))
+			room.receiveKeyboard(socket.id, keyMap[keycode]);
 	});
 
 	// notify about any in-room changes

@@ -64,8 +64,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             self.registerKeyListeners();
         });
 
-        socket_.on('end_of_game', function() {
-            ctrl_.serverEndOfGame();
+        socket_.on('end_of_game', function(rawdata) {
+            ctrl_.serverEndOfGame(rawdata);
+            self.displayGameSummary(rawdata);
         });
 
         socket_.on('update', ctrl_.serverUpdate);
@@ -98,6 +99,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         socket_.on("pacnem_heart_sync", function(rawdata)
         {
             var data = JSON.parse(rawdata);
+            var player = self.getPlayerDetails();
+
+            if (! player.address || ! player.address.length)
+                return false;
+
+            if (player.address !== data.address)
+                // this update is not for this session
+                return false;
+
+            var credits = data.credits;
 
             // we will display the `data` (count of hearts available read from
             // blockchain) in the top bar.
@@ -105,16 +116,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             var $data = $("#currentHearts-hearts").first();
 
             $wrap.show();
-            self.animateHeartsCounter($data, 0, data, " Credits");
+            self.animateHeartsCounter($data, 0, credits, " Credits");
 
-            if (data > 0) {
+            if (credits > 0) {
                 $("#pacNEM-needs-payment").val("0");
             }
             else
                 $("#pacNEM-needs-payment").val("1");
 
             if (typeof session_ != 'undefined' && session_.details_.hearts != data) {
-                session_.details_.hearts = data;
+                session_.details_.hearts = credits;
                 session_.store(false); // do not re-validate with blockchain, we just did that!
             }
 
@@ -185,16 +196,76 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         for (var i = 0 ; i < players.length ; i++) {
             var $row  = $userRow.clone().removeClass("hidden").addClass("player-row");
-            var color = GHOSTS_COLORS[i % GHOSTS_COLORS.length];
+            var color = PACMAN_COLORS[i % PACMAN_COLORS.length];
+
+            var hex = color.replace(/#/, '');
+            var rgb = [
+                parseInt(hex.substring(0, hex.length/3), 16),
+                parseInt(hex.substring(hex.length/3, 2*hex.length/3), 16),
+                parseInt(hex.substring(2*hex.length/3, 3*hex.length/3), 16)
+            ];
 
             // set player name and add to DOM
             $row.find(".player").first().text(players[i]);
+            $row.find(".list-group-item-heading").first().css("background-color", "rgba(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", 0.4)");
             $row.find(".glyphicon").first().css("color", color);
+
             $row.appendTo($details);
         }
 
         $("#pacnem-game-wrapper").show();
         return this;
+    };
+
+    /**
+     * Display a modal box containing data about the
+     * finished game. `rawdata` must contain a 
+     * `pacmans` with `score` fields.
+     * 
+     * @param  {string} rawdata
+     * @return void
+     */
+    this.displayGameSummary = function(rawdata)
+    {
+        var self = this;
+        var data = JSON.parse(rawdata);
+
+        if ($(".pacnem-summary-modal").length) {
+            // need refresh of summary modal.
+            $(".pacnem-summary-modal").remove();
+        }
+
+        // score compare function for fast sorting
+        var scrcmp = function(a, b) {
+            if (a.score < b.score) return -1;
+            if (a.score > b.score) return 1;
+
+            return 0;
+        };
+
+        // sort by descending score to have high score ranking
+        data.pacmans.sort(scrcmp).reverse();
+        data.winnerName = data.pacmans[0].username;
+        data.isWinner   = self.getPlayerDetails().username == data.winnerName;
+        data.isLoser    = ! data.isWinner;
+
+        var rand = Math.floor(Math.random() * 5 + 1);
+        var key  = data.isWinner ? "winner" : "loser";
+        data.yodaQuote = "summary." + key + "_yoda_quote_" + rand;
+
+        template_.render("summary-box", function(compileWith)
+            {
+                // add server side generated summary HTML to a modal
+                // boxes wrapper.
+                var html = $("#pacnem-modal-wrapper").html();
+                $("#pacnem-modal-wrapper").html(html + compileWith(data));
+
+                $(".pacnem-summary-modal").first().modal({
+                    backdrop: "static",
+                    keyboard: false,
+                    show: true
+                });
+            });
     };
 
     /**
@@ -228,11 +299,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      */
     this.enableCreateRoom = function()
     {
+        var self = this;
         var $button = $(".roomCreateNew").first();
 
         $button.removeAttr("disabled").removeClass("disabled");
         $button.off("click");
-        $button.on("click", function() { socket_.emit("create_room"); });
+        $button.on("click", function() { 
+            var player = self.getPlayerDetails(); 
+            socket_.emit("create_room", JSON.stringify(player)); 
+        });
 
         return this;
     };
@@ -274,7 +349,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         var playerInRoom = false;
         for (var i = 0; i < data["rooms"].length; i++) {
-            var inThisRoom = self.displayRoom(i+1, $rooms, sid, data["rooms"][i], data["users"]);
+            var inThisRoom = self.displayRoom(i+1, $rooms, sid, data["rooms"][i], data["users"], data["addresses"]);
 
             if (inThisRoom && !ctrl_.isRoomMembershipAcknowledged(data["rooms"][i]["id"]))
                 ctrl_.ackRoomMember(data["rooms"][i]["id"]);
@@ -327,7 +402,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @return boolean  Whether current Player is Member of the
      *                  displayed room or not
      */
-    this.displayRoom = function(roomIndex, $rooms, sid, roomdata, usersdata)
+    this.displayRoom = function(roomIndex, $rooms, sid, roomdata, usersdata, xemdata)
     {
         var self = this;
 
@@ -365,13 +440,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         // now create the members entries for this room
         for (var i = 0 ; i < roomdata['users'].length ; i++) {
-            var user = usersdata[roomdata['users'][i]] ? usersdata[roomdata['users'][i]] : roomdata['users'][i];
+            var socketId = roomdata['users'][i];
+            var user = usersdata[socketId] ? usersdata[socketId] : socketId;
+            var xem  = xemdata[socketId];
 
             $currentRow = $memberRow.clone()
                                   .removeClass("hidden")
                                   .appendTo($members);
 
+            $currentRow.find(".socket-id").first().text(socketId);
             $currentRow.find(".member-name").first().text(user);
+            $currentRow.find(".member-address").first().text(xem);
 
             players.push(user);
         }
@@ -444,7 +523,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 $button.prop("disabled", true);
             else {
                 self.displayRoomAction(room, $button, function($btn, room) {
-                    socket_.emit("join_room", room["id"]);
+                    var player = self.getPlayerDetails();
+                    socket_.emit("join_room", JSON.stringify({
+                        "room_id": room["id"], 
+                        "details": player}));
                     self.disableCreateRoom();
                 });
             }
@@ -479,7 +561,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             return {"username": "", "address": ""};
         }
 
-        return {"username": username, "address": address};
+        return {"username": username, "address": address.replace(/-/g, '')};
     };
 
     /**
@@ -536,7 +618,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     ui.displaySponsorAdvertisement(function(ui)
                     {
                         // and finally, emit the session creation
-                        socket_.emit('change_username', details.username);
+                        socket_.emit('change_username', JSON.stringify(details));
                         socket_.emit("notify");
                     });
                 });
@@ -546,7 +628,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         // we can safely emit the session creation, this user is
         // either a pay-per-play or share-per-play (not yet implemented)
-        socket_.emit('change_username', details.username);
+        socket_.emit('change_username', JSON.stringify(details));
         socket_.emit("notify");
 
         // return whether an invoice is needed or not
@@ -607,6 +689,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 $("#address").val(sponsor.xem);
                 $("#address").prop("disabled", true);
                 $("#address").attr("data-sponsor", "1");
+
+                //XXX sponsored mode should hide or obfuscate sponsored wallet address
+
                 $("#username").attr("data-sponsor", sponsor.slug);
 
                 ctrl_.setSponsor(sponsor);

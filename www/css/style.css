@@ -187,6 +187,12 @@ footer {
     width: 60px;
 }
 
+ .label-bigger {
+    font-size: 95% !important;
+ }
+
+.p0 { padding: 0; }
+.m0 { margin: 0; }
 .mt5 { margin-top: 5px; }
 .mt10 { margin-top: 10px; }
 .mb5 { margin-bottom: 5px; }
@@ -243,3 +249,32 @@ footer {
 .bgcNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: center center; }
 .bglNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: left center; }
 .bgrNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: right center; }
+
+.list-group.players-list .list-group-item.player-row {
+    border-radius: 10px;
+    margin: 10px;
+    background-color: #e7edf2;
+}
+
+blockquote.bq-minimal-centered {
+    /*background: url(/img/blockquote.png) no-repeat 0 0;*/
+    width: 75%; 
+    margin: auto; 
+    border: 0px;
+    font-style: italic;
+}
+
+.game-end-title {
+    font-size: 52px;
+    margin-top: 0px;
+}
+
+.game-end-title.winner {text-shadow: 3px 3px 0px #4fe15b;}
+.game-end-title.loser {text-shadow: 3px 3px 0px #f7a800;}
+
+.summary-bg-wrapper {
+    background: url(/img/pacnem_placeholder_white-small.png) no-repeat 0;
+    height: 270px;
+}
+
+
