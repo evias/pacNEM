@@ -595,22 +595,22 @@ var service = function(io, nemSDK, logger)
      * @param   {Object}    gameState   Object received through Socket.io
      * @return void
      */
-    this.processGameCreditsBurning = function(gameState)
+    this.processGameCreditsBurning = function(gamers)
     {
         var self = this;
 
-        var players = gameState.pacmans;
+        var players = gamers;
         if (! players || ! players.length)
             return false;
 
         // read addresses in ended game state data
         var addresses = [];
         for (var i = 0; i < players.length; i++) {
-            if (! players[i].address || ! players[i].address.length)
+            if (! players[i].getAddress() || ! players[i].getAddress().length)
                 continue;
 
             // validate NEM address with NEM-sdk
-            var address = players[i].address;
+            var address = players[i].getAddress();
             var chainId = self.getNetwork().config.id;
             var isValid = self.getSDK().model.address.isFromNetwork(address, chainId);
             if (! isValid)
@@ -620,7 +620,17 @@ var service = function(io, nemSDK, logger)
             addresses.push(address);
         }
 
+        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Will now burn Player Game Credit for the Game Session: " + addresses.length + " Players.");
+
         self.sendGameCreditsToSink(addresses);
+
+        // for each address we also need to update the 
+        // NEMGameCredit entry for given NEMGamer.
+        for (var j = 0; j < players.length; j++) {
+            var gamer = players[j];
+
+            gamer.updateCredits({countPlayedHearts: 1});
+        }
     };
 
     /**
@@ -655,7 +665,7 @@ var service = function(io, nemSDK, logger)
         var mosaicDefPair = self.getSDK().model.objects.get("mosaicDefinitionMetaDataPair");
         var redeemingMosaicName  = self.getCreditsSinkData().mosaic.id;
 
-        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending " + paymentChannel.countRedeem + " hearts-- " + " sent to " + sinkXEM + " paid by " + pacNEM_);
+        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending " + countRedeem + " hearts-- " + " sent to " + sinkXEM + " paid by " + pacNEM_);
 
         // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
         var transferTransaction = self.getSDK().model.objects.create("transferTransaction")(sinkXEM, 1, encMessage); // Amount 1 is "one time x Mosaic Attachments"
@@ -701,8 +711,6 @@ var service = function(io, nemSDK, logger)
                     "[NEM] [CREDITS SINK]", "[CREATED]",
                     "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug
                     + " sent to " + sinkXEM);
-
-                //XXX update credits for each player
             },
             function(err) {
                 logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + vendor_ + " to " + sinkXEM + " with error: " + err);
@@ -759,7 +767,7 @@ var service = function(io, nemSDK, logger)
         var content = transactionMetaDataPair.transaction;
 
         var trxRealData = content;
-        if (content.type == nem_.model.transactionTypes.multisigTransaction) {
+        if (content.type == this.getSDK().model.transactionTypes.multisigTransaction) {
             // multisig, message will be in otherTrans
             trxRealData = content.otherTrans;
         }
@@ -770,7 +778,7 @@ var service = function(io, nemSDK, logger)
 
         // decode transaction message and job done
         var payload = trxRealData.message.payload;
-        var plain   = chainDataLayer.nem().utils.convert.hex2a(payload);
+        var plain   = this.getSDK().utils.convert.hex2a(payload);
 
         if (doDecrypt === true)
             plain = CryptoJS.AES.decrypt(plain, this.getEncryptionSecretKey());

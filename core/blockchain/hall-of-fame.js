@@ -239,7 +239,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
         if (cntScores)
             currentHighScore = scores[0].score;
 
-        if (cntScore >= 10)
+        if (cntScores >= 10)
             currentTop10MinScore = scores[9].score;
         // no-else: in case there is less than 10 scores, anyone 
         //          can take the last spot.

@@ -229,8 +229,11 @@ var GameController = function(config, socket, nem, chainId)
     this.serverEndOfGame = function(rawdata)
     {
         var data = JSON.parse(rawdata);
-
         ongoing_game_ = false;
+
+        // end_of_game event needs only Pacman objects states
+        delete data["map"];
+        socket_.emit("end_of_game", JSON.stringify(data));
         return this;
     };
 

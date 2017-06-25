@@ -850,11 +850,29 @@ io.sockets.on('connection', function(socket)
 		logger.info(__smartfilename, __line, '[' + socket.id + '] end_of_game(' + rawdata + ')');
 
 		var details = JSON.parse(rawdata);
-		if (typeof details.pacmans == 'undefined' || ! details.pacmans.length)
+		if (typeof details.pacmans == 'undefined')
 			return false;
 
-		chainDataLayer.processGameCreditsBurning(details);
-		HallOfFame.processGameScores(details.pacmans);
+		var addresses = [];
+		for (var i in details.pacmans)
+			addresses.push(details.pacmans[i].address);
+
+		if (! addresses.length)
+			return false;
+
+		logger.info(__smartfilename, __line, '[' + socket.id + '] burn_credits([' + addresses.join(", ") + '])');
+
+		// load gamers by address
+		dataLayer.NEMGamer.find({xem: {$in: addresses}}, function(err, gamers)
+		{
+			if (err || ! gamers || ! gamers.length) {
+				//XXX should never happen, add error log, someone sent an EMPTY end_of_game event
+				return false;
+			}
+
+			chainDataLayer.processGameCreditsBurning(gamers);
+			HallOfFame.processGameScores(details.pacmans);
+		});
 	});
 
 	// Cancel game
