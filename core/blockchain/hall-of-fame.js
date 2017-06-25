@@ -463,7 +463,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
                 var trxHash = res.transactionHash.data;
                 var paidOutRewards = {"cheeses": {"mosaic": cheeseSlug, "quantity": countCheeses}};
 
-                if (isHallOfFame)
+                if (isHallOfFamer)
                     paidOutRewards["hallOfFame"] = {"mosaic": hofSlug, "quantity": 1};
 
                 if (isAllTimeBest)
