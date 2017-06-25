@@ -189,6 +189,9 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
                         {
                             if (! err && !payout) {
 
+                                invoice.hasSentHearts = true;
+                                invoice.save();
+
                                 var creation = new self.db_.NEMAppsPayout({
                                     xem: data.sender,
                                     reference: invoice.number,

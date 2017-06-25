@@ -24,6 +24,14 @@ var config = require("config"),
 
 var __smartfilename = path.basename(__filename);
 
+// score compare function for fast sorting
+var scrcmp = function(a, b) {
+    if (a.score < b.score) return -1;
+    if (a.score > b.score) return 1;
+
+    return 0;
+};
+
 /**
  * class HallOfFame provides a business layer for
  * hall of fame management. (High Scores reading / writing)
@@ -249,6 +257,10 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
         // we will iterate from BIGGER score TO SMALLEST score in this game
         for (var i = 0; i < pacmans.length; i++) {
             var pacman = pacmans[i];
+
+            if (! pacman || ! pacman.address || ! pacman.username || ! pacman.score)
+                continue;
+
             if (pacman.score <= currentTop10MinScore)
                 continue;
 
@@ -284,60 +296,41 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
 
         var self = this;
 
+        // remove useless fields in Pacman object (directions, etc.)
+        // we don't want to store useless information on the blockchain
+        var unsetFields = ["x", "y", "direction", "combo", "cheese_power", "cheese_effect", "killed_recently"];
+        for (var u = 0; u < unsetFields.length; u++)
+            delete pacman[unsetFields[u]];
+
         // build encrypted message - the message + address are used to avoid 
         // sending rewards more than 1 time.
         var message = JSON.stringify(pacman);
         var encrypt = CryptoJS.AES.encrypt(message, self.blockchain_.getEncryptionSecretKey());
 
-        self.logger_.info("[DEBUG]", "[PACNEM HOF]",
-                     "Plain JSON: '" + message + "' with Encrypted: '" + encrypt + "'");
-
-        self.prepareRewardsPayout(pacman, encrypt, function(nemReward)
-        {
-            self.announceRewardsPayout(nemReward, pacman, currentTop10MinScore, currentHighScore);
-        });
-    };
-
-    /**
-     * Save an address + message pair as a reward payout. The PacMan object contains
-     * game-specific data that will make the encrypted message unique.
-     * 
-     * After the save has occured, the callback will be executed.
-     * 
-     * @param {Pacman} pacman
-     * @param {string} encryptedMessage
-     * @param {callable} callback
-     * @return void
-     */
-    this.prepareRewardsPayout = function(pacman, encryptedMessage, callback)
-    {
-        var self = this;
+        self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Plain JSON: '" + message + "' with Encrypted: '" + encrypt.toString() + "'");
 
         // find already paid out Rewards
-        self.db_.NEMReward({"address": pacman.address, "encryptedMessage": encryptedMessage}
-                .findOne(function(err, reward)
+        self.db_.NEMReward.findOne({"address": pacman.address, "encryptedMessage": encrypt.toString()}, 
+        function(err, reward)
         {
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "READ NEMReward JSON: '" + JSON.stringify(reward));
+
             if (err) {
-                self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Error reading NEMReward: " + JSON.stringify(err));
+                self.logger_.error("[ERROR]", "[PACNEM HOF]", "Error reading NEMReward: " + JSON.stringify(err));
                 return false;
             }
 
             if (! reward) {
                 // we only want to payout in case we didn't send mosaics before
                 // for this Game and Player.
-                var reward = new self.db_.NEMReward({"address": pacman.address, "encryptedMessage": encryptedMessage});
-                reward.save(function(err)
-                {
-                    if (err) {
-                        self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Error writing NEMReward: " + JSON.stringify(err));
-                        return false;
-                    }
+                var createReward = new self.db_.NEMReward({
+                    "address": pacman.address,
+                    "encryptedMessage": encrypt.toString()});
+                createReward.save();
 
-                    if (callback)
-                        return callback(reward);
-                });
+                self.announceRewardsPayout(createReward, pacman, currentTop10MinScore, currentHighScore);
             }
-        }));
+        });
     };
 
     /**
@@ -357,44 +350,55 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
     this.announceRewardsPayout = function(nemReward, pacman, currentTop10MinScore, currentHighScore)
     {
         var self = this;
-        var countCheeses  = pacman.score;
-        var privStore     = self.blockchain_.getSDK().model.objects.create("common")("", self.blockchain_.getPublicWalletSecretKey());
-        var mosaicDefPair = self.blockchain_.getSDK().model.objects.get("mosaicDefinitionMetaDataPair");
-        var cheeseMosaicName = Object.getOwnPropertyNames(self.blockchain_.getGameMosaicsConfiguration().scores)[0];
-        var hofMosaicName = Object.getOwnPropertyNames(self.blockchain_.getGameMosaicsConfiguration().rewards.high_score)[0];
-        var atbMosaicName = Object.getOwnPropertyNames(self.blockchain_.getGameMosaicsConfiguration().rewards.high_score)[1];
+        var nemSDK = self.blockchain_.getSDK();
+        var appsMosaic = self.blockchain_.getGameMosaicsConfiguration();
+
+        var countCheeses   = pacman.score;
+        var privStore     = nemSDK.model.objects.create("common")("", self.blockchain_.getPublicWalletSecretKey());
+        var mosaicDefPair = nemSDK.model.objects.get("mosaicDefinitionMetaDataPair");
+        var cheeseMosaicName = Object.getOwnPropertyNames(appsMosaic.scores)[0];
+        var hofMosaicName = Object.getOwnPropertyNames(appsMosaic.rewards.high_score)[0];
+        var atbMosaicName = Object.getOwnPropertyNames(appsMosaic.rewards.high_score)[1];
         var cheeseMosaicSlug = self.blockchain_.getNamespace() + ":" + cheeseMosaicName;
 
         // HOF mosaic paid out only when the hall of fame has at least 10 players
-        var isHallOfFamer = currentTop10MinScore > 0;
+        var isHallOfFamer = currentTop10MinScore > 0 && pacman.score > currentTop10MinScore;
         var isAllTimeBest = currentTop10MinScore > 0 && pacman.score > currentHighScore;
 
-        self.logger_.info("[DEBUG]", "[PACNEM HOF]",
-                     "Now sending " + pacman.score + " cheeses to player " 
-                     + pacman.address + " with username '" + pacman.username + "' paid by " + self.blockchain_.getPublicWallet());
+        if (currentTop10MinScore > 0 && !isHallOfFamer)
+            // only send mosaics to hall of famers
+            return false;
 
-        // Create an un-prepared mosaic transfer transaction object 
+        self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending " + pacman.score + " cheeses to player " + pacman.address + " with username '" + pacman.username + "' paid by " + self.blockchain_.getPublicWallet());
+
+        // Create an un-prepared multisig mosaic transfer transaction object 
+        // Must be Multisig because mosaic evias.pacnem:cheese is non-transferable
         // Amount 1 is "one time x Mosaic Attachments"
         // (use same object as transfer tansaction)
-        var transferTransaction = self.blockchain_.getSDK().model.objects.create("transferTransaction")(pacman.address, 1, nemReward.encryptedMessage);
-        var mosaicAttachCheeses = self.blockchain_.getSDK().model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), cheeseMosaicName, countCheeses);
-        var mosaicAttachHOF     = self.blockchain_.getSDK().model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), hofMosaicName, 1);
-        var mosaicAttachATB     = self.blockchain_.getSDK().model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), atbMosaicName, 1);
+        var transferTransaction = nemSDK.model.objects.create("transferTransaction")(pacman.address, 1, nemReward.encryptedMessage);
+        transferTransaction.isMultisig = true;
+        transferTransaction.multisigAccount = {publicKey: config.get("pacnem.businessPublic")};
 
-        var cheeseSlug = self.blockchain_.getSDK().utils.helpers.mosaicIdToName(mosaicAttachCheeses.mosaicId);
-        var hofSlug = self.blockchain_.getSDK().utils.helpers.mosaicIdToName(mosaicAttachHOF.mosaicId);
-        var atbSlug = self.blockchain_.getSDK().utils.helpers.mosaicIdToName(mosaicAttachATB.mosaicId);
+        var mosaicAttachCheeses = nemSDK.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), cheeseMosaicName, countCheeses);
+        var mosaicAttachHOF     = nemSDK.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), hofMosaicName, 1);
+        var mosaicAttachATB     = nemSDK.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), atbMosaicName, 1);
+
+        var cheeseSlug = nemSDK.utils.helpers.mosaicIdToName(mosaicAttachCheeses.mosaicId);
+        var hofSlug = nemSDK.utils.helpers.mosaicIdToName(mosaicAttachHOF.mosaicId);
+        var atbSlug = nemSDK.utils.helpers.mosaicIdToName(mosaicAttachATB.mosaicId);
+
+        var paidOutRewards = {"HallOfFameReward": {"mosaic": cheeseSlug, "quantity": countCheeses}};
 
         self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Using Mosaics: " + cheeseSlug + ", " + hofSlug + ", " + atbSlug);
 
         // Need mosaic definition of evias.pacnem:* mosaics to calculate 
         // adequate fees, so we get it from network.
-        self.blockchain_.getSDK().com.requests.namespace
+        nemSDK.com.requests.namespace
             .mosaicDefinitions(self.blockchain_.getEndpoint(), self.blockchain_.getNamespace()).then(
         function(res) {
-            var cheeseDef  = self.blockchain_.getSDK().utils.helpers.searchMosaicDefinitionArray(res, [cheeseMosaicName]);
-            var hofDef = self.blockchain_.getSDK().utils.helpers.searchMosaicDefinitionArray(res, [hofMosaicName]);
-            var atbDef = self.blockchain_.getSDK().utils.helpers.searchMosaicDefinitionArray(res, [atbMosaicName]);
+            var cheeseDef  = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [cheeseMosaicName]);
+            var hofDef = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [hofMosaicName]);
+            var atbDef = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [atbMosaicName]);
 
             if (undefined === cheeseDef[cheeseSlug] || undefined === hofDef[hofSlug] || undefined === atbDef[atbSlug])
                 return self.logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition with [cheeseSlug, hofSlug, atbSlug]: " + JSON.stringify([cheeseSlug, hofSlug, atbSlug]) + " - Obligatory for the game, Please fix!");
@@ -409,12 +413,13 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
             mosaicDefPair[cheeseSlug] = {};
             mosaicDefPair[cheeseSlug].mosaicDefinition = cheeseDef[cheeseSlug];
 
-            // include optional mosaics defs (they are not always sent)
+            // hall of famer only included if at least 1 person in hall of fame
             if (isHallOfFamer) {
                 mosaicDefPair[hofSlug] = {};
                 mosaicDefPair[hofSlug].mosaicDefinition = hofDef[hofSlug];
             }
 
+            // include optional mosaics defs (they are not always sent)
             if (isAllTimeBest) {
                 mosaicDefPair[atbSlug] = {};
                 mosaicDefPair[atbSlug].mosaicDefinition = atbDef[atbSlug];
@@ -426,7 +431,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
             transferTransaction.mosaics.push(mosaicAttachCheeses);
 
             if (isHallOfFamer)
-                // send hall-of-famer Mosaic (at least 10 player in hall of fame before)
+                // send hall-of-famer Mosaic
                 transferTransaction.mosaics.push(mosaicAttachHOF);
 
             if (isAllTimeBest)
@@ -435,17 +440,17 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
 
             // (3)
             // Prepare the mosaic transfer transaction object
-            var entity = self.blockchain_.getSDK().model.transactions.prepare("mosaicTransferTransaction")(
+            var entity = nemSDK.model.transactions.prepare("mosaicTransferTransaction")(
                 privStore, 
                 transferTransaction, 
                 mosaicDefPair, 
                 self.blockchain_.getNetwork().config.id
             );
 
-            self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending Mosaic Transfer Transaction to " + pacman.address + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
+            self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending Mosaic Transfer Transaction to " + pacman.address + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
 
             // (4) announce the mosaic transfer transaction on the NEM network
-            self.blockchain_.getSDK().model.transactions.send(privStore, entity, self.blockchain_.getEndpoint()).then(
+            nemSDK.model.transactions.send(privStore, entity, self.blockchain_.getEndpoint()).then(
             function(res) {
                 delete privStore;
 
@@ -456,11 +461,18 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
                 }
 
                 var trxHash = res.transactionHash.data;
-                self.logger_.info(
-                    "[DEBUG]", "[PACNEM HOF]",
-                    "Created a Mosaic transfer transaction for " + pacman.address);
+                var paidOutRewards = {"cheeses": {"mosaic": cheeseSlug, "quantity": countCheeses}};
+
+                if (isHallOfFame)
+                    paidOutRewards["hallOfFame"] = {"mosaic": hofSlug, "quantity": 1};
+
+                if (isAllTimeBest)
+                    paidOutRewards["allTimeBest"] = {"mosaic": atbSlug, "quantity": 1};
+
+                self.logger_.info("[DEBUG]", "[PACNEM HOF]","Created a Mosaic transfer transaction for " + pacman.address + " with hash '" + trxHash + " and paidOutRewards: " + JSON.stringify(paidOutRewards));
 
                 nemReward.transactionHash = trxHash;
+                nemReward.rewards = paidOutRewards;
                 nemReward.save();
             },
             function(err) {

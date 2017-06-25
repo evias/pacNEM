@@ -561,7 +561,6 @@ var service = function(io, nemSDK, logger)
                     + " sent to " + gamerXEM + " for invoice " + paymentChannel.number);
 
                 // update `paymentChannel` to contain the transaction hash too and make sure history is kept.
-                paymentChannel.hasSentHearts = true;
                 paymentChannel.heartsTransactionHash = trxHash;
                 paymentChannel.save(function(err)
                     {
@@ -669,6 +668,11 @@ var service = function(io, nemSDK, logger)
 
         // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
         var transferTransaction = self.getSDK().model.objects.create("transferTransaction")(sinkXEM, 1, encMessage); // Amount 1 is "one time x Mosaic Attachments"
+
+        // must be multisig because non-transferable hearts-- mosaic owned by multisig
+        transferTransaction.isMultisig = true;
+        transferTransaction.multisigAccount = {publicKey: config.get("pacnem.businessPublic")};
+
         var mosaicAttachRedeem  = self.getSDK().model.objects.create("mosaicAttachment")(pacNEM_NS_, redeemingMosaicName, countRedeem);
         var redeemSlug = self.getSDK().utils.helpers.mosaicIdToName(mosaicAttachRedeem.mosaicId);
 
