@@ -128,6 +128,10 @@ var dataLayer = new models.pacnem(io, chainDataLayer);
 var PaymentsCore = require("./core/blockchain/payments-core.js").PaymentsCore;
 var PaymentsProtocol = new PaymentsCore(io, logger, chainDataLayer, dataLayer);
 
+var HallOfFameCore = require("./core/blockchain/hall-of-fame.js").HallOfFame;
+var HallOfFame = new HallOfFameCore(io, logger, chainDataLayer, dataLayer);
+HallOfFame.fetchBlockchainHallOfFame();
+
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
 var PacNEM_Crons  = new JobsScheduler(logger, chainDataLayer, dataLayer);
 PacNEM_Crons.hourly();
@@ -835,6 +839,40 @@ io.sockets.on('connection', function(socket)
 		if (room) {
 			room.runGame();
 		}
+	});
+
+	// When the end_of_game event is pushed, potential hall of famer will
+	// be recognized and stored in the database.
+	// This event listener will also trigger the BURNING of evias.pacnem:heart
+	// Game Credits. There is no way around triggering this event so this should
+	// be a fairly well chosen endpoint for burned game credits.
+	socket.on("end_of_game", function(rawdata) {
+		logger.info(__smartfilename, __line, '[' + socket.id + '] end_of_game(' + rawdata + ')');
+
+		var details = JSON.parse(rawdata);
+		if (typeof details.pacmans == 'undefined')
+			return false;
+
+		var addresses = [];
+		for (var i in details.pacmans)
+			addresses.push(details.pacmans[i].address);
+
+		if (! addresses.length)
+			return false;
+
+		logger.info(__smartfilename, __line, '[' + socket.id + '] burn_credits([' + addresses.join(", ") + '])');
+
+		// load gamers by address
+		dataLayer.NEMGamer.find({xem: {$in: addresses}}, function(err, gamers)
+		{
+			if (err || ! gamers || ! gamers.length) {
+				//XXX should never happen, add error log, someone sent an EMPTY end_of_game event
+				return false;
+			}
+
+			chainDataLayer.processGameCreditsBurning(gamers);
+			HallOfFame.processGameScores(details.pacmans);
+		});
 	});
 
 	// Cancel game

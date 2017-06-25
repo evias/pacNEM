@@ -18,20 +18,54 @@
 
 (function() {
 
-var config = require("config");
+var config = require("config"),
+    CryptoJS = require("crypto-js");
 
+/**
+ * Configuration of PacNEM Mosaics, the following object will
+ * describe all mosaics used in the game - being Game Credits 
+ * Mosaics, Scores Mosaics and Achievements Mosaics.
+ */
 var pacNEM_mosaics = {
-    "heart": true,
-    "beta-player": true,
-    "player": true,
-    "nember": true,
-    "n00b": true,
-    "afficionado": true,
-    "great-supporter": true,
-    "multikill": true,
-    "rampage": true,
-    "ghostbuster": true,
-    "godlike-101010": true
+    "credits": {"heart": true},
+    "scores": {"cheese": true},
+    "rewards": {
+        "purchases": {"beta-player": true, "player": true},
+        "return_x2": {"n00b": true},
+        "return_x5": {"nember": true},
+        "return_x10": {"afficionado": true},
+        "return_x100": {"great-supporter": true},
+        "high_score": {"hall-of-famer": true, "all-time-best-player": true}
+    },
+    "achievements": {
+        "combo_x3": {"multikill": {"minCombo": 3}},
+        "combo_x5": {"rampage": {"minCombo": 5}},
+        "combo_x7": {"ghostbuster": {"minCombo": 7}},
+        "combo_x10": {"godlike-101010": {"minCombo": 10}}
+    }
+};
+
+/**
+ * PacNEM defines SINK Accounts where tokens are sent that must be considered
+ * as *redeemed* or *burned*. For example if someone buys 1 Game Credit, burning
+ * this 1 Game Credit means the person cannot use it anymore.
+ * 
+ * Currently there is only one type of sink accounts used being the Game Credits
+ * Sink Address.
+ */
+var pacNEM_SINKS_ = {
+    "credits": {
+        "address": (process.env["CREDITS_SINK"] || config.get("pacnem.creditsSinkAddress")).replace(/-/g, ""),
+        "mosaic": {"id": "hearts--"}
+    }
+};
+
+// score compare function for fast sorting
+var scrcmp = function(a, b) {
+    if (a.score < b.score) return -1;
+    if (a.score > b.score) return 1;
+
+    return 0;
 };
 
 /**
@@ -87,7 +121,7 @@ var service = function(io, nemSDK, logger)
      *
      * Must not be multisig, could be simple wallet.
      *
-     * @return string   The namespace + subnamespace(s) joined with a dot (.).
+     * @return string
      */
     this.getVendorWallet = function()
     {
@@ -101,11 +135,65 @@ var service = function(io, nemSDK, logger)
      * In case the vendor wallet is not a multi signature account,
      * the vendor and cosignatory wallet will be the same.
      *
-     * @return {[type]} [description]
+     * @return {string}
      */
     this.getPublicWallet = function()
     {
         return pacNEM_;
+    };
+
+    /**
+     * Utility to get complete configuration of the PacNEM
+     * Game Credits Sink Account.
+     */
+    this.getCreditsSinkData = function()
+    {
+        return pacNEM_SINKS_.credits;
+    };
+
+    /**
+     * Get the Game Credits Sink Wallet address. This wallet will 
+     * receive transactions whenever someone's game on pacNEM is 
+     * finished (or has ended).
+     * 
+     * Sending evias.pacnem:heart to this address ALONG WITH a message
+     * containing at least one XEM address (multi separated by comma)
+     * and encrypted with AES and pacNEM's encryption secret key.
+     * 
+     * @return {string}
+     */
+    this.getCreditsSinkWallet = function()
+    {
+        return this.getCreditsSinkData().address;
+    };
+
+    /**
+     * Get the NEM-sdk object initialized before.
+     * 
+     * @link https://github.com/QuantumMechanics/NEM-sdk
+     */
+    this.getSDK = function()
+    {
+        return nem_;
+    };
+
+    /**
+     * Get the NEM-sdk `endpoint` with which we are connecting
+     * to the blockchain.
+     */
+    this.getEndpoint = function()
+    {
+        return node_;
+    };
+
+    /**
+     * Utility method to retrieve this game's mosaics 
+     * configuration. This includes the configuration for 
+     * special payouts of rewards and achievements.
+     */
+    this.getGameMosaicsConfiguration = function()
+    {
+        return pacNEM_mosaics;
     };
 
     /**
@@ -119,11 +207,26 @@ var service = function(io, nemSDK, logger)
      * Only Co-Signatory NEMBots are private, the Payment Processor Bot
      * can publish read operations to track current invoices, etc.
      *
-     * @return {[type]} [description]
+     * @return {string}
      */
-    this.getSecretKey = function()
+    this.getPublicWalletSecretKey = function()
     {
         return process.env["APP_SECRET"] || config.get("pacnem.applicationSecret");
+    };
+
+    /**
+     * This returns the `pacnem.secretKey` option value.
+     * 
+     * This key can be changed to make the application act
+     * privately on the blockchain
+     * 
+     * XXX PaymentProcessor should use this if enabled, too.
+     * 
+     * @return {string}
+     */
+    this.getEncryptionSecretKey = function()
+    {
+        return config.get("pacnem.secretKey");
     };
 
     /**
@@ -174,7 +277,7 @@ var service = function(io, nemSDK, logger)
     this.fetchHeartsByGamer = function(gamer)
     {
         var self = this;
-        var heartsMosaicSlug = pacNEM_NS_ + ":heart";
+        var heartsMosaicSlug = pacNEM_NS_ + ":" + Object.getOwnPropertyNames(pacNEM_mosaics.credits)[0];
 
         // read Mosaics owned by the given address's XEM wallet
         nem_.com.requests.account.mosaics(node_, gamer.getAddress()).then(function(res)
@@ -278,6 +381,13 @@ var service = function(io, nemSDK, logger)
                 // NO Transactions available / wrong Network for address / Unresolved Promise Errors
                 logger_.info("[DEBUG]", "[ERROR]", "Error in NIS API account.allTransactions: " + JSON.stringify(err));
             });
+
+        // paralelly we can also read all transaction of the Game Credits Sink Account. 
+        // This account is used to *burn game credits* (or *redeem* the tokens). This helps
+        // in diminishing the amount of money that the Players have to Pay for playing 
+        // a NEM linked game.
+
+        //XXX implement Game Credits Sink Account
     };
 
     /**
@@ -369,9 +479,13 @@ var service = function(io, nemSDK, logger)
     {
         var gamerXEM  = paymentChannel.getPayer();
         var countHearts = paymentChannel.countHearts;
-        var privStore = nem_.model.objects.create("common")("", this.getSecretKey());
+        var privStore = nem_.model.objects.create("common")("", this.getPublicWalletSecretKey());
         var mosaicDefPair = nem_.model.objects.get("mosaicDefinitionMetaDataPair");
         var hasBetaMosaic = config.get("pacnem.isBeta");
+
+        var heartsMosaicName  = Object.getOwnPropertyNames(pacNEM_mosaics.credits)[0];
+        var bPlayerMosaicName = Object.getOwnPropertyNames(pacNEM_mosaics.rewards.purchases)[0];
+        var playerMosaicName  = Object.getOwnPropertyNames(pacNEM_mosaics.rewards.purchases)[1];
 
         //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]",
         //DEBUG            "Now sending " + paymentChannel.countHearts + " hearts for invoice " + paymentChannel.number
@@ -383,15 +497,15 @@ var service = function(io, nemSDK, logger)
         transferTransaction.isMultisig = true;
         transferTransaction.multisigAccount = {publicKey: config.get("pacnem.businessPublic")};
 
-        var mosaicAttachHearts = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "heart", countHearts);
-        var mosaicAttachPlayer  = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "player", 1);
-        var mosaicAttachBPlayer = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, "beta-player", 1);
+        var mosaicAttachHearts = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, heartsMosaicName, countHearts);
+        var mosaicAttachPlayer  = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, playerMosaicName, 1);
+        var mosaicAttachBPlayer = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, bPlayerMosaicName, 1);
 
         var heartsSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachHearts.mosaicId);
         var playerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachPlayer.mosaicId);
         var bPlayerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachBPlayer.mosaicId);
 
-        logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Using Mosaics: " + heartsSlug + ", " + playerSlug + ", " + bPlayerSlug);
+        //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Using Mosaics: " + heartsSlug + ", " + playerSlug + ", " + bPlayerSlug);
 
         // always receive evias.pacnem:heart and evias.pacnem:player
         transferTransaction.mosaics.push(mosaicAttachHearts);
@@ -407,9 +521,9 @@ var service = function(io, nemSDK, logger)
         nem_.com.requests.namespace
             .mosaicDefinitions(node_, pacNEM_NS_).then(
         function(res) {
-            var heartsDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["heart"]);
-            var playerDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["player"]);
-            var bPlayerDef = nem_.utils.helpers.searchMosaicDefinitionArray(res, ["beta-player"]);
+            var heartsDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, [heartsMosaicName]);
+            var playerDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, [playerMosaicName]);
+            var bPlayerDef = nem_.utils.helpers.searchMosaicDefinitionArray(res, [bPlayerMosaicName]);
 
             if (undefined === heartsDef[heartsSlug] || undefined === playerDef[playerSlug] || undefined === bPlayerDef[bPlayerSlug])
                 return logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition for " + heartsSlug + " - Obligatory for the game, Please fix!");
@@ -447,7 +561,6 @@ var service = function(io, nemSDK, logger)
                     + " sent to " + gamerXEM + " for invoice " + paymentChannel.number);
 
                 // update `paymentChannel` to contain the transaction hash too and make sure history is kept.
-                paymentChannel.hasSentHearts = true;
                 paymentChannel.heartsTransactionHash = trxHash;
                 paymentChannel.save(function(err)
                     {
@@ -465,6 +578,155 @@ var service = function(io, nemSDK, logger)
         function(err) {
             logger_.error("[NEM] [ERROR]", "[MOSAIC-GET]", "Could not read mosaics definition for namespace: " + pacNEM_NS_ + ": " + err);
         });
+    };
+
+    /**
+     * This method is used to REDEEM the evias.pacnem:heart
+     * Mosaic when *player have finished playing* the Game 
+     * Session.
+     * 
+     * In order to avoid Player paying for the redeem of tokens 
+     * in the pacNEM game, I thought about implementing a Game Credits
+     * Sink Account to which the pacNEM game will send Messages 
+     * containing commands about the action of burning Game Credits
+     * and making them unavailable for players.
+     * 
+     * @param   {Object}    gameState   Object received through Socket.io
+     * @return void
+     */
+    this.processGameCreditsBurning = function(gamers)
+    {
+        var self = this;
+
+        var players = gamers;
+        if (! players || ! players.length)
+            return false;
+
+        // read addresses in ended game state data
+        var addresses = [];
+        for (var i = 0; i < players.length; i++) {
+            if (! players[i].getAddress() || ! players[i].getAddress().length)
+                continue;
+
+            // validate NEM address with NEM-sdk
+            var address = players[i].getAddress();
+            var chainId = self.getNetwork().config.id;
+            var isValid = self.getSDK().model.address.isFromNetwork(address, chainId);
+            if (! isValid)
+                //XXX add error log, someone tried to send invalid data
+                continue;
+
+            addresses.push(address);
+        }
+
+        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Will now burn Player Game Credit for the Game Session: " + addresses.length + " Players.");
+
+        self.sendGameCreditsToSink(addresses);
+
+        // for each address we also need to update the 
+        // NEMGameCredit entry for given NEMGamer.
+        for (var j = 0; j < players.length; j++) {
+            var gamer = players[j];
+
+            gamer.updateCredits({countPlayedHearts: 1});
+        }
+    };
+
+    /**
+     * This method will send Game Credits to the Game Credits
+     * Sink Address. `Game Credits Redeem Equivalent` mosaic is
+     * used, which is evias.pacnem:hearts--. This mosaic can and
+     * will always only be sent to the Game Credits Sink Account.
+     * 
+     * Sending the hearts-- mosaic is done with the PUBLIC Wallet
+     * because we want to avoid expensive cosignatory fees for 
+     * this action as this will happen quite often (every time 
+     * a multiplayer game is ended).
+     * 
+     * @param   {Array}     addresses   List of XEM addresses (players)
+     * @return  self
+     */
+    this.sendGameCreditsToSink = function(addresses)
+    {
+        var self = this;
+
+        // addresses will be added to a message which will be encrypted
+        // using CryptoJS.AES and pacNEM's secret encryption key. The 
+        // message contains all players of the ended game and this 
+        // transaction will act as a "Game Credit Burn" event in the Game.
+        var sinkMessage = addresses.join(",");
+        var sinkAddress = self.getCreditsSinkWallet();
+        var encMessage  = CryptoJS.AES.encrypt(sinkMessage, self.getEncryptionSecretKey());
+
+        var sinkXEM  = self.getCreditsSinkWallet();
+        var countRedeem = addresses.length; // sending X times hearts--
+        var privStore   = self.getSDK().model.objects.create("common")("", this.getPublicWalletSecretKey());
+        var mosaicDefPair = self.getSDK().model.objects.get("mosaicDefinitionMetaDataPair");
+        var redeemingMosaicName  = self.getCreditsSinkData().mosaic.id;
+
+        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending " + countRedeem + " hearts-- " + " sent to " + sinkXEM + " paid by " + pacNEM_);
+
+        // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
+        var transferTransaction = self.getSDK().model.objects.create("transferTransaction")(sinkXEM, 1, encMessage); // Amount 1 is "one time x Mosaic Attachments"
+
+        // must be multisig because non-transferable hearts-- mosaic owned by multisig
+        transferTransaction.isMultisig = true;
+        transferTransaction.multisigAccount = {publicKey: config.get("pacnem.businessPublic")};
+
+        var mosaicAttachRedeem  = self.getSDK().model.objects.create("mosaicAttachment")(pacNEM_NS_, redeemingMosaicName, countRedeem);
+        var redeemSlug = self.getSDK().utils.helpers.mosaicIdToName(mosaicAttachRedeem.mosaicId);
+
+        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Using Mosaics: " + redeemSlug);
+
+        // attach mosaic to transaction
+        transferTransaction.mosaics.push(mosaicAttachRedeem);
+
+        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Reading Mosaic Definitions for namespace: " + pacNEM_NS_);
+
+        // Need mosaic definition of evias.pacnem:heart to calculate adequate fees, so we get it from network.
+        self.getSDK().com.requests.namespace
+            .mosaicDefinitions(node_, pacNEM_NS_).then(
+        function(res) {
+            var redeemDef  = self.getSDK().utils.helpers.searchMosaicDefinitionArray(res, [redeemingMosaicName]);
+
+            if (undefined === redeemDef[redeemSlug])
+                return logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition for " + redeemSlug + " - Obligatory for the game, Please fix!");
+
+            mosaicDefPair[redeemSlug] = {};
+            mosaicDefPair[redeemSlug].mosaicDefinition = redeemDef[redeemSlug];
+
+            // Prepare the mosaic transfer transaction object and broadcast
+            var transactionEntity = self.getSDK().model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
+
+            logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending Mosaic Transfer Transaction to " + sinkXEM + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
+
+            self.getSDK().model.transactions.send(privStore, transactionEntity, node_).then(
+            function(res) {
+                delete privStore;
+
+                // If code >= 2, it's an error
+                if (res.code >= 2) {
+                    logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + pacNEM_ + " to " + sinkXEM + ": " + JSON.stringify(res));
+                    return false;
+                }
+
+                var trxHash = res.transactionHash.data;
+                logger_.info(
+                    "[NEM] [CREDITS SINK]", "[CREATED]",
+                    "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug
+                    + " sent to " + sinkXEM);
+            },
+            function(err) {
+                logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + vendor_ + " to " + sinkXEM + " with error: " + err);
+            });
+
+            delete privStore;
+        },
+        function(err) {
+            logger_.error("[NEM] [ERROR]", "[MOSAIC-GET]", "Could not read mosaics definition for namespace: " + pacNEM_NS_ + ": " + err);
+        });
+
+        return self;
     };
 
     /**
@@ -486,10 +748,47 @@ var service = function(io, nemSDK, logger)
         return trxHash;
     };
 
+    /**
+     * Read blockchain transaction ID from TransactionMetaDataPair
+     *
+     * @param  [TransactionMetaDataPair]{@link http://bob.nem.ninja/docs/#transactionMetaDataPair} transactionMetaDataPair
+     * @return {integer}
+     */
     this.getTransactionId = function(transactionMetaDataPair)
     {
         return transactionMetaDataPair.meta.id;
-    }
+    };
+
+    /**
+     * Read blockchain transaction Message from TransactionMetaDataPair
+     *
+     * @param  [TransactionMetaDataPair]{@link http://bob.nem.ninja/docs/#transactionMetaDataPair} transactionMetaDataPair
+     * @return {string}
+     */
+    this.getTransactionMessage = function(transactionMetaDataPair, doDecrypt = false)
+    {
+        var meta    = transactionMetaDataPair.meta;
+        var content = transactionMetaDataPair.transaction;
+
+        var trxRealData = content;
+        if (content.type == this.getSDK().model.transactionTypes.multisigTransaction) {
+            // multisig, message will be in otherTrans
+            trxRealData = content.otherTrans;
+        }
+
+        if (! trxRealData.message || ! trxRealData.message.payload)
+            // no message found in transaction
+            return "";
+
+        // decode transaction message and job done
+        var payload = trxRealData.message.payload;
+        var plain   = this.getSDK().utils.convert.hex2a(payload);
+
+        if (doDecrypt === true)
+            plain = CryptoJS.AES.decrypt(plain, this.getEncryptionSecretKey());
+
+        return plain;
+    };
 
     /**
      * This will read `slugToExtract` Mosaic amounts from the given Transaction
@@ -504,7 +803,7 @@ var service = function(io, nemSDK, logger)
      * @param  {string} slugToExtract - Which mosaic ID to extract (i.e.: evias.pacnem:heart)
      * @return {object}
      */
-    this.extractMosaicFromTransactionData_ = function(trxContent, slugToExtract)
+    this.extractMosaicFromTransactionData_ = function(trxContent, slugToExtract, divisibility = 6)
     {
         if (! trxContent || ! slugToExtract || ! slugToExtract.length)
             return {totalMosaic: 0, recipient: false};
@@ -555,7 +854,9 @@ var service = function(io, nemSDK, logger)
             // transaction, the amount field is in fact a QUANTITY. Whereas the `mosaic.quantity`
             // field represents the AMOUNT of Mosaics in the described Attachment.
             var mosAmount   = parseInt(mosaic.quantity);
-            var mosMultiply = trxAmount > 0 ? parseInt(trxAmount / 1000000) : 1; // multiplier field stored in micro XEM in transactions!
+
+             // multiplier field stored in micro XEM in transactions!
+            var mosMultiply = trxAmount > 0 ? parseInt(trxAmount / Math.pow(10, divisibility)) : 1;
             var totalMosaic = mosMultiply * mosAmount;
 
             // found our mosaic in `trxContent`
