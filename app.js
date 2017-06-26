@@ -492,25 +492,24 @@ app.post("/api/v1/sessions/store", function(req, res)
 		});
 	});
 
-//XXX implement actual model
 app.get("/api/v1/scores", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		//XXX implement chainDataLayer.fetchScores
+		var ranking = HallOfFame.getRanking();
 		var scores = [];
-		for (var i = 0; i < 10; i++) {
-			var rScore = Math.floor(Math.random() * 20001);
-			var rUser  = Math.floor(Math.random() * 15);
-			var rDay   = Math.floor(Math.random() * 32);
+		for (var i = 0; i < ranking.length; i++) {
+			var rScore  = ranking[i];
+			var fmtTime = rScore.timestamp.toISOString().replace(/T/, ' ')
+														.replace(/\..+/, '');
 
 			scores.push({
 				position: i+1,
-				score: Math.floor(Math.random() * 20001),
-				username: "greg" + Math.floor(Math.random() * 15),
-				address: "TATKHV5JJTQXCUCXPXH2WPHLAYE73REUMGDOZKUW",
-				truncAddress: ("TATKHV5JJTQXCUCXPXH2WPHLAYE73REUMGDOZKUW").substr(0, 8),
-				scoreDate: "2017-03-" + (rDay > 9 ? rDay : "0" + rDay) + " at 00:01"
+				score: rScore.score,
+				username: rScore.username,
+				address: rScore.address,
+				truncAddress: rScore.address.substr(0, 8),
+				scoreDate: fmtTime
 			});
 		}
 
