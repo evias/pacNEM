@@ -656,7 +656,6 @@ var service = function(io, nemSDK, logger)
         // transaction will act as a "Game Credit Burn" event in the Game.
         var sinkMessage = addresses.join(",");
         var sinkAddress = self.getCreditsSinkWallet();
-        var encMessage  = CryptoJS.AES.encrypt(sinkMessage, self.getEncryptionSecretKey());
 
         var sinkXEM  = self.getCreditsSinkWallet();
         var countRedeem = addresses.length; // sending X times hearts--
@@ -667,7 +666,7 @@ var service = function(io, nemSDK, logger)
         logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending " + countRedeem + " hearts-- " + " sent to " + sinkXEM + " paid by " + pacNEM_);
 
         // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
-        var transferTransaction = self.getSDK().model.objects.create("transferTransaction")(sinkXEM, 1, encMessage); // Amount 1 is "one time x Mosaic Attachments"
+        var transferTransaction = self.getSDK().model.objects.create("transferTransaction")(sinkXEM, 1, sinkMessage); // Amount 1 is "one time x Mosaic Attachments"
 
         // must be multisig because non-transferable hearts-- mosaic owned by multisig
         transferTransaction.isMultisig = true;
@@ -780,14 +779,45 @@ var service = function(io, nemSDK, logger)
             // no message found in transaction
             return "";
 
+        //DEBUG logger_.info("[DEBUG]", "[BLOCKCHAIN]", "Reading following message: " + JSON.stringify(trxRealData.message));
+
         // decode transaction message and job done
         var payload = trxRealData.message.payload;
         var plain   = this.getSDK().utils.convert.hex2a(payload);
 
-        if (doDecrypt === true)
-            plain = CryptoJS.AES.decrypt(plain, this.getEncryptionSecretKey());
+        //DEBUG logger_.info("[DEBUG]", "[BLOCKCHAIN]", "Message Read: " + JSON.stringify(plain));
+
+        if (doDecrypt === true) {
+            var decrypted = CryptoJS.AES.decrypt(plain, this.getEncryptionSecretKey());
+
+            //DEBUG logger_.info("[DEBUG]", "[BLOCKCHAIN]", "Decrypted using AES from '" + plain + "' to '" + decrypted + "'");
+
+            return decrypted;
+        }
 
         return plain;
+    };
+
+    /**
+     * Read the Transaction Date from a given TransactionMetaDataPair
+     * object (gotten from NEM websockets or API).
+     *
+     * @param  [TransactionMetaDataPair]{@link http://bob.nem.ninja/docs/#transactionMetaDataPair} transactionMetaDataPair
+     * @param  {boolean}    asNemTime   Whether to return a NEM Timestamp or normal timestamp
+     * @return {string}
+     */
+    this.getTransactionDate = function(transactionMetaDataPair, asNemTime = false)
+    {
+        var meta    = transactionMetaDataPair.meta;
+        var content = transactionMetaDataPair.transaction;
+
+        var nemTime  = content.timeStamp;
+        var nemEpoch = Date.UTC(2015, 2, 29, 0, 6, 25, 0);
+
+        if (asNemTime === true)
+            return nemTime;
+
+        return new Date(nemEpoch + nemTime);
     };
 
     /**
