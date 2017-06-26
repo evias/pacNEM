@@ -191,6 +191,8 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
 
             // the message in the transaction should be a valid JSON Pacman object
             try {
+                //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now interpreting: '" + lastMsgRead + "' as JSON for mosaicStake: " + JSON.stringify(mosaicStake));
+
                 var player = JSON.parse(lastMsgRead);
 
                 // the timestamp of the transaction is not stored in the encrypted JSON
@@ -203,13 +205,14 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
                     continue;
                 }
 
-                self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Score Found: " + score + " for " + recipient + " with player data: " + decrypt);
+                //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Score Found with player data: " + JSON.stringify(player));
                 gameHallOfFame_.history[recipient].push(player);
             }
             catch (e) {
                 // could not parse the object in the transaction message as a valid JSON object
                 // representing a Pacman player object.
                 // do nothing (high score NOT valid).
+                //DEBUG self.logger_.error("[DEBUG]", "[PACNEM HOF]", "Error Parsing JSON: " + e);
             }
         }
 
