@@ -656,7 +656,6 @@ var service = function(io, nemSDK, logger)
         // transaction will act as a "Game Credit Burn" event in the Game.
         var sinkMessage = addresses.join(",");
         var sinkAddress = self.getCreditsSinkWallet();
-        var encMessage  = CryptoJS.AES.encrypt(sinkMessage, self.getEncryptionSecretKey());
 
         var sinkXEM  = self.getCreditsSinkWallet();
         var countRedeem = addresses.length; // sending X times hearts--
@@ -664,10 +663,10 @@ var service = function(io, nemSDK, logger)
         var mosaicDefPair = self.getSDK().model.objects.get("mosaicDefinitionMetaDataPair");
         var redeemingMosaicName  = self.getCreditsSinkData().mosaic.id;
 
-        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending " + countRedeem + " hearts-- " + " sent to " + sinkXEM + " paid by " + pacNEM_);
+        //DEBUG logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending " + countRedeem + " hearts-- " + " sent to " + sinkXEM + " paid by " + pacNEM_);
 
         // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
-        var transferTransaction = self.getSDK().model.objects.create("transferTransaction")(sinkXEM, 1, encMessage); // Amount 1 is "one time x Mosaic Attachments"
+        var transferTransaction = self.getSDK().model.objects.create("transferTransaction")(sinkXEM, 1, sinkMessage); // Amount 1 is "one time x Mosaic Attachments"
 
         // must be multisig because non-transferable hearts-- mosaic owned by multisig
         transferTransaction.isMultisig = true;
@@ -676,12 +675,12 @@ var service = function(io, nemSDK, logger)
         var mosaicAttachRedeem  = self.getSDK().model.objects.create("mosaicAttachment")(pacNEM_NS_, redeemingMosaicName, countRedeem);
         var redeemSlug = self.getSDK().utils.helpers.mosaicIdToName(mosaicAttachRedeem.mosaicId);
 
-        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Using Mosaics: " + redeemSlug);
+        //DEBUG logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Using Mosaics: " + redeemSlug);
 
         // attach mosaic to transaction
         transferTransaction.mosaics.push(mosaicAttachRedeem);
 
-        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Reading Mosaic Definitions for namespace: " + pacNEM_NS_);
+        //DEBUG logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Reading Mosaic Definitions for namespace: " + pacNEM_NS_);
 
         // Need mosaic definition of evias.pacnem:heart to calculate adequate fees, so we get it from network.
         self.getSDK().com.requests.namespace
@@ -698,7 +697,7 @@ var service = function(io, nemSDK, logger)
             // Prepare the mosaic transfer transaction object and broadcast
             var transactionEntity = self.getSDK().model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
 
-            logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending Mosaic Transfer Transaction to " + sinkXEM + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
+            //DEBUG logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending Mosaic Transfer Transaction to " + sinkXEM + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
 
             self.getSDK().model.transactions.send(privStore, transactionEntity, node_).then(
             function(res) {
@@ -711,10 +710,7 @@ var service = function(io, nemSDK, logger)
                 }
 
                 var trxHash = res.transactionHash.data;
-                logger_.info(
-                    "[NEM] [CREDITS SINK]", "[CREATED]",
-                    "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug
-                    + " sent to " + sinkXEM);
+                logger_.info("[NEM] [CREDITS SINK]", "[CREATED]", "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug + " sent to " + sinkXEM);
             },
             function(err) {
                 logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + vendor_ + " to " + sinkXEM + " with error: " + err);
@@ -780,14 +776,45 @@ var service = function(io, nemSDK, logger)
             // no message found in transaction
             return "";
 
+        //DEBUG logger_.info("[DEBUG]", "[BLOCKCHAIN]", "Reading following message: " + JSON.stringify(trxRealData.message));
+
         // decode transaction message and job done
         var payload = trxRealData.message.payload;
         var plain   = this.getSDK().utils.convert.hex2a(payload);
 
-        if (doDecrypt === true)
-            plain = CryptoJS.AES.decrypt(plain, this.getEncryptionSecretKey());
+        //DEBUG logger_.info("[DEBUG]", "[BLOCKCHAIN]", "Message Read: " + JSON.stringify(plain));
+
+        if (doDecrypt === true) {
+            var decrypted = CryptoJS.AES.decrypt(plain, this.getEncryptionSecretKey());
+
+            //DEBUG logger_.info("[DEBUG]", "[BLOCKCHAIN]", "Decrypted using AES from '" + plain + "' to '" + decrypted + "'");
+
+            return decrypted;
+        }
 
         return plain;
+    };
+
+    /**
+     * Read the Transaction Date from a given TransactionMetaDataPair
+     * object (gotten from NEM websockets or API).
+     *
+     * @param  [TransactionMetaDataPair]{@link http://bob.nem.ninja/docs/#transactionMetaDataPair} transactionMetaDataPair
+     * @param  {boolean}    asNemTime   Whether to return a NEM Timestamp or normal timestamp
+     * @return {string}
+     */
+    this.getTransactionDate = function(transactionMetaDataPair, asNemTime = false)
+    {
+        var meta    = transactionMetaDataPair.meta;
+        var content = transactionMetaDataPair.transaction;
+
+        var nemTime  = content.timeStamp;
+        var nemEpoch = Date.UTC(2015, 2, 29, 0, 6, 25, 0);
+
+        if (asNemTime === true)
+            return nemTime;
+
+        return new Date(nemEpoch + (nemTime*1000));
     };
 
     /**

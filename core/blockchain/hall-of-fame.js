@@ -48,6 +48,21 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
     var gameHallOfFame_ = {"ranking": [], "history": {}, "trxIdList": {}};
 
     /**
+     * This method uses the pre-fetched `gameHallOfFame_.ranking` object
+     * which is already sorted.
+     * 
+     * @see     fetchBlockchainHallOfFame()
+     * @return  {Array}
+     */
+    this.getRanking = function()
+    {
+        if (! gameHallOfFame_.ranking)
+            return [];
+
+        return gameHallOfFame_.ranking;
+    };
+
+    /**
      * This method will recursively read transactions from the blockchain.
      * 
      * NIS endpoints only allow up to 25 transactions in one request. This method
@@ -63,7 +78,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
     this.fetchBlockchainHallOfFame = function(lastTrxRead = null, callback = null)
     {
         var self = this;
-        var cheesePayer = self.blockchain_.getPublicWallet();
+        var cheesePayer = self.blockchain_.getVendorWallet();
 
         // read outgoing transactions of the account and check for the given mosaic to build a
         // blockchain-trust mosaic history.
@@ -121,6 +136,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
 
         var lastTrxRead = null;
         var lastTrxHash = null;
+        var lastTtxDate = null;
         var lastMsgRead = null;
         for (var i = 0; i < transactions.length; i++) {
             var content    = transactions[i].transaction;
@@ -129,6 +145,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
             // save transaction id
             lastTrxRead = self.blockchain_.getTransactionId(transactions[i]);
             lastTrxHash = self.blockchain_.getTransactionHash(transactions[i]);
+            lastTrxDate = self.blockchain_.getTransactionDate(transactions[i], false);
             lastMsgRead = self.blockchain_.getTransactionMessage(transactions[i]);
 
             if (! lastMsgRead.length)
@@ -172,19 +189,31 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
             // represents the total score of the player.
             var score  = mosaicStake.totalMosaic;
 
-            // PacNEM encrypts the transaction message with AES using the key in config `pacnem.secretKey`.
-            var decrypt = CryptoJS.AES.decrypt(lastMsgRead, self.blockchain_.getEncryptionSecretKey());
+            // the message in the transaction should be a valid JSON Pacman object
+            try {
+                //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now interpreting: '" + lastMsgRead + "' as JSON for mosaicStake: " + JSON.stringify(mosaicStake));
 
-            // the decrypted message should be a valid JSON Pacman object
-            var player = JSON.parse(decrypt);
+                var player = JSON.parse(lastMsgRead);
 
-            if (! player || ! player.address || ! player.score || ! player.username) {
-                // invalid transaction, should contain AES encrypted JSON of Pacman object
-                continue;
+                // the timestamp of the transaction is not stored in the encrypted JSON
+                // on the blockchain because it can be computed from the NEM Timestamp
+                // of the transaction.
+                player.timestamp = lastTrxDate;
+
+                if (! player || ! player.address || ! player.score || ! player.username) {
+                    // invalid transaction, should contain JSON of Pacman object
+                    continue;
+                }
+
+                //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Score Found with player data: " + JSON.stringify(player));
+                gameHallOfFame_.history[recipient].push(player);
             }
-
-            self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Score Found: " + score + " for " + recipient + " with player data: " + decrypt);
-            gameHallOfFame_.history[recipient].push(player);
+            catch (e) {
+                // could not parse the object in the transaction message as a valid JSON object
+                // representing a Pacman player object.
+                // do nothing (high score NOT valid).
+                //DEBUG self.logger_.error("[DEBUG]", "[PACNEM HOF]", "Error Parsing JSON: " + e);
+            }
         }
 
         return lastTrxRead;
@@ -261,6 +290,9 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
             if (! pacman || ! pacman.address || ! pacman.username || ! pacman.score)
                 continue;
 
+            if (pacman.lifes < 0)
+                pacman["lifes"] = 0;
+
             if (pacman.score <= currentTop10MinScore)
                 continue;
 
@@ -298,19 +330,18 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
 
         // remove useless fields in Pacman object (directions, etc.)
         // we don't want to store useless information on the blockchain
-        var unsetFields = ["x", "y", "direction", "combo", "cheese_power", "cheese_effect", "killed_recently"];
+        var unsetFields = ["x", "y", "lifes", "direction", "combo", "cheese_power", "cheese_effect", "killed_recently"];
         for (var u = 0; u < unsetFields.length; u++)
             delete pacman[unsetFields[u]];
 
-        // build encrypted message - the message + address are used to avoid 
-        // sending rewards more than 1 time.
+        // build message with Pacman object JSON - the message + address are 
+        // used to avoid sending rewards more than 1 time.
         var message = JSON.stringify(pacman);
-        var encrypt = CryptoJS.AES.encrypt(message, self.blockchain_.getEncryptionSecretKey());
 
-        self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Plain JSON: '" + message + "' with Encrypted: '" + encrypt.toString() + "'");
+        self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Sending Cheese with Pacman Object Plain JSON: '" + message);
 
         // find already paid out Rewards
-        self.db_.NEMReward.findOne({"address": pacman.address, "encryptedMessage": encrypt.toString()}, 
+        self.db_.NEMReward.findOne({"address": pacman.address, "encryptedMessage": message}, 
         function(err, reward)
         {
             //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "READ NEMReward JSON: '" + JSON.stringify(reward));
@@ -325,7 +356,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
                 // for this Game and Player.
                 var createReward = new self.db_.NEMReward({
                     "address": pacman.address,
-                    "encryptedMessage": encrypt.toString()});
+                    "encryptedMessage": message});
                 createReward.save();
 
                 self.announceRewardsPayout(createReward, pacman, currentTop10MinScore, currentHighScore);
@@ -369,7 +400,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
             // only send mosaics to hall of famers
             return false;
 
-        self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending " + pacman.score + " cheeses to player " + pacman.address + " with username '" + pacman.username + "' paid by " + self.blockchain_.getPublicWallet());
+        self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending " + pacman.score + " cheeses to player " + pacman.address + " with username '" + pacman.username + "' paid by " + self.blockchain_.getVendorWallet());
 
         // Create an un-prepared multisig mosaic transfer transaction object 
         // Must be Multisig because mosaic evias.pacnem:cheese is non-transferable
@@ -456,7 +487,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
 
                 // If code >= 2, it's an error
                 if (res.code >= 2) {
-                    self.logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + self.blockchain_.getPublicWallet() + " to " + pacman.address + ": " + JSON.stringify(res));
+                    self.logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + pacman.address + ": " + JSON.stringify(res));
                     return false;
                 }
 
@@ -476,7 +507,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
                 nemReward.save();
             },
             function(err) {
-                self.logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + self.blockchain_.getPublicWallet() + " to " + pacman.address + " with error: " + err);
+                self.logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + pacman.address + " with error: " + err);
             });
         },
         function(err) {
