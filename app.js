@@ -578,7 +578,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 		};
 
 		// when no invoiceNumber is given, create or retrieve in following statuses
-		dbConditions["status"] = { $in: ["not_paid", "identified", "unconfirmed", "paid_partly"] };
+		dbConditions["status"] = { $in: ["not_paid", "identified", "unconfirmed", "paid_partly", "paid"] };
 		if (invoiceNumber && invoiceNumber.length) {
 			// load invoice by number
 			dbConditions["number"] = decodeURIComponent(invoiceNumber);
@@ -665,15 +665,27 @@ app.get("/api/v1/credits/history", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		var payer = req.query.payer ? req.query.payer : undefined;
-		if (! payer.length || dataLayer.isApplicationWallet(payer))
+		var payer  = req.query.payer ? req.query.payer : undefined;
+		var number = req.query.number ? req.query.number : undefined;
+
+		if (! payer || ! payer.length || dataLayer.isApplicationWallet(payer))
 			// cannot be one of the application wallets
 			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
 
-		dataLayer.NEMPaymentChannel.find({
+		var invoiceQuery = {
 			payerXEM: payer,
-			status: {$in: ["not_paid", "expired", "unconfirmed", "paid_partly", "paid"]}
-		}, function(err, invoices)
+			status: {$in: ["not_paid", 
+						   "expired", 
+						   "unconfirmed", 
+						   "paid_partly", 
+						   "paid"]}
+		};
+
+		if (number && number.length) {
+			invoiceQuery["number"] = number;
+		}
+
+		dataLayer.NEMPaymentChannel.find(invoiceQuery, function(err, invoices)
 		{
 			if (err) {
 				var errorMessage = "Error occured on /credits/history: " + err;
@@ -716,7 +728,11 @@ app.get("/api/v1/credits/history", function(req, res)
 				}
 			}
 
-			res.send(JSON.stringify({data: invoicesHistory}));
+			if (number && number.length && invoicesHistory.length === 1)
+				// single invoice data
+				return res.send(JSON.stringify({item: invoicesHistory.pop()}));
+
+			return res.send(JSON.stringify({data: invoicesHistory}));
 		});
 	});
 

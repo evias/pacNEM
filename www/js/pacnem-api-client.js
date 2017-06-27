@@ -38,6 +38,18 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		return this.socket_;
 	};
 
+	/**
+	 * This method saves the player details and will issue a check on the blockchain
+	 * for available Game Credits.
+	 * 
+	 * The 3rd parameter `validateHeartsPerBlockchain` defines whether the saving 
+	 * process should validate the Blockchain Available Game Credits or if this 
+	 * was already done.
+	 * 
+	 * @param 	{object} 	details
+	 * @param	{Function} 	callback
+	 * @param 	{boolean}	validateHeartsPerBlockchain
+	 */
 	this.storeSession = function(details, callback, validateHeartsPerBlockchain = true)
 	{
 		this.jquery_.ajax({
@@ -56,6 +68,13 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		});
 	};
 
+	/**
+	 * This method reads session details with the given address and
+	 * username in the `details` object.
+	 * 
+	 * @param 	{object} 	details
+	 * @param	{Function} 	callback
+	 */
 	this.getSession = function(details, callback)
 	{
 		this.jquery_.ajax({
@@ -72,6 +91,14 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		});
 	};
 
+	/**
+	 * This method read the Scores from the PacNEM API
+	 * and renders the `scores-container` partial view
+	 * when the AJAX request is done.
+	 * 
+	 * @param 	{object} 	details
+	 * @param	{Function} 	callback
+	 */
 	this.fetchScores = function(callback)
 	{
 		var self = this;
@@ -95,6 +122,14 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		});
 	};
 
+	/**
+	 * This method will read a random sponsor from the PacNEM API.
+	 * 
+	 * This method is used when the game needs a random sponsor to 
+	 * display details.
+	 * 
+	 * @param	{Function} 	callback
+	 */
 	this.getRandomSponsor = function(callback)
 	{
 		var self = this;
@@ -113,6 +148,17 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		});
 	};
 
+	/**
+	 * This method reads or creates an Invoice given the details
+	 * provided. If there is currently an open invoice for the given
+	 * player details, it will be returned by the PacNEM API. If not,
+	 * a new one will be created so that the Player can buy Game Credits.
+	 * 
+	 * @param 	{object} 	player 		Should contain value for `address`
+	 * @param 	{string} 	socketId
+	 * @param 	{string} 	invoiceNum
+	 * @param	{Function} 	callback
+	 */
 	this.getInvoice = function(player, socketId, invoiceNumber, callback)
 	{
 		var numSuffix = invoiceNumber && invoiceNumber.length ? "&num=" + encodeURIComponent(invoiceNumber) : "";
@@ -134,6 +180,44 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 	    });
 	};
 
+	/**
+	 * This method reads a given invoice's status.
+	 * 
+	 * The `invoiceNum` parameter is used to load the Invoice. You must
+	 * also provide a `player` object containing `address` and a `socketId`
+	 * 
+	 * @param 	{object} 	player 		Should contain value for `address`
+	 * @param 	{string} 	socketId
+	 * @param 	{string} 	invoiceNum
+	 * @param	{Function} 	callback
+	 */
+	this.checkInvoiceStatus = function(player, socketId, invoiceNum, callback)
+	{
+		var numberSuffix = invoiceNum && invoiceNum.length ? "&number=" + encodeURIComponent(invoiceNum) : "";
+
+		$.ajax({
+	        url: "/api/v1/credits/history?payer=" + player.address + "&usid=" + socketId + numberSuffix,
+	        type: "GET",
+	        success: function(res)
+	        {
+	            if (res.status == "error") {
+	                console.log("Error occured on Invoice History: " + res.message);
+	                return false;
+	            }
+	            else if (res.status == "ok") {
+					return callback(res.item);
+	            }
+	        }
+	    });
+	};
+
+	/**
+	 * This method reads the Game Credits History for
+	 * the given `player` address.
+	 *
+	 * @param 	{object} 	player 		Should contain value for `address`
+	 * @param	{Function} 	callback
+	 */
 	this.fetchPurchaseHistory = function(player, callback)
 	{
 		var self = this;
@@ -157,6 +241,13 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 		});
 	};
 
+	/**
+	 * This method reads the remaining Game Credits from
+	 * the PacNEM API.
+	 * 
+	 * @param 	{object} 	player 		Should contain value for `address`
+	 * @param	{Function} 	callback
+	 */
 	this.fetchRemainingHearts = function(player, callback)
 	{
 		var self = this;
