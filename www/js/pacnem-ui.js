@@ -37,6 +37,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     var session = undefined;
     var API_ = new GameAPI(config, socket, controller, $, jQFileTemplate);
     var template_ = jQFileTemplate;
+    var interval_ = null; // fallback AJAX invoice payment status update listener
 
     /**
      * /!\
@@ -135,7 +136,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         socket_.on("pacnem_payment_success", function(rawdata)
         {
             var data = JSON.parse(rawdata);
-            var sess = ctrl_.getSession();
+            var sess = self.getPlayerDetails();
 
             // close modal
             //var $invoiceBox = $(".pacnem-invoice-modal").first();
@@ -845,8 +846,13 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
     /**
      * Open the Invoice modal box for the user to Pay
-     * per Play. This invoice will contain a Mosaic
-     * amount to defined.
+     * per Play. This invoice will ask the user to pay
+     * to a given address with a displayed Message and
+     * an amount computed using the current Network Fees.
+     * 
+     * This method defines a Websocket Subscription for 
+     * the NEMBot as well as an AJAX fallback checking for
+     * updates on the Payment without websockets (HTTP only).
      *
      * @param  Function callback
      * @return GameUI
@@ -855,60 +861,196 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     {
         var self = this;
 
-        // Frontend to Backend WebSocket Handler
-        // -------------------------------------
-        // This method will receive updates from the PacNEM backend
-        // whenever a Payment Update is received on the NEM Blockchain.
-        // The updates are sent in the form of Socket.io events named
-        // `pacnem_payment_status_update`. The data sent through this
-        // websocket will contain a `status` field and a `paymentData`
-        // field containing the details of the said payment.
-        var registerInvoiceStatusUpdateListener = function(ui)
+        /**
+         * This method will process the JSON or Object passed as a 
+         * Payment Update data object. This object should contain 
+         * at least the `status` field with a set value.
+         * 
+         * This method is responsible for updating the DOM elements
+         * of the invoice for visual feedback.
+         * 
+         * @param {string|object} rawData 
+         */
+        var processPaymentData_ = function(ui, rawData)
+        {
+            var data = null;
+            if (typeof rawData == 'object') {
+                data = rawData;
+            }
+            else if (typeof rawData == 'string') {
+                data = JSON.parse(rawData);
+            }
+            //DEBUG else {
+            //DEBUG    console.log("[DEBUG] " + "processPaymentData_ with: ", rawData, " with typeof: " + typeof rawData);
+            //DEBUG }
+
+            console.log("[DEBUG] " + "processing payment status data: ", data);
+
+            if (! data)
+                return false;
+
+            var amountPaid = typeof data.paymentData != 'undefined' ? data.paymentData.amountPaid : data.amountPaid;
+            var amountUnconfirmed = typeof data.paymentData != 'undefined' ? data.paymentData.amountUnconfirmed : data.amountUnconfirmed;
+            var newStatus = typeof data.paymentData != 'undefined' ? data.paymentData.status : data.status;
+
+            var statusClass  = newStatus == 'unconfirmed' ? "info" : "success";
+            var statusIcon   = newStatus == 'unconfirmed' ? "glyphicon-time" : "glyphicon-check";
+
+            var prefix = $("#pacnem-invoice-prefix").val();
+            var $status      = $("#" + prefix + "-status");
+            var $paid        = $("#" + prefix + "-amountPaid .amount");
+            var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
+
+            $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + newStatus + "</span>")
+                    .removeClass("text-danger").addClass("text-" + statusClass);
+
+            if (amountPaid) {
+                $paid.text(amountPaid / 1000000);
+                $paid.parents(".wrap-amount").first().show();
+            }
+            else
+                $paid.parents(".wrap-amount").first().hide();
+
+            if (amountUnconfirmed) {
+                $unconfirmed.text(amountUnconfirmed / 1000000);
+                $unconfirmed.parents(".wrap-amount").first().show();
+            }
+            else
+                $unconfirmed.parents(".wrap-amount").first().hide();
+
+            if (newStatus == "paid") {
+                $(".pacnem-invoice-close-trigger").show();
+
+                var $invoiceBox = $(".pacnem-invoice-modal").first();
+
+                if (callback)
+                    return callback(ui);
+            }
+        };
+
+        var closeableInvoiceModalBox = function(ui, callback)
+        {
+            $(".pacnem-invoice-close-trigger").show();
+            $(".pacnem-invoice-close-trigger").off("click");
+            $(".pacnem-invoice-close-trigger").on("click", function()
+            {
+                $(".pacnem-invoice-modal").modal("hide");
+                callback(ui);
+                return false;
+            });
+        };
+
+        /**
+         * This method defines an AJAX fallback for when the websocket
+         * does not catch a payment update.
+         * 
+         * When the NEMBot is deployed on a VPS, this will not be used
+         * very often but using Heroku, the NEMBot goes to sleep and
+         * needs to be waken up with this AJAX fallback that will also
+         * check for payment updates that the sleeping bot will have 
+         * missed.
+         * 
+         * @param {GameUI} ui 
+         */
+        var registerStatusHttpFallback = function(ui, seconds = 30)
+        {
+            var fn_getState = function()
             {
                 var player = self.getPlayerDetails();
+                var prefix = $("#pacnem-invoice-prefix").val();
+                var number = $("#" + prefix + "-message").text().trim();
+                var status = $("#" + prefix + "-status").text().trim();
 
-                socket_.on("pacnem_payment_status_update", function(rawdata)
+                if (status == 'paid') {
+                    // make invoice closeable in case the invoice is stated Paid
+                    // and stop http fallback requests
+                    clearInterval(interval_);
+                    closeableInvoiceModalBox(self, callback);
+                    return false;
+                }
+
+                API_.checkInvoiceStatus(player, socket_.id, number, function(paymentUpdateData)
                 {
-                    var data = JSON.parse(rawdata);
+                    console.log("[DEBUG] " + "Invoice State API JSON: '" + JSON.stringify(paymentUpdateData) + "' untouched: ", paymentUpdateData);
 
-                    var statusClass  = data.status == 'unconfirmed' ? "info" : "success";
-                    var statusIcon   = data.status == 'unconfirmed' ? "glyphicon-time" : "glyphicon-check";
+                    if (paymentUpdateData !== false) {
+                        var done = {"paid": true, "overpaid": true};
+                        if (paymentUpdateData.status && done.hasOwnProperty(paymentUpdateData.status)) {
+                            // make invoice closeable in case the invoice is stated Paid
+                            // and stop http fallback requests
+                            clearInterval(interval_);
+                            closeableInvoiceModalBox(self, callback);
+                        }
 
-                    var prefix = $("#pacnem-invoice-prefix").val();
-                    var $status      = $("#" + prefix + "-status");
-                    var $paid        = $("#" + prefix + "-amountPaid .amount");
-                    var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
-
-                    $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + data.status + "</span>")
-                           .removeClass("text-danger").addClass("text-" + statusClass);
-
-                    if (data.paymentData.amountPaid) {
-                        $paid.text(data.paymentData.amountPaid / 1000000);
-                        $paid.parents(".wrap-amount").first().show();
-                    }
-                    else
-                        $paid.parents(".wrap-amount").first().hide();
-
-                    if (data.paymentData.amountUnconfirmed) {
-                        $unconfirmed.text(data.paymentData.amountUnconfirmed / 1000000);
-                        $unconfirmed.parents(".wrap-amount").first().show();
-                    }
-                    else
-                        $unconfirmed.parents(".wrap-amount").first().hide();
-
-                    if (data.status == "paid") {
-                        $(".pacnem-invoice-close-trigger").show();
-
-                        var $invoiceBox = $(".pacnem-invoice-modal").first();
-
-                        //XXX do not close modal automatically anymore.
-                        //$invoiceBox.modal("hide");
-
-                        if (callback)
-                            return callback(ui);
+                        return processPaymentData_(self, paymentUpdateData);
                     }
                 });
             };
+
+            // configure INTERVAL to run every X seconds..
+            interval_ = setInterval(fn_getState, seconds * 1000);
+
+            // also run the interval right a way in case websocket subscription does not work
+            fn_getState();
+
+            // when the invoice is closed, the ajax fallback should
+            // be turned off.
+            $invoiceBox.on("shown.bs.hidden", function()
+            {
+                clearInterval(interval_);
+            });
+
+            // after 5 minutes without updates, check only every other minute
+            setInterval(function()
+            {
+                var prefix = $("#pacnem-invoice-prefix").val();
+                var status = $("#" + prefix + "-status").text().trim();
+                var done = {"paid": true, "overpaid": true};
+
+                clearInterval(interval_);
+                if (! done.hasOwnProperty(status)) {
+                    // now every minute we will check for an update of the invoice
+                    registerStatusHttpFallback(ui, 120);
+                }
+            }, 5 * 60 * 1000);
+
+            // register "I have Paid!" button listener
+            $(".pacnem-invoice-refresh-trigger").off("click");
+            $(".pacnem-invoice-refresh-trigger").on("click", function()
+            {
+                fn_getState();
+                return false;
+            });
+        };
+
+        /**
+         * This method registers the AJAX Fallback for Invoice Updates
+         * *and* establishes the Websocket Subscription for the NEMBot
+         * Payment Updates for the currently displayed invoice.
+         * 
+         * @param {GameUI} ui 
+         */
+        var registerInvoiceStatusUpdateListener = function(ui)
+        {
+            var player = self.getPlayerDetails();
+
+            // Frontend to Backend WebSocket Handler
+            // -------------------------------------
+            // This method will receive updates from the PacNEM backend
+            // whenever a Payment Update is received on the NEM Blockchain.
+            // The updates are sent in the form of Socket.io events named
+            // `pacnem_payment_status_update`. The data sent through this
+            // websocket will contain a `status` field and a `paymentData`
+            // field containing the details of the said payment.
+            socket_.on("pacnem_payment_status_update", function(rawdata)
+            {
+                return processPaymentData_(ui, rawdata);
+            });
+
+            // AJAX fallback will trigger every 20 seconds to check for invoice
+            // updates using the NEMBot API.
+            registerStatusHttpFallback(ui, 20);
+        };
 
         // pre-show event should trigger an ajax request to load the
         // dynamic invoice fields.
@@ -923,7 +1065,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 {
                     self.fillInvoiceModal(data, false);
 
-                    if (data.status != 'paid') {
+                    if (data.status != 'paid' && data.status != 'overpaid') {
                         registerInvoiceStatusUpdateListener(self);
                     }
                 });
@@ -933,8 +1075,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 {
                     $(".pacnem-invoice-modal").modal("hide");
                     callback(self);
+                    return false;
                 });
-
                 //XXX $("#pacnem-invoice-show-trigger").off("click");
             });
 

@@ -62,10 +62,49 @@ var JobsScheduler = function(logger, chainDataLayer, dataLayer)
             "Europe/Amsterdam"
         );
 
+//        var tenMinutes_PaymentProcess = new CronJob('*/10 * * * * *',
+//            function() {
+//                self._processPaymentsStatusUpdates(function(result, err)
+//                    {
+//                        if (! err)
+//                            self.logger.info("[NEM] [PAYMENT]", "[UPDATE]", "Updated " + result + "Payment Channels");
+//                        else
+//                            self.logger.error("[NEM] [PAYMENT]", "[UPDATE]", "Error on Payments Status update: " + err);
+//                    });
+//            },
+//            function () {
+//                //XXX print results with logger.
+//            },
+//            false,
+//            "Europe/Amsterdam"
+//        );
+
+//        var tenMinutes_HallOfFame = new CronJob('*/10 * * * * *',
+//            function() {
+//                self._processHallOfFameUpdates(function(result, err)
+//                    {
+//                        if (! err)
+//                            self.logger.info("[NEM] [HALLOFFAME]", "[UPDATE]", "Updated " + result + "Payment Channels");
+//                        else
+//                            self.logger.error("[NEM] [HALLOFFAME]", "[UPDATE]", "Error on Payments Status update: " + err);
+//                    });
+//            },
+//            function () {
+//                //XXX print results with logger.
+//            },
+//            false,
+//            "Europe/Amsterdam"
+//        );
+
         this.crons["hourly"]["PaymentExpiration"] = hourly_PaymentExpiration;
     };
 
-    this._processPaymentsStatusUpdates = function()
+    this._processPaymentsStatusUpdates = function(callback)
+    {
+
+    };
+
+    this._processHallOfFameUpdates = function(callback)
     {
 
     };
