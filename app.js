@@ -732,6 +732,8 @@ app.get("/api/v1/credits/history", function(req, res)
 						truncRecipient: currentInvoice.getTruncatedRecipient(),
 						amount: (currentInvoice.amount),
 						amountPaid: (currentInvoice.amountPaid),
+						amountInteger: (currentInvoice.amount * Math.pow(10, 6)),
+						amountPaidInteger: (currentInvoice.amountPaid * Math.pow(10, 6)),
 						status: currentInvoice.status,
 						createdAt: fmtCreatedAt,
 						updatedAt: fmtUpdatedAt,
