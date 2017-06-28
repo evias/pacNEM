@@ -205,7 +205,7 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 	                return false;
 	            }
 	            else if (res.status == "ok") {
-					return callback(res.item);
+					return callback(res.item || res.data.pop());
 	            }
 	        }
 	    });

@@ -973,7 +973,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 {
                     console.log("[DEBUG] " + "Invoice State API JSON: '" + JSON.stringify(paymentUpdateData) + "' untouched: ", paymentUpdateData);
 
-                    if (paymentUpdateData !== false) {
+                    if (paymentUpdateData) {
                         var done = {"paid": true, "overpaid": true};
                         if (paymentUpdateData.status && done.hasOwnProperty(paymentUpdateData.status)) {
                             // make invoice closeable in case the invoice is stated Paid

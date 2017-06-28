@@ -82,11 +82,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
  * COMMENT BLOCK if you wish to open the website
  * to the public.
  */
-var basicAuth = auth.basic({
-    realm: "This is a Highly Secured Area - Monkey at Work.",
-    file: __dirname + "/pacnem.htpasswd"
-});
-app.use(auth.connect(basicAuth));
+if (! config.get("pacnem.isPublic", false)) {
+	var basicAuth = auth.basic({
+		realm: "This is a Highly Secured Area - Monkey at Work.",
+		file: __dirname + "/pacnem.htpasswd"
+	});
+	app.use(auth.connect(basicAuth));
+}
 /**
  * End Basic HTTP Authentication BLOCK
  */

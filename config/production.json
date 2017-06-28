@@ -12,7 +12,8 @@
             "paymentBot": "ws://nem-nodejs-bot.herokuapp.com:29081"
         },
         "isBeta": true,
-        "secretKey": "PacNEMByGrégorySaive_NotSoSecretKey"
+        "secretKey": "PacNEMByGrégorySaive_NotSoSecretKey",
+        "isPublic": true
     },
     "nem": {
         "isTestMode": true,
