@@ -883,9 +883,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     return false;
                 }
 
-                amountPaid = data.amountPaid;
-                amountUnconfirmed = data.amountUnconfirmed;
-                newStatus  = data.status;
+                amountPaid = data.item.amountPaid;
+                amountUnconfirmed = data.item.amountUnconfirmed;
+                newStatus  = data.item.status;
             }
             else if (typeof data == 'string') {
                 data = JSON.parse(rawData);

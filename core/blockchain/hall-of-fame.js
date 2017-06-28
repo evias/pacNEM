@@ -427,6 +427,8 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
         nemSDK.com.requests.namespace
             .mosaicDefinitions(self.blockchain_.getEndpoint(), self.blockchain_.getNamespace()).then(
         function(res) {
+            res = res.data;
+
             var cheeseDef  = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [cheeseMosaicName]);
             var hofDef = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [hofMosaicName]);
             var atbDef = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [atbMosaicName]);

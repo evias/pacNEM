@@ -525,6 +525,8 @@ var service = function(io, nemSDK, logger)
         nem_.com.requests.namespace
             .mosaicDefinitions(node_, self.getNamespace()).then(
         function(res) {
+            res = res.data;
+
             var heartsDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, [heartsMosaicName]);
             var playerDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, [playerMosaicName]);
             var bPlayerDef = nem_.utils.helpers.searchMosaicDefinitionArray(res, [bPlayerMosaicName]);
@@ -690,6 +692,8 @@ var service = function(io, nemSDK, logger)
         self.getSDK().com.requests.namespace
             .mosaicDefinitions(node_, self.getNamespace()).then(
         function(res) {
+            res = res.data;
+
             var redeemDef  = self.getSDK().utils.helpers.searchMosaicDefinitionArray(res, [redeemingMosaicName]);
 
             if (undefined === redeemDef[redeemSlug])
