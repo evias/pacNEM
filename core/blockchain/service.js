@@ -280,14 +280,14 @@ var service = function(io, nemSDK, logger)
         var heartsMosaicSlug = pacNEM_NS_ + ":" + Object.getOwnPropertyNames(pacNEM_mosaics.credits)[0];
 
         // read Mosaics owned by the given address's XEM wallet
-        nem_.com.requests.account.mosaics(node_, gamer.getAddress()).then(function(res)
+        nem_.com.requests.account.mosaics.owned(node_, gamer.getAddress()).then(function(res)
         {
             if (! res.data || ! res.data.length) {
                 gamer.updateCredits({countHearts: 0});
                 return null;
             }
 
-            //logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.mosaics: " + JSON.stringify(res));
+            //DEBUG logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.mosaics: " + JSON.stringify(res));
 
             // this accounts owns mosaics, check if he has evias.pacnem:heart
             // mosaic so that he can play.
@@ -303,10 +303,12 @@ var service = function(io, nemSDK, logger)
                     // of Available Lives! The user may have *Played* Hearts or *Sent Back*
                     // Hearts to the pacnem-business wallet.
 
+                    //DEBUG logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found mosaic '" + heartsMosaicSlug + "' - Now validating with Transaction history.");
+
                     // computing the exact balance of the user (we now know that the user owns hearts.)
                     self.fetchGameCreditsRealHistoryByGamer(gamer, mosaic, null, function(creditsData)
                         {
-                            logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Total of " + creditsData.countHearts + " " + heartsMosaicSlug + " found for " + gamer.getAddress());
+                            //DEBUG logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Total of " + creditsData.countHearts + " " + heartsMosaicSlug + " found for " + gamer.getAddress());
                             gamer.updateCredits(creditsData);
                         });
                     hasHearts = true;
@@ -353,12 +355,12 @@ var service = function(io, nemSDK, logger)
         // read all transactions of the account and check for the given mosaic to build a
         // blockchain-trust mosaic history.
 
-        nem_.com.requests.account.allTransactions(node_, gamer.getAddress(), null, lastTrxRead)
+        nem_.com.requests.account.transactions.all(node_, gamer.getAddress(), null, lastTrxRead)
             .then(function(res)
             {
-                //logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.allTransactions: " + JSON.stringify(res));
+                //DEBUG logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.transactions.all: " + JSON.stringify(res));
 
-                var transactions = res;
+                var transactions = res.data;
 
                 lastTrxRead = self.saveGameCreditsRealHistoryForGamer(gamer, mosaic, transactions);
 
@@ -451,7 +453,7 @@ var service = function(io, nemSDK, logger)
         }
 
         var creditsInChunk = totalHeartsIncome - totalHeartsOutgo;
-        //logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + creditsInChunk + " " + heartsMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
+        //DEBUG logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + creditsInChunk + " " + heartsMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
 
         gamerHistory.countHearts = gamerHistory.countHearts + creditsInChunk;
         gamerHistory.exchangedHearts = gamerHistory.exchangedHearts + totalHeartsOutgo;

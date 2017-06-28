@@ -83,13 +83,13 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
         // read outgoing transactions of the account and check for the given mosaic to build a
         // blockchain-trust mosaic history.
 
-        self.blockchain_.getSDK().com.requests.account
-            .outgoingTransactions(self.blockchain_.getEndpoint(), cheesePayer, null, lastTrxRead)
+        self.blockchain_.getSDK().com.requests.account.transactions
+            .outgoing(self.blockchain_.getEndpoint(), cheesePayer, null, lastTrxRead)
             .then(function(res)
         {
-            //self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Result from NIS API account.outgoingTransactions: " + JSON.stringify(res));
+            //self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Result from NIS API account.transactions.outgoing: " + JSON.stringify(res));
 
-            var transactions = res;
+            var transactions = res.data;
 
             // forward transactions chunk (maximum 25 trx) to processHallOfFameTransactions
             // to interpret the data. `lastTrxRead` will be `false` when we should stop.
