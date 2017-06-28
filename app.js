@@ -694,15 +694,15 @@ app.get("/api/v1/credits/history", function(req, res)
 			}
 
 			if (!invoices || !invoices.length)
-				return res.send(JSON.stringify({data: []}));
+				return res.send(JSON.stringify({"status": "ok", data: []}));
 
 			// VERIFY all invoices state and amounts by iterating blockchain
 			// transactions. This ensure that we never send a wrong Invoice State
 			// through this API - it will always be validated by blockchain data.
-			PaymentsProtocol.fetchInvoicesRealHistory(invoices, function(invoicesHistory)
+			PaymentsProtocol.fetchInvoicesRealHistory(invoices, null, function(invoicesHistory)
 			{
 				if (invoicesHistory === false)
-					return res.send(JSON.stringify({data: []}));
+					return res.send(JSON.stringify({"status": "ok", data: []}));
 
 				// return list of invoices
 				var invoicesData = [];
@@ -728,8 +728,8 @@ app.get("/api/v1/credits/history", function(req, res)
 						number: currentInvoice.number,
 						recipient: currentInvoice.recipientXEM,
 						truncRecipient: currentInvoice.getTruncatedRecipient(),
-						amount: (currentInvoice.amount / Math.pow(10, 6)),
-						amountPaid: (currentInvoice.amountPaid / Math.pow(10, 6)),
+						amount: (currentInvoice.amount),
+						amountPaid: (currentInvoice.amountPaid),
 						status: currentInvoice.status,
 						createdAt: fmtCreatedAt,
 						updatedAt: fmtUpdatedAt,
@@ -740,9 +740,9 @@ app.get("/api/v1/credits/history", function(req, res)
 
 				if (number && number.length && invoicesData.length === 1)
 					// single invoice data
-					return res.send(JSON.stringify({item: invoicesData.pop()}));
+					return res.send(JSON.stringify({"status": "ok", item: invoicesData.pop()}));
 
-				return res.send(JSON.stringify({data: invoicesData}));
+				return res.send(JSON.stringify({"status": "ok", data: invoicesData}));
 			});
 		});
 	});

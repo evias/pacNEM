@@ -280,9 +280,9 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
         var numbers = {};
         var invoiceByNumber = {};
         for (var i = 0; i < invoices.length; i++) {
-            var num = invoices[i].number;
+            var num = invoices[i].number.toUpperCase();
             if (! paymentTransactionHistory_.byInvoice.hasOwnProperty(num)) {
-                paymentTransactionHistory_.byInvoice[num.toUpperCase()] = {
+                paymentTransactionHistory_.byInvoice[num] = {
                     transactions: [],
                     totalPaid: 0,
                     invoice: invoices[i]
@@ -297,7 +297,7 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
             .incoming(self.blockchain_.getEndpoint(), self.blockchain_.getVendorWallet(), null, lastTrxRead)
         .then(function(res)
         {
-            //DEBUG logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.transactions.all: " + JSON.stringify(res));
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.transactions.incoming: " + JSON.stringify(res));
 
             var transactions = res.data;
 
@@ -315,7 +315,8 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
 
             if (callback && (lastTrxRead === false || transactions.length < 25)) {
                 // done.
-                return callback(paymentTransactionHistory_.byInvoices);
+                self.logger_.info("[NEM] [PAY-FALLBACK] ", __line, "read a total of " + Object.getOwnPropertyNames(paymentTransactionHistory_.byHash).length + " transactions from " + self.blockchain_.getVendorWallet() + ".");
+                return callback(paymentTransactionHistory_.byInvoice);
             }
         });
     };
@@ -327,6 +328,7 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
         var lastMsgRead = null;
         var lastTrxHash = null;
         var lastAmtRead = null;
+        var cntRelevant = 0;
         for (var i = 0; i < transactions.length; i++) {
             var content    = transactions[i].transaction;
             var meta       = transactions[i].meta;
@@ -351,31 +353,47 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
                 continue;
 
             if (! paymentTransactionHistory_.byInvoice.hasOwnProperty(lastMsgRead.toUpperCase()))
-                // message does not contain any of the relevant one (for this request)
+                // message does not contain any of the relevant data (for this request)
                 continue;
 
-            paymentTransactionHistory_.byInvoice[lastMsgRead]
+            var normNumber = lastMsgRead.toUpperCase();
+
+            paymentTransactionHistory_.byInvoice[normNumber]
                 .transactions
                 .push(transactions[i]);
 
-            paymentTransactionHistory_.byInvoice[lastMsgRead]
-                .totalPaid += lastAmtRead * Math.pow(10, 6);
+            paymentTransactionHistory_.byInvoice[normNumber]
+                .totalPaid += lastAmtRead;
+
+            cntRelevant++;
         }
 
+        var newByInvoice = paymentTransactionHistory_.byInvoice;
         for (var num in paymentTransactionHistory_.byInvoice) {
-            var currentInvoice = paymentTransactionHistory_.byInvoice[num].invoice;
-            
-            // modify with latest data read from blockchain            
-            currentInvoice.amountPaid = totalPaid;
-            if (currentInvoice.amountPaid >= currentInvoice.amount)
+            var currentEntry   = paymentTransactionHistory_.byInvoice[num];
+            var currentInvoice = currentEntry.invoice;
+
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Invoice " + currentInvoice.number + " found totalPaid of " + currentEntry.totalPaid + " in " + currentEntry.transactions.length + " transactions.");
+
+            // modify with latest data read from blockchain
+            currentInvoice.amountPaid = currentEntry.totalPaid;
+            if (currentInvoice.amountPaid >= currentInvoice.amount) {
                 currentInvoice.isPaid = true;
+                currentInvoice.status = 'paid';
+
+                if (currentInvoice.amountPaid > currentInvoice.amount)
+                    currentInvoice.status = 'overpaid';
+            }
 
             currentInvoice.dirty = true;
 
             // store dirty state
-            paymentTransactionHistory_.byInvoice[num].invoice = currentInvoice;
+            newByInvoice[num].invoice = currentInvoice;
         }
 
+        //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + cntRelevant + " relevant transaction in chunk of " + transactions.length + " transactions.");
+
+        paymentTransactionHistory_.byInvoice = newByInvoice;
         return lastTrxRead;
     };
 

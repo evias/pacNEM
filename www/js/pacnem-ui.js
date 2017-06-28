@@ -37,6 +37,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     var session = undefined;
     var API_ = new GameAPI(config, socket, controller, $, jQFileTemplate);
     var template_ = jQFileTemplate;
+    var interval_ = null; // fallback AJAX invoice payment status update listener
 
     /**
      * /!\
@@ -843,39 +844,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         return this;
     };
 
-    this.getInvoiceState = function()
-    {
-        var self = this;
-
-        var player = self.getPlayerDetails();
-        var prefix = $("#pacnem-invoice-prefix").val();
-        var number = $("#" + prefix + "-message").text().trim();
-        var status = $("#" + prefix + "-status").text().trim();
-
-        if (status == 'paid') {
-            // make invoice closeable in case the invoice is stated Paid
-            // and stop http fallback requests
-            clearInterval(interval_);
-            closeableInvoiceModalBox(self, callback);
-            return false;
-        }
-
-        API_.checkInvoiceStatus(player, socket_.id, number, function(paymentUpdateData)
-        {
-            if (paymentUpdateData !== false) {
-
-                if (paymentUpdateData.status && paymentUpdateData.status == 'paid') {
-                    // make invoice closeable in case the invoice is stated Paid
-                    // and stop http fallback requests
-                    clearInterval(interval_);
-                    closeableInvoiceModalBox(self, callback);
-                }
-
-                return processPaymentData_(self, paymentUpdateData);
-            }
-        });
-    };
-
     /**
      * Open the Invoice modal box for the user to Pay
      * per Play. This invoice will ask the user to pay
@@ -915,6 +883,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             //DEBUG else {
             //DEBUG    console.log("[DEBUG] " + "processPaymentData_ with: ", rawData, " with typeof: " + typeof rawData);
             //DEBUG }
+
+            console.log("[DEBUG] " + "processing payment status data: ", data);
 
             if (! data)
                 return false;
@@ -984,10 +954,44 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
          */
         var registerStatusHttpFallback = function(ui, seconds = 30)
         {
-            var interval_ = setInterval(ui.getInvoiceState, seconds * 1000);
+            var fn_getState = function()
+            {
+                var player = self.getPlayerDetails();
+                var prefix = $("#pacnem-invoice-prefix").val();
+                var number = $("#" + prefix + "-message").text().trim();
+                var status = $("#" + prefix + "-status").text().trim();
+
+                if (status == 'paid') {
+                    // make invoice closeable in case the invoice is stated Paid
+                    // and stop http fallback requests
+                    clearInterval(interval_);
+                    closeableInvoiceModalBox(self, callback);
+                    return false;
+                }
+
+                API_.checkInvoiceStatus(player, socket_.id, number, function(paymentUpdateData)
+                {
+                    console.log("[DEBUG] " + "Invoice State API JSON: '" + JSON.stringify(paymentUpdateData) + "' untouched: ", paymentUpdateData);
+
+                    if (paymentUpdateData !== false) {
+                        var done = {"paid": true, "overpaid": true};
+                        if (paymentUpdateData.status && done.hasOwnProperty(paymentUpdateData.status)) {
+                            // make invoice closeable in case the invoice is stated Paid
+                            // and stop http fallback requests
+                            clearInterval(interval_);
+                            closeableInvoiceModalBox(self, callback);
+                        }
+
+                        return processPaymentData_(self, paymentUpdateData);
+                    }
+                });
+            };
+
+            // configure INTERVAL to run every X seconds..
+            interval_ = setInterval(fn_getState, seconds * 1000);
 
             // also run the interval right a way in case websocket subscription does not work
-            ui.getInvoiceState();
+            fn_getState();
 
             // when the invoice is closed, the ajax fallback should
             // be turned off.
@@ -1001,13 +1005,22 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             {
                 var prefix = $("#pacnem-invoice-prefix").val();
                 var status = $("#" + prefix + "-status").text().trim();
+                var done = {"paid": true, "overpaid": true};
 
                 clearInterval(interval_);
-                if (status !== 'paid') {
+                if (! done.hasOwnProperty(status)) {
                     // now every minute we will check for an update of the invoice
                     registerStatusHttpFallback(ui, 120);
                 }
             }, 5 * 60 * 1000);
+
+            // register "I have Paid!" button listener
+            $(".pacnem-invoice-refresh-trigger").off("click");
+            $(".pacnem-invoice-refresh-trigger").on("click", function()
+            {
+                fn_getState();
+                return false;
+            });
         };
 
         /**
@@ -1052,7 +1065,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 {
                     self.fillInvoiceModal(data, false);
 
-                    if (data.status != 'paid') {
+                    if (data.status != 'paid' && data.status != 'overpaid') {
                         registerInvoiceStatusUpdateListener(self);
                     }
                 });
@@ -1072,13 +1085,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             backdrop: "static",
             keyboard: false,
             show: true
-        });
-
-        // register "I have Paid!" button listener
-        $(".pacnem-invoice-refresh-trigger").off("click");
-        $(".pacnem-invoice-refresh-trigger").on("click", function()
-        {
-            self.getInvoiceState();
         });
 
         return this;
