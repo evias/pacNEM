@@ -42,6 +42,8 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
 
     this.logger_ = logger;
 
+    var paymentTransactionHistory_ = {byInvoice: {}, byHash: {}};
+
     /**
      * The startPaymentChannel function is used to open the communication
      * channel between this backend and the NEMBot responsible for Payment
@@ -153,65 +155,89 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
             invoiceQuery["payerXEM"] = data.sender;
         }
 
-        //DEBUG self.logger_.info("[PACNEM] [INVOICE]", "[DEBUG]", 'Fetching invoice with: ' + JSON.stringify(data));
+        //DEBUG self.logger_.info("[PACNEM] [INVOICE]", "[DEBUG]", 'Fetching invoice with query: ' + JSON.stringify(invoiceQuery));
 
         // find invoice and update status and amounts
         self.db_.NEMPaymentChannel.findOne(invoiceQuery, function(err, invoice)
         {
-            if (! err && invoice) {
-                invoice.status = data.status;
+            if (err || ! invoice) {
+                //DEBUG self.logger_.info("[PACNEM] [INVOICE]", "[DEBUG]", 'No Invoice found: ' + JSON.stringify(invoiceQuery));
+                return false;
+            }
 
-                if (data.status == "unconfirmed")
-                    invoice.amountUnconfirmed = data.amountUnconfirmed;
-                else if (data.amountPaid)
-                    invoice.amountPaid = data.amountPaid;
+            invoice.status = data.status;
 
-                if (data.status == "paid") {
-                    invoice.isPaid = true;
-                    invoice.paidAt = new Date().valueOf();
+            if (data.status == "unconfirmed")
+                invoice.amountUnconfirmed = data.amountUnconfirmed;
+            else if (data.amountPaid)
+                invoice.amountPaid = data.amountPaid;
+
+            if (data.status == "paid") {
+                invoice.isPaid = true;
+                invoice.paidAt = new Date().valueOf();
+            }
+
+            invoice.save(function(err)
+            {
+                if (err) {
+                    self.logger_.error(__smartfilename, __line, '[ERROR] Invoice status update error: ' + err);
+                    return false;
                 }
 
-                invoice.save(function(err)
+                if (data.status != "paid" && data.status != "unconfirmed")
+                    return false;
+
+                if (invoice.hasSentHearts === true && invoice.heartsTransactionHash)
+                    return false;
+
+                if (!invoice.isPaid || invoice.getTotalIncoming() < invoice.amount)
+                    return false;
+
+                // coming here means INVOICE PAID
+
+                self.db_.NEMAppsPayout.findOne({xem: data.sender, reference: invoice.number}, function(err, payout)
                 {
                     if (err) {
-                        self.logger_.error(__smartfilename, __line, '[ERROR] Invoice status update error: ' + err);
+                        //DEBUG self.logger_.info("[PACNEM] [INVOICE]", "[DEBUG]", 'No Invoice found: ' + err);
+                        return false;
+                    }
+                    if (payout) {
+                        //DEBUG self.logger_.info("[PACNEM] [INVOICE]", "[DEBUG]", 'Payout already done: ' + JSON.stringify(payout));
                         return false;
                     }
 
-                    if (data.status != "paid" && data.status != "unconfirmed")
-                        return false;
+                    invoice.hasSentHearts = true;
+                    invoice.save();
 
-                    if (invoice.hasSentHearts === true)
-                        return false;
+                    var creation = new self.db_.NEMAppsPayout({
+                        xem: data.sender,
+                        reference: invoice.number,
+                        createdAt: new Date().valueOf()
+                    });
+                    creation.save(function(err) {
 
-                    if (invoice.isPaid || invoice.getTotalIncoming() >= invoice.amount) {
-                        self.db_.NEMAppsPayout.findOne({xem: data.sender, reference: invoice.number}, function(err, payout)
-                        {
-                            if (! err && !payout) {
+                        // only send hearts in case it was not done before.
 
-                                invoice.hasSentHearts = true;
-                                invoice.save();
-
-                                var creation = new self.db_.NEMAppsPayout({
-                                    xem: data.sender,
-                                    reference: invoice.number,
-                                    createdAt: new Date().valueOf()
-                                });
-                                creation.save(function(err) {
-
-                                    // only send hearts in case it was not done before.
-
-                                    self.closePaymentChannel(invoice);
-                                });
-                            }
-                        });
-                    }
-
+                        self.closePaymentChannel(invoice);
+                    });
                 });
-            }
+
+            });
         });
     };
 
+    /**
+     * This method is used when a PaymentChannel *is finalized*.
+     * This means that the Invoice *has been paid completely* and
+     * will send the corresponding hearts Mosaics to the Payer of
+     * the Invoice.
+     *
+     * This method will also broadcast a Socket.IO event for the Frontend
+     * such that the Payment Status Update can be processed on the Invoice
+     * View.
+     *
+     * @param   {NEMPaymentChannel}     paymentChannel
+     */
     this.closePaymentChannel = function(paymentChannel)
     {
         var self = this;
@@ -232,6 +258,125 @@ var PaymentsCore = function(io, logger, chainDataLayer, dataLayer)
                         .emit("pacnem_payment_success", JSON.stringify(clientData));
             }
         });
+    };
+
+    /**
+     * This method reads blockchain transactions to validate
+     * invoice entries. It will send Payment Status Updates
+     * in case the paymentChannel object must be updated.
+     *
+     * Invoices in the `invoices` Array should be passed
+     * NEMPaymentChannel instances loaded from mongoose.
+     *
+     * @param   {Array}     invoices    Should contain {NEMPaymentChannel} objects
+     */
+    this.fetchInvoicesRealHistory = function(invoices, lastTrxRead, callback)
+    {
+        var self = this;
+
+        if (!invoices.length)
+            return callback(false);
+
+        var numbers = {};
+        var invoiceByNumber = {};
+        for (var i = 0; i < invoices.length; i++) {
+            var num = invoices[i].number;
+            if (! paymentTransactionHistory_.byInvoice.hasOwnProperty(num)) {
+                paymentTransactionHistory_.byInvoice[num.toUpperCase()] = {
+                    transactions: [],
+                    totalPaid: 0,
+                    invoice: invoices[i]
+                };
+            }
+        }
+
+        // we will now read blockchain transactions for our vendor
+        // account, trying to identify relevant transactions.
+
+        self.blockchain_.getSDK().com.requests.account.transactions
+            .incoming(self.blockchain_.getEndpoint(), self.blockchain_.getVendorWallet(), null, lastTrxRead)
+        .then(function(res)
+        {
+            //DEBUG logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.transactions.all: " + JSON.stringify(res));
+
+            var transactions = res.data;
+
+            lastTrxRead = self.saveIncomingPaymentsHistory(transactions);
+
+            if (lastTrxRead !== false && 25 == transactions.length) {
+                // recursion..
+                // there may be more transactions in the past (25 transactions
+                // is the limit that the API returns). If we specify a hash or ID it
+                // will look for transactions BEFORE this hash or ID (25 before ID..).
+                // We pass transactions IDs because all NEM nodes support those, hashes are
+                // only supported by a subset of the NEM nodes.
+                self.fetchInvoicesRealHistory(invoices, lastTrxRead, callback);
+            }
+
+            if (callback && (lastTrxRead === false || transactions.length < 25)) {
+                // done.
+                return callback(paymentTransactionHistory_.byInvoices);
+            }
+        });
+    };
+
+    this.saveIncomingPaymentsHistory = function(transactions)
+    {
+        var self = this;
+        var lastTrxRead = null;
+        var lastMsgRead = null;
+        var lastTrxHash = null;
+        var lastAmtRead = null;
+        for (var i = 0; i < transactions.length; i++) {
+            var content    = transactions[i].transaction;
+            var meta       = transactions[i].meta;
+            var recipient  = null;
+
+            // save transaction id
+            lastTrxRead = self.blockchain_.getTransactionId(transactions[i]);
+            lastTrxHash = self.blockchain_.getTransactionHash(transactions[i]);
+            lastMsgRead = self.blockchain_.getTransactionMessage(transactions[i]);
+            lastAmtRead = self.blockchain_.getTransactionAmount(transactions[i], "nem:xem", 6);
+
+            if (paymentTransactionHistory_.byHash.hasOwnProperty(lastTrxHash))
+                // stopping the loop, reading data we already know about.
+                return false;
+
+            paymentTransactionHistory_.byHash[lastTrxHash] = true;
+
+            if (content.type != self.blockchain_.getSDK().model.transactionTypes.transfer
+                && content.type != self.blockchain_.getSDK().model.transactionTypes.multisigTransaction)
+                // we are interested only in transfer transactions
+                // and multisig transactions.
+                continue;
+
+            if (! paymentTransactionHistory_.byInvoice.hasOwnProperty(lastMsgRead.toUpperCase()))
+                // message does not contain any of the relevant one (for this request)
+                continue;
+
+            paymentTransactionHistory_.byInvoice[lastMsgRead]
+                .transactions
+                .push(transactions[i]);
+
+            paymentTransactionHistory_.byInvoice[lastMsgRead]
+                .totalPaid += lastAmtRead * Math.pow(10, 6);
+        }
+
+        for (var num in paymentTransactionHistory_.byInvoice) {
+            var currentInvoice = paymentTransactionHistory_.byInvoice[num].invoice;
+            
+            // modify with latest data read from blockchain            
+            currentInvoice.amountPaid = totalPaid;
+            if (currentInvoice.amountPaid >= currentInvoice.amount)
+                currentInvoice.isPaid = true;
+
+            currentInvoice.dirty = true;
+
+            // store dirty state
+            paymentTransactionHistory_.byInvoice[num].invoice = currentInvoice;
+        }
+
+        return lastTrxRead;
     };
 
 };

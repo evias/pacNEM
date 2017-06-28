@@ -87,7 +87,14 @@
                 <div class="row text-center">
                     <input type="hidden" id="{{invoicePrefix}}-token_" value="{{token_}}" />
                     <input type="hidden" id="pacnem-invoice-prefix" value="{{invoicePrefix}}" />
-                    <button class="btn btn-primary pacnem-invoice-close-trigger" role="button" style="display: none;">
+
+                    <button class="btn btn-success pacnem-invoice-refresh-trigger" role="button">
+                        <i class="glyphicon glyphicon-refresh"></i>&nbsp;
+                        <span>{{t "invoices.button_i_have_paid"}}</span>
+                    </button>
+
+                    <button class="btn btn-default pacnem-invoice-close-trigger" role="button" style="display: none;">
+                        <i class="glyphicon glyphicon-remove"></i>&nbsp;
                         <span>{{t "invoices.button_already_have_credits"}}</span>
                     </button>
                 </div>

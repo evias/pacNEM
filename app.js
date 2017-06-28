@@ -693,11 +693,22 @@ app.get("/api/v1/credits/history", function(req, res)
 				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
 			}
 
-			// return list of invoices
-			var invoicesHistory = [];
-			if (invoices && invoices.length) {
-				for (var i = 0; i < invoices.length; i++) {
-					var currentInvoice = invoices[i];
+			if (!invoices || !invoices.length)
+				return res.send(JSON.stringify({data: []}));
+
+			// VERIFY all invoices state and amounts by iterating blockchain
+			// transactions. This ensure that we never send a wrong Invoice State
+			// through this API - it will always be validated by blockchain data.
+			PaymentsProtocol.fetchInvoicesRealHistory(invoices, function(invoicesHistory)
+			{
+				if (invoicesHistory === false)
+					return res.send(JSON.stringify({data: []}));
+
+				// return list of invoices
+				var invoicesData = [];
+				for (var num in invoicesHistory) {
+					var currentInvoice = invoicesHistory[num].invoice;
+
 					var statusLabelClass = "label-default";
 					var statusLabelIcon  = "glyphicon glyphicon-time";
 
@@ -713,7 +724,7 @@ app.get("/api/v1/credits/history", function(req, res)
 					var fmtCreatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
 					var fmtUpdatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
 
-					invoicesHistory.push({
+					invoicesData.push({
 						number: currentInvoice.number,
 						recipient: currentInvoice.recipientXEM,
 						truncRecipient: currentInvoice.getTruncatedRecipient(),
@@ -726,13 +737,13 @@ app.get("/api/v1/credits/history", function(req, res)
 						statusLabelIcon: statusLabelIcon
 					});
 				}
-			}
 
-			if (number && number.length && invoicesHistory.length === 1)
-				// single invoice data
-				return res.send(JSON.stringify({item: invoicesHistory.pop()}));
+				if (number && number.length && invoicesData.length === 1)
+					// single invoice data
+					return res.send(JSON.stringify({item: invoicesData.pop()}));
 
-			return res.send(JSON.stringify({data: invoicesHistory}));
+				return res.send(JSON.stringify({data: invoicesData}));
+			});
 		});
 	});
 

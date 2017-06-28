@@ -135,7 +135,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         socket_.on("pacnem_payment_success", function(rawdata)
         {
             var data = JSON.parse(rawdata);
-            var sess = ctrl_.getSession();
+            var sess = self.getPlayerDetails();
 
             // close modal
             //var $invoiceBox = $(".pacnem-invoice-modal").first();
@@ -843,6 +843,39 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         return this;
     };
 
+    this.getInvoiceState = function()
+    {
+        var self = this;
+
+        var player = self.getPlayerDetails();
+        var prefix = $("#pacnem-invoice-prefix").val();
+        var number = $("#" + prefix + "-message").text().trim();
+        var status = $("#" + prefix + "-status").text().trim();
+
+        if (status == 'paid') {
+            // make invoice closeable in case the invoice is stated Paid
+            // and stop http fallback requests
+            clearInterval(interval_);
+            closeableInvoiceModalBox(self, callback);
+            return false;
+        }
+
+        API_.checkInvoiceStatus(player, socket_.id, number, function(paymentUpdateData)
+        {
+            if (paymentUpdateData !== false) {
+
+                if (paymentUpdateData.status && paymentUpdateData.status == 'paid') {
+                    // make invoice closeable in case the invoice is stated Paid
+                    // and stop http fallback requests
+                    clearInterval(interval_);
+                    closeableInvoiceModalBox(self, callback);
+                }
+
+                return processPaymentData_(self, paymentUpdateData);
+            }
+        });
+    };
+
     /**
      * Open the Invoice modal box for the user to Pay
      * per Play. This invoice will ask the user to pay
@@ -872,37 +905,23 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
          */
         var processPaymentData_ = function(ui, rawData)
         {
-            var amountPaid = null;
-            var amountUnconfirmed = null;
-            var newStatus = null;
-
-            if (typeof data == 'object') {
+            var data = null;
+            if (typeof rawData == 'object') {
                 data = rawData;
-
-                if (! data.status) {
-                    return false;
-                }
-
-                amountPaid = data.item.amountPaid;
-                amountUnconfirmed = data.item.amountUnconfirmed;
-                newStatus  = data.item.status;
             }
-            else if (typeof data == 'string') {
+            else if (typeof rawData == 'string') {
                 data = JSON.parse(rawData);
-
-                if (! data || ! data.status) {
-                    return false;
-                }
-
-                amountPaid = data.paymentData.amountPaid;
-                amountUnconfirmed = data.paymentData.amountUnconfirmed;
-                newStatus  = data.status;
             }
             //DEBUG else {
             //DEBUG    console.log("[DEBUG] " + "processPaymentData_ with: ", rawData, " with typeof: " + typeof rawData);
             //DEBUG }
 
-            //DEBUG console.log("[DEBUG] " + "processPaymentData_ with: ", rawData);
+            if (! data)
+                return false;
+
+            var amountPaid = typeof data.paymentData != 'undefined' ? data.paymentData.amountPaid : data.amountPaid;
+            var amountUnconfirmed = typeof data.paymentData != 'undefined' ? data.paymentData.amountUnconfirmed : data.amountUnconfirmed;
+            var newStatus = typeof data.paymentData != 'undefined' ? data.paymentData.status : data.status;
 
             var statusClass  = newStatus == 'unconfirmed' ? "info" : "success";
             var statusIcon   = newStatus == 'unconfirmed' ? "glyphicon-time" : "glyphicon-check";
@@ -946,7 +965,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             $(".pacnem-invoice-close-trigger").on("click", function()
             {
                 $(".pacnem-invoice-modal").modal("hide");
-                return callback(ui);
+                callback(ui);
+                return false;
             });
         };
 
@@ -964,41 +984,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
          */
         var registerStatusHttpFallback = function(ui, seconds = 30)
         {
-            var fn_checkStatePerAPI = function()
-            {
-                var player = ui.getPlayerDetails();
-                var prefix = $("#pacnem-invoice-prefix").val();
-                var number = $("#" + prefix + "-message").text().trim();
-                var status = $("#" + prefix + "-status").text().trim();
-
-                if (status === 'paid') {
-                    // make invoice closeable in case the invoice is stated Paid
-                    // and stop http fallback requests
-                    clearInterval(interval_);
-                    closeableInvoiceModalBox(ui, callback);
-                    return false;
-                }
-
-                API_.checkInvoiceStatus(player, socket_.id, number, function(paymentUpdateData)
-                {
-                    if (paymentUpdateData !== false) {
-
-                        if (paymentUpdateData.status && paymentUpdateData.status == 'paid') {
-                            // make invoice closeable in case the invoice is stated Paid
-                            // and stop http fallback requests
-                            clearInterval(interval_);
-                            closeableInvoiceModalBox(ui, callback);
-                        }
-
-                        return processPaymentData_(ui, paymentUpdateData);
-                    }
-                });
-            };
-
-            var interval_ = setInterval(fn_checkStatePerAPI, seconds * 1000);
+            var interval_ = setInterval(ui.getInvoiceState, seconds * 1000);
 
             // also run the interval right a way in case websocket subscription does not work
-            fn_checkStatePerAPI();
+            ui.getInvoiceState();
 
             // when the invoice is closed, the ajax fallback should
             // be turned off.
@@ -1073,6 +1062,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 {
                     $(".pacnem-invoice-modal").modal("hide");
                     callback(self);
+                    return false;
                 });
                 //XXX $("#pacnem-invoice-show-trigger").off("click");
             });
@@ -1082,6 +1072,13 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             backdrop: "static",
             keyboard: false,
             show: true
+        });
+
+        // register "I have Paid!" button listener
+        $(".pacnem-invoice-refresh-trigger").off("click");
+        $(".pacnem-invoice-refresh-trigger").on("click", function()
+        {
+            self.getInvoiceState();
         });
 
         return this;

@@ -30,12 +30,18 @@ var pacNEM_mosaics = {
     "credits": {"heart": true},
     "scores": {"cheese": true},
     "rewards": {
-        "purchases": {"beta-player": true, "player": true},
+        "purchases": {
+            "beta-player": {"icon": "glyphicon glyphicon-empty-star"},
+            "player": {"icon": "glyphicon glyphicon-user"}
+        },
         "return_x2": {"n00b": true},
         "return_x5": {"nember": true},
         "return_x10": {"afficionado": true},
         "return_x100": {"great-supporter": true},
-        "high_score": {"hall-of-famer": true, "all-time-best-player": true}
+        "high_score": {
+            "hall-of-famer": {"icon": "glyphicon glyphicon-king"}, 
+            "all-time-best-player": {"icon": "glyphicon glyphicon-queen"}
+        }
     },
     "achievements": {
         "combo_x3": {"multikill": {"minCombo": 3}},
@@ -823,6 +829,56 @@ var service = function(io, nemSDK, logger)
             return nemTime;
 
         return new Date(nemEpoch + (nemTime*1000));
+    };
+
+    /**
+     * Read the Transaction Amount.
+     *
+     * if `mosaicSlug` is provided and is different than
+     * `nem:xem`, the transaction *must* be a mosaic transfer
+     * transaction.
+     *
+     * @param   [TransactionMetaDataPair]{@link http://bob.nem.ninja/docs/#transactionMetaDataPair} transactionMetaDataPair
+     * @param   {string}    mosaicSlug
+     * @param   {integer}   divisibility
+     * @return {[type]}                         [description]
+     */
+    this.getTransactionAmount = function(transactionMetaDataPair, mosaicSlug = 'nem:xem', divisibility = 6)
+    {
+        var meta    = transactionMetaDataPair.meta;
+        var content = transactionMetaDataPair.transaction;
+
+        var isMultiSig  = content.type === this.getSDK().model.transactionTypes.multisigTransaction;
+        var realContent = isMultiSig ? content.otherTrans : content;
+        var isMosaic    = realContent.mosaics && realContent.mosaics.length > 0;
+
+        var lookupNS  = mosaicSlug.replace(/:[^:]+$/, "");
+        var lookupMos = mosaicSlug.replace(/^[^:]+:/, "");
+
+        if (isMosaic) {
+            // read mosaics to find XEM, `content.amount` is now a multiplier!
+
+            var multiplier = realContent.amount / Math.pow(10, divisibility); // from microXEM to XEM
+            for (var i in realContent.mosaics) {
+                var mosaic = realContent.mosaics[i];
+                var isLookupMosaic  = mosaic.mosaicId.namespaceId == lookupNS 
+                                    && mosaic.mosaicId.name == lookupMos;
+
+                if (!isLookupMosaic)
+                    continue;
+
+                return (multiplier * mosaic.quantity).toFixed(divisibility);
+            }
+
+            // no XEM in transaction.
+            return 0;
+        }
+
+        if (mosaicSlug !== 'nem:xem')
+            return 0;
+
+        // not a mosaic transer, `content.amount` is our XEM amount.
+        return realContent.amount;
     };
 
     /**

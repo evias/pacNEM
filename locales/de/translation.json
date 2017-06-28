@@ -129,6 +129,7 @@
         "buy_hearts_warning_message": "<b>Bitte, vergesse nicht die Nachricht in deine Transaktion an PacNEM!</b>",
         "buy_hearts_manual_invoice_label": "Rechnung",
         "button_already_have_credits": "Fenster schließen",
+        "button_i_have_paid": "Ich habe bezahlt!",
         "flow_after_paid_explain": "PacNEM wird Ihre Zahlung automatisch identifizieren und verarbeiten. Jedoch, weil wir bei PacNEM die Game Credits als NEM Mosaics ausgeben, kann es bis zu 1 Minute dauern <b>nachdem</b> Ihre Zahlung eingegangen ist, bis Sie die genannte Mosaics erhalten. Eine aufführung Ihre Rechnungen, finden Sie unter Ihre Bestellungen."
     },
     "invoice_history": {

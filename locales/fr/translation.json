@@ -106,6 +106,7 @@
         "buy_hearts_warning_message": "<b>Pensez à inclure le message ci-dessous dans votre Transaction à PacNEM!</b>",
         "buy_hearts_manual_invoice_label": "Facture",
         "button_already_have_credits": "Fermer cette fenêtre",
+        "button_i_have_paid": "J'ai payé!",
         "flow_after_paid_explain": "PacNEM mettra automatiquement le Paiement à jour. Cela dit, étant donné que PacNEM utilise des Mosaics sur la blockchain NEM pour vous envoyer des Crédits de Jeu, il se peut que vous deviez attendre jusqu'a 1 minute <b>après</b> réception de votre paiement, pour recevoir vos Mosaics. Vous trouverez un résumé de vos Achats sous Historique d'Achats."
     },
     "invoice_history": {
