@@ -277,7 +277,7 @@ var service = function(io, nemSDK, logger)
     this.fetchHeartsByGamer = function(gamer)
     {
         var self = this;
-        var heartsMosaicSlug = pacNEM_NS_ + ":" + Object.getOwnPropertyNames(pacNEM_mosaics.credits)[0];
+        var heartsMosaicSlug = self.getNamespace() + ":" + Object.getOwnPropertyNames(pacNEM_mosaics.credits)[0];
 
         // read Mosaics owned by the given address's XEM wallet
         nem_.com.requests.account.mosaics.owned(node_, gamer.getAddress()).then(function(res)
@@ -479,6 +479,8 @@ var service = function(io, nemSDK, logger)
      */
     this.sendHeartsForPayment = function(paymentChannel, callbackSuccess)
     {
+        var self = this;
+
         var gamerXEM  = paymentChannel.getPayer();
         var countHearts = paymentChannel.countHearts;
         var privStore = nem_.model.objects.create("common")("", this.getPublicWalletSecretKey());
@@ -499,13 +501,13 @@ var service = function(io, nemSDK, logger)
         transferTransaction.isMultisig = true;
         transferTransaction.multisigAccount = {publicKey: config.get("pacnem.businessPublic")};
 
-        var mosaicAttachHearts = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, heartsMosaicName, countHearts);
-        var mosaicAttachPlayer  = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, playerMosaicName, 1);
-        var mosaicAttachBPlayer = nem_.model.objects.create("mosaicAttachment")(pacNEM_NS_, bPlayerMosaicName, 1);
+        var mosaicAttachHearts = nem_.model.objects.create("mosaicAttachment")(self.getNamespace(), heartsMosaicName, countHearts);
+        var mosaicAttachPlayer  = nem_.model.objects.create("mosaicAttachment")(self.getNamespace(), playerMosaicName, 1);
+        var mosaicAttachBPlayer = nem_.model.objects.create("mosaicAttachment")(self.getNamespace(), bPlayerMosaicName, 1);
 
-        var heartsSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachHearts.mosaicId);
-        var playerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachPlayer.mosaicId);
-        var bPlayerSlug = nem_.utils.helpers.mosaicIdToName(mosaicAttachBPlayer.mosaicId);
+        var heartsSlug = self.getNamespace() + ":" + heartsMosaicName;
+        var playerSlug = self.getNamespace() + ":" + playerMosaicName;
+        var bPlayerSlug = self.getNamespace() + ":" + bPlayerMosaicName;
 
         //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Using Mosaics: " + heartsSlug + ", " + playerSlug + ", " + bPlayerSlug);
 
@@ -521,7 +523,7 @@ var service = function(io, nemSDK, logger)
 
         // Need mosaic definition of evias.pacnem:heart to calculate adequate fees, so we get it from network.
         nem_.com.requests.namespace
-            .mosaicDefinitions(node_, pacNEM_NS_).then(
+            .mosaicDefinitions(node_, self.getNamespace()).then(
         function(res) {
             var heartsDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, [heartsMosaicName]);
             var playerDef  = nem_.utils.helpers.searchMosaicDefinitionArray(res, [playerMosaicName]);
@@ -674,8 +676,8 @@ var service = function(io, nemSDK, logger)
         transferTransaction.isMultisig = true;
         transferTransaction.multisigAccount = {publicKey: config.get("pacnem.businessPublic")};
 
-        var mosaicAttachRedeem  = self.getSDK().model.objects.create("mosaicAttachment")(pacNEM_NS_, redeemingMosaicName, countRedeem);
-        var redeemSlug = self.getSDK().utils.helpers.mosaicIdToName(mosaicAttachRedeem.mosaicId);
+        var mosaicAttachRedeem  = self.getSDK().model.objects.create("mosaicAttachment")(self.getNamespace(), redeemingMosaicName, countRedeem);
+        var redeemSlug = self.getNamespace() + ":" + redeemingMosaicName;
 
         //DEBUG logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Using Mosaics: " + redeemSlug);
 
@@ -686,7 +688,7 @@ var service = function(io, nemSDK, logger)
 
         // Need mosaic definition of evias.pacnem:heart to calculate adequate fees, so we get it from network.
         self.getSDK().com.requests.namespace
-            .mosaicDefinitions(node_, pacNEM_NS_).then(
+            .mosaicDefinitions(node_, self.getNamespace()).then(
         function(res) {
             var redeemDef  = self.getSDK().utils.helpers.searchMosaicDefinitionArray(res, [redeemingMosaicName]);
 

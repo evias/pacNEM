@@ -414,9 +414,9 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
         var mosaicAttachHOF     = nemSDK.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), hofMosaicName, 1);
         var mosaicAttachATB     = nemSDK.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), atbMosaicName, 1);
 
-        var cheeseSlug = nemSDK.utils.helpers.mosaicIdToName(mosaicAttachCheeses.mosaicId);
-        var hofSlug = nemSDK.utils.helpers.mosaicIdToName(mosaicAttachHOF.mosaicId);
-        var atbSlug = nemSDK.utils.helpers.mosaicIdToName(mosaicAttachATB.mosaicId);
+        var cheeseSlug = self.blockchain_.getNamespace() + ":" + cheeseMosaicName;
+        var hofSlug = self.blockchain_.getNamespace() + ":" + hofMosaicName;
+        var atbSlug = self.blockchain_.getNamespace() + ":" + atbMosaicName;
 
         var paidOutRewards = {"HallOfFameReward": {"mosaic": cheeseSlug, "quantity": countCheeses}};
 
