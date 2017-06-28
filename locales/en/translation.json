@@ -135,6 +135,7 @@
         "label_amount_paid": "Amount Paid:",
         "label_amount_unconfirmed": "Pending confirmation:",
         "button_already_have_credits": "Close this window",
+        "button_i_have_paid": "I have Paid!",
         "flow_after_paid_explain": "PacNEM will process your Payment automatically. When we have received your Payment we will send you the listed Mosaics using the NEM Blockchain. A Listing of Transactions matched to Invoices can be found under your Purchases History."
     },
     "invoice_history": {

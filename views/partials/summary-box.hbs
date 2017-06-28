@@ -17,17 +17,13 @@
             <div class="modal-body">
 
                 {{#if isWinner}}
-                    <div class="summary-bg-wrapper">
-                        <h1 class="text-success game-end-title winner" 
-                            style="text-transform: uppercase;">{{t "summary.you_won"}}</h1>
-                    </div>
+                    <div class="summary-bg-wrapper">&nbsp;</div>
                     <p class="text-success text-justify">
                         <h4>{{t "summary.congratulations"}}</h4>
                     </p>
                 {{/if}}
 
                 {{#if isLoser}}
-                    <h1 class="text-danger game-end-title loser" style="text-transform: uppercase;">{{t "summary.loser"}}</h1>
                     <p class="text-danger text-justify">
                         <h4>{{t "summary.maybe_next_time"}}</h4>
                     </p>

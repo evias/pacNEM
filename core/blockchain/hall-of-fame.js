@@ -83,13 +83,13 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
         // read outgoing transactions of the account and check for the given mosaic to build a
         // blockchain-trust mosaic history.
 
-        self.blockchain_.getSDK().com.requests.account
-            .outgoingTransactions(self.blockchain_.getEndpoint(), cheesePayer, null, lastTrxRead)
+        self.blockchain_.getSDK().com.requests.account.transactions
+            .outgoing(self.blockchain_.getEndpoint(), cheesePayer, null, lastTrxRead)
             .then(function(res)
         {
-            //self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Result from NIS API account.outgoingTransactions: " + JSON.stringify(res));
+            //self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Result from NIS API account.transactions.outgoing: " + JSON.stringify(res));
 
-            var transactions = res;
+            var transactions = res.data;
 
             // forward transactions chunk (maximum 25 trx) to processHallOfFameTransactions
             // to interpret the data. `lastTrxRead` will be `false` when we should stop.
@@ -414,9 +414,9 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
         var mosaicAttachHOF     = nemSDK.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), hofMosaicName, 1);
         var mosaicAttachATB     = nemSDK.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), atbMosaicName, 1);
 
-        var cheeseSlug = nemSDK.utils.helpers.mosaicIdToName(mosaicAttachCheeses.mosaicId);
-        var hofSlug = nemSDK.utils.helpers.mosaicIdToName(mosaicAttachHOF.mosaicId);
-        var atbSlug = nemSDK.utils.helpers.mosaicIdToName(mosaicAttachATB.mosaicId);
+        var cheeseSlug = self.blockchain_.getNamespace() + ":" + cheeseMosaicName;
+        var hofSlug = self.blockchain_.getNamespace() + ":" + hofMosaicName;
+        var atbSlug = self.blockchain_.getNamespace() + ":" + atbMosaicName;
 
         var paidOutRewards = {"HallOfFameReward": {"mosaic": cheeseSlug, "quantity": countCheeses}};
 
@@ -427,6 +427,8 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
         nemSDK.com.requests.namespace
             .mosaicDefinitions(self.blockchain_.getEndpoint(), self.blockchain_.getNamespace()).then(
         function(res) {
+            res = res.data;
+
             var cheeseDef  = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [cheeseMosaicName]);
             var hofDef = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [hofMosaicName]);
             var atbDef = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [atbMosaicName]);

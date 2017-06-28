@@ -578,7 +578,7 @@ app.get("/api/v1/credits/buy", function(req, res)
 		};
 
 		// when no invoiceNumber is given, create or retrieve in following statuses
-		dbConditions["status"] = { $in: ["not_paid", "identified", "unconfirmed", "paid_partly"] };
+		dbConditions["status"] = { $in: ["not_paid", "identified", "unconfirmed", "paid_partly", "paid"] };
 		if (invoiceNumber && invoiceNumber.length) {
 			// load invoice by number
 			dbConditions["number"] = decodeURIComponent(invoiceNumber);
@@ -665,15 +665,27 @@ app.get("/api/v1/credits/history", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		var payer = req.query.payer ? req.query.payer : undefined;
-		if (! payer.length || dataLayer.isApplicationWallet(payer))
+		var payer  = req.query.payer ? req.query.payer : undefined;
+		var number = req.query.number ? req.query.number : undefined;
+
+		if (! payer || ! payer.length || dataLayer.isApplicationWallet(payer))
 			// cannot be one of the application wallets
 			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
 
-		dataLayer.NEMPaymentChannel.find({
+		var invoiceQuery = {
 			payerXEM: payer,
-			status: {$in: ["not_paid", "expired", "unconfirmed", "paid_partly", "paid"]}
-		}, function(err, invoices)
+			status: {$in: ["not_paid", 
+						   "expired", 
+						   "unconfirmed", 
+						   "paid_partly", 
+						   "paid"]}
+		};
+
+		if (number && number.length) {
+			invoiceQuery["number"] = number;
+		}
+
+		dataLayer.NEMPaymentChannel.find(invoiceQuery, function(err, invoices)
 		{
 			if (err) {
 				var errorMessage = "Error occured on /credits/history: " + err;
@@ -681,11 +693,22 @@ app.get("/api/v1/credits/history", function(req, res)
 				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
 			}
 
-			// return list of invoices
-			var invoicesHistory = [];
-			if (invoices && invoices.length) {
-				for (var i = 0; i < invoices.length; i++) {
-					var currentInvoice = invoices[i];
+			if (!invoices || !invoices.length)
+				return res.send(JSON.stringify({"status": "ok", data: []}));
+
+			// VERIFY all invoices state and amounts by iterating blockchain
+			// transactions. This ensure that we never send a wrong Invoice State
+			// through this API - it will always be validated by blockchain data.
+			PaymentsProtocol.fetchInvoicesRealHistory(invoices, null, function(invoicesHistory)
+			{
+				if (invoicesHistory === false)
+					return res.send(JSON.stringify({"status": "ok", data: []}));
+
+				// return list of invoices
+				var invoicesData = [];
+				for (var num in invoicesHistory) {
+					var currentInvoice = invoicesHistory[num].invoice;
+
 					var statusLabelClass = "label-default";
 					var statusLabelIcon  = "glyphicon glyphicon-time";
 
@@ -701,12 +724,12 @@ app.get("/api/v1/credits/history", function(req, res)
 					var fmtCreatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
 					var fmtUpdatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
 
-					invoicesHistory.push({
+					invoicesData.push({
 						number: currentInvoice.number,
 						recipient: currentInvoice.recipientXEM,
 						truncRecipient: currentInvoice.getTruncatedRecipient(),
-						amount: (currentInvoice.amount / Math.pow(10, 6)),
-						amountPaid: (currentInvoice.amountPaid / Math.pow(10, 6)),
+						amount: (currentInvoice.amount),
+						amountPaid: (currentInvoice.amountPaid),
 						status: currentInvoice.status,
 						createdAt: fmtCreatedAt,
 						updatedAt: fmtUpdatedAt,
@@ -714,9 +737,13 @@ app.get("/api/v1/credits/history", function(req, res)
 						statusLabelIcon: statusLabelIcon
 					});
 				}
-			}
 
-			res.send(JSON.stringify({data: invoicesHistory}));
+				if (number && number.length && invoicesData.length === 1)
+					// single invoice data
+					return res.send(JSON.stringify({"status": "ok", item: invoicesData.pop()}));
+
+				return res.send(JSON.stringify({"status": "ok", data: invoicesData}));
+			});
 		});
 	});
 
