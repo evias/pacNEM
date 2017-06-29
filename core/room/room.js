@@ -194,9 +194,20 @@ var Room = function(io, manager, withMembers)
 		return usernames_[sid];
 	};
 
+	this.getStatus = function()
+	{
+		return status_;
+	};
+
+	this.getGame = function()
+	{
+		return game_;
+	};
+
 	// Notification to re-open the room in join mode
 	// after the end of the game
-	this.notifyEnd = function() {
+	this.notifyEnd = function() 
+	{
 		assert.equal(status_, Room.STATUS_PLAY);
 		assert(game_);
 

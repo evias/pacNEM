@@ -36,10 +36,7 @@ var app = require('express')(),
     validator = require("express-validator");
 
 // internal core dependencies
-var logger = require('./core/logger.js'),
-	__room = require('./core/room/room.js'),
-	Room = __room.Room,
-	RoomManager = require('./core/room/room_manager.js').RoomManager;
+var logger = require('./core/logger.js');
 
 var __smartfilename = path.basename(__filename);
 
@@ -133,6 +130,9 @@ var PaymentsProtocol = new PaymentsCore(io, logger, chainDataLayer, dataLayer);
 var HallOfFameCore = require("./core/blockchain/hall-of-fame.js").HallOfFame;
 var HallOfFame = new HallOfFameCore(io, logger, chainDataLayer, dataLayer);
 HallOfFame.fetchBlockchainHallOfFame();
+
+var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
+var PacNEMSockets  = new PacNEMProtocol(io, logger, chainDataLayer, dataLayer, HallOfFame);
 
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
 var PacNEM_Crons  = new JobsScheduler(logger, chainDataLayer, dataLayer);
@@ -796,181 +796,48 @@ app.get("/api/v1/lounge/get", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		//XXX build list of player states
-		//XXX build list of rooms
-		//XXX numeric statistics
-		//XXX current active games data
+		var lounge = PacNEMSockets.getRoomManager().toDict();
+		var totalSessions    = lounge.players.length;
+		var activeSessions   = 0;
+		var inactiveSessions = 0;
+		var loungeSessions   = 0;
+		var playingSessions  = 0;
 
-		var loungeData = {};
+		for (var rId in lounge.rooms) {
+			var currentRoom = lounge.rooms[rId];
+			var cntMembers  = currentRoom.toDict().usernames.length;
+
+			switch (currentRoom.getStatus()) {
+				default:
+				case "join":
+					loungeSessions += cntMembers;
+					activeSessions += cntMembers;
+					break;
+
+				case "wait":
+				case "play":
+					playingSessions += cntMembers;
+					activeSessions += cntMembers;
+					break;
+			}
+		}
+
+		var inactiveSessions = totalSessions - activeSessions;
+		var loungeData = {
+			"details": lounge,
+			"lounge": {
+				"sessions": {
+					"total": totalSessions,
+					"active": activeSessions,
+					"inactive": inactiveSessions,
+					"lounge": loungeSessions,
+					"playing": playingSessions
+				} 
+			}
+		};
 
 		res.send(JSON.stringify({"status": "ok", "data": loungeData}));
 	});
-
-/**
- * Socket.IO RoomManager implementation
- *
- * The following code block defines Socket.IO room
- * event listeners and configures the WebSocket
- * connections for Multiplayer features.
- *
- * Following Socket Events are implemented:
- * 	- disconnect
- * 	- change_username
- * 	- join_room
- * 	- create_room
- * 	- leave_room
- * 	- run_game
- * 	- cancel_game
- * 	- start
- * 	- keydown
- * 	- notify
- *
- * @link https://github.com/dubzzz/js-pacman
- * @link https://github.com/pacNEM/evias
- */
-var room_manager = new RoomManager(io);
-
-io.sockets.on('connection', function(socket)
-{
-	logger.info(__smartfilename, __line, '[' + socket.id + '] ()');
-	room_manager.register(socket.id);
-
-	// Unregister the socket from the underlying RoomManager
-	socket.on('disconnect', function () {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] ~()');
-		room_manager.disconnect(socket.id);
-	});
-
-	// Rename the user
-	socket.on('change_username', function(details) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] change_username(' + details + ')');
-
-		var parsed = JSON.parse(details);
-		room_manager.changeUsername(socket.id, parsed);
-	});
-
-	// Join an existing room
-	socket.on('join_room', function(json) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] join_room(' + json + ')');
-
-		var parsed = JSON.parse(json);
-		room_manager.joinRoom(socket.id, parsed.room_id, parsed.details);
-	});
-
-	// Create a new room
-	socket.on('create_room', function(details) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] create_room(' + details + ')');
-
-		var parsed = JSON.parse(details);
-		room_manager.createRoom(socket.id, parsed);
-	});
-
-	// Leave a room
-	socket.on('leave_room', function() {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] leave_room()');
-		room_manager.leaveRoom(socket.id);
-	});
-
-	// Acknowledge room membership
-	socket.on('ack_room', function(room_id) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] ack_room(' + room_id + ')');
-		room_manager.ackRoomMember(socket.id, room_id);
-	});
-
-	// Ask to launch the game inside the room
-	// The game will not start immediately and other members can cancel its launch
-	socket.on('run_game', function() {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] run_game()');
-		var room = room_manager.getRoom(socket.id);
-
-		if (room) {
-			room.runGame();
-		}
-	});
-
-	// When the end_of_game event is pushed, potential hall of famer will
-	// be recognized and stored in the database.
-	// This event listener will also trigger the BURNING of evias.pacnem:heart
-	// Game Credits. There is no way around triggering this event so this should
-	// be a fairly well chosen endpoint for burned game credits.
-	socket.on("end_of_game", function(rawdata) {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] end_of_game(' + rawdata + ')');
-
-		var details = JSON.parse(rawdata);
-		if (typeof details.pacmans == 'undefined')
-			return false;
-
-		var addresses = [];
-		for (var i in details.pacmans)
-			addresses.push(details.pacmans[i].address);
-
-		if (! addresses.length)
-			return false;
-
-		logger.info(__smartfilename, __line, '[' + socket.id + '] burn_credits([' + addresses.join(", ") + '])');
-
-		// load gamers by address
-		dataLayer.NEMGamer.find({xem: {$in: addresses}}, function(err, gamers)
-		{
-			if (err || ! gamers || ! gamers.length) {
-				//XXX should never happen, add error log, someone sent an EMPTY end_of_game event
-				return false;
-			}
-
-			chainDataLayer.processGameCreditsBurning(gamers);
-			HallOfFame.processGameScores(details.pacmans);
-		});
-	});
-
-	// Cancel game
-	socket.on('cancel_game', function() {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] cancel_game()');
-		var room = room_manager.getRoom(socket.id);
-		if (! room) {
-			logger.warn(__smartfilename, __line, 'Room is not defined for ' + socket.id);
-			return;
-		}
-		room.cancelGame();
-	});
-
-	// Start the game
-	socket.on('start', function() {
-		logger.info(__smartfilename, __line, '[' + socket.id + '] start()');
-		var room = room_manager.getRoom(socket.id);
-		if (! room) {
-			logger.warn(__smartfilename, __line, 'Room is not defined for ' + socket.id);
-			return;
-		}
-		room.startGame(socket.id);
-	});
-
-	// Update the direction of the player
-	socket.on('keydown', function(keycode) {
-		// [DEBUG] logger.info(__smartfilename, __line, '[' + socket.id + '] keydown(' + keycode + ')');
-
-		var room = room_manager.getRoom(socket.id);
-		if (! room) {
-			return;
-		}
-
-		var keyMap = {
-			37: __room.LEFT,
-			38: __room.UP,
-			39: __room.RIGHT,
-			40: __room.DOWN
-		};
-
-		if (keyMap.hasOwnProperty(keycode))
-			room.receiveKeyboard(socket.id, keyMap[keycode]);
-	});
-
-	// notify about any in-room changes
-	socket.on("notify", function()
-	{
-		logger.info(__smartfilename, __line, '[' + socket.id + '] notify()');
-		room_manager.notifyChanges(socket.id);
-	});
-});
 
 /**
  * Now listen for connections on the Web Server.

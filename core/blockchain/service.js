@@ -636,7 +636,7 @@ var service = function(io, nemSDK, logger)
             addresses.push(address);
         }
 
-        logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Will now burn Player Game Credit for the Game Session: " + addresses.length + " Players.");
+        //DEBUG logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Will now burn Player Game Credit for the Game Session: " + addresses.length + " Players.");
 
         self.sendGameCreditsToSink(addresses);
 

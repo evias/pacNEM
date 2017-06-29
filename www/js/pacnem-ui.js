@@ -1174,11 +1174,13 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         var self = this;
         var player = self.getPlayerDetails();
 
+        self.setLoadingUI();
         self.prepareInvoiceBox(function(ui)
         {
             API_.getInvoice(player, socket_.id, invoiceNumber, function(data)
             {
                 self.fillInvoiceModal(data, true);
+                self.unsetLoadingUI();
             });
         });
     };
@@ -1369,14 +1371,75 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         return this;
     };
 
+    this.setLoadingUI = function()
+    {
+        var $wrapper = $("#pacNEMWrapper");
+        var $overlay = $("<div class='pacnem-loading-overlay'></div>");
+        $overlay.css({
+            "position": "absolute",
+            "zIndex": 10,
+            "backgroundColor": "rgba(255,255,255, 0.8)",
+            "backgroundImage": "url(/img/loading_32.gif)",
+            "backgroundRepeat": "no-repeat",
+            "backgroundPosition": "center",
+            "height": "100%",
+            "width": "100%",
+            "display": "none"
+        });
+
+        $wrapper.css({"position": "relative"});
+        $overlay.prependTo($wrapper);
+        $overlay.fadeIn("slow");
+    };
+
+    this.unsetLoadingUI = function()
+    {
+        var $wrapper = $("#pacNEMWrapper");
+        var $overlay = $wrapper.find(".pacnem-loading-overlay").first();
+
+        $overlay.fadeOut("slow");
+    };
+
+    /**
+     * Display the PacNEM Lounge. 
+     * 
+     * Ultimately the PacNEM lounge will be a place to
+     * chat, but this will come in later releases.
+     *
+     * @return GameUI
+     */
     this.displayLounge = function()
     {
         var self = this;
         var player = self.getPlayerDetails();
+
+        self.setLoadingUI();
         API_.fetchLoungeInformations(player, function(loungeData)
         {
-            $("#pacnem-lounge-wrapper").show();
+            console.log("[DEBUG] " + "Received lounge data: ", loungeData);
+            $("#pacnem-lounge-wrapper").fadeIn("slow", function()
+            {
+                self.unsetLoadingUI();
+            });
         });
+
+        return this;
+    };
+
+    /**
+     * Hide the PacNEM Lounge container.
+     * 
+     * @return GameUI
+     */
+    this.hideLounge = function(callback = null)
+    {
+        $("#pacnem-lounge").fadeOut("slow", function()
+        {
+            if (callback)
+                return callback();
+        });
+
+        return this;
     };
 
     /**
@@ -1394,12 +1457,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
             if (flag == "0") {
                 $(this).attr("data-display", "1");
+                self.setLoadingUI();
                 API_.fetchScores(function(scores)
                     {
                         self.initBackToPlayButtons();
                         $(".msgSelectRoom").hide();
                         $("#pacnem-current-player-details").hide();
                         $("#pacnem-scores-wrapper").show();
+                        self.unsetLoadingUI();
                     });
             }
             else {
@@ -1428,6 +1493,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
             if (! flag || ! flag.length || flag == "0") {
                 $(this).attr("data-display", "1");
+                self.setLoadingUI();
                 API_.fetchPurchaseHistory(player, function(history)
                     {
                         self.initInvoicesButtons();
@@ -1435,6 +1501,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                         $(".msgSelectRoom").hide();
                         //$("#pacnem-current-player-details").hide();
                         $("#pacnem-invoice-history-wrapper").show();
+                        self.unsetLoadingUI();
                     });
             }
             else {
@@ -1450,11 +1517,13 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         $("#pacnem-invoice-show-trigger").off("click");
         $("#pacnem-invoice-show-trigger").on("click", function()
         {
+            self.setLoadingUI();
             self.prepareInvoiceBox(function(ui)
             {
                 self.watchInvoice(function() {});
 
                 $(".pacnem-invoice-close-trigger").show();
+                self.unsetLoadingUI();
             });
 
             return false;

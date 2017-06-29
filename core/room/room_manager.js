@@ -22,7 +22,8 @@
 var assert = require('assert');
 var Room = require('./room.js').Room;
 
-var RoomManager = function(io) {
+var RoomManager = function(io) 
+{
 	assert(io);
 
 	var io = io;
@@ -166,6 +167,32 @@ var RoomManager = function(io) {
 		delete map_member_roomid_[sid];
 		delete map_member_username_[sid];
 		delete map_member_address_[sid];
+	};
+
+	this.toDict = function(includeAddresses = false)
+	{
+		var players = {};
+		for (var sock in map_member_username_) {
+			assert(map_member_address_.hasOwnProperty(sock));
+
+			var player = {"username": map_member_username_[sock]};
+
+			if (map_member_roomid_.hasOwnProperty(sock))
+				// user is in room
+				player["room"] = map_member_roomid_[sock];
+
+			if (includeAddresses === true)
+				player["address"] = map_member_address_[sock];
+
+			players[sid] = player;
+		}
+
+		var dict = {
+			"rooms": map_id_rooms_,
+			"players": players
+		};
+
+		return dict;
 	};
 };
 
