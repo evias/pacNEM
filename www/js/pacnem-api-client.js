@@ -270,4 +270,33 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 			}
 		});
 	};
+
+	/**
+	 * This method reads the PacNEM Lounge Informations.
+	 *
+	 * @param 	{object} 	player 		Should contain value for `address`
+	 * @param	{Function} 	callback
+	 */
+	this.fetchLoungeInformations = function(player, callback)
+	{
+		var self = this;
+		self.jquery_.ajax({
+			url: "/api/v1/lounge/get?player=" + player.address,
+			type: "GET",
+			dataType: "json",
+			beforeSend: function(req) {
+				if (req && req.overrideMimeType)
+					req.overrideMimeType("application/json;charset=UTF-8");
+			},
+			success: function(response) {
+				var history = response.data;
+
+				self.template_.render("pacnem-lounge-container", function(compileWith)
+				{
+					$("#pacnem-lounge-wrapper").html(compileWith(response));
+					return callback(history);
+				});
+			}
+		});
+	};
 };

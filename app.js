@@ -792,6 +792,20 @@ app.get("/api/v1/credits/remaining", function(req, res)
 		});
 	});
 
+app.get("/api/v1/lounge/get", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		//XXX build list of player states
+		//XXX build list of rooms
+		//XXX numeric statistics
+		//XXX current active games data
+
+		var loungeData = {};
+
+		res.send(JSON.stringify({"status": "ok", "data": loungeData}));
+	});
+
 /**
  * Socket.IO RoomManager implementation
  *

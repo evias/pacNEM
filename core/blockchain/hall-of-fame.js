@@ -429,7 +429,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
 
         var paidOutRewards = {"HallOfFameReward": {"mosaic": cheeseSlug, "quantity": countCheeses}};
 
-        self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Using Mosaics: " + cheeseSlug + ", " + hofSlug + ", " + atbSlug);
+        //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Using Mosaics: " + cheeseSlug + ", " + hofSlug + ", " + atbSlug);
 
         // Need mosaic definition of evias.pacnem:* mosaics to calculate 
         // adequate fees, so we get it from network.
@@ -489,7 +489,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
                 self.blockchain_.getNetwork().config.id
             );
 
-            self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending Mosaic Transfer Transaction to " + pacman.address + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending Mosaic Transfer Transaction to " + pacman.address + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
 
             // (4) announce the mosaic transfer transaction on the NEM network
             nemSDK.model.transactions.send(privStore, entity, self.blockchain_.getEndpoint()).then(
