@@ -498,24 +498,27 @@ app.get("/api/v1/scores", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		var ranking = HallOfFame.getRanking();
-		var scores = [];
-		for (var i = 0; i < ranking.length; i++) {
-			var rScore  = ranking[i];
-			var fmtTime = rScore.timestamp.toISOString().replace(/T/, ' ')
-														.replace(/\..+/, '');
+		HallOfFame.fetchBlockchainHallOfFame(null, function(hallOfFame)
+		{
+			var ranking = hallOfFame.ranking;
+			var scores = [];
+			for (var i = 0; i < ranking.length; i++) {
+				var rScore  = ranking[i];
+				var fmtTime = rScore.timestamp.toISOString().replace(/T/, ' ')
+															.replace(/\..+/, '');
 
-			scores.push({
-				position: i+1,
-				score: rScore.score,
-				username: rScore.username,
-				address: rScore.address,
-				truncAddress: rScore.address.substr(0, 8),
-				scoreDate: fmtTime
-			});
-		}
+				scores.push({
+					position: i+1,
+					score: rScore.score,
+					username: rScore.username,
+					address: rScore.address,
+					truncAddress: rScore.address.substr(0, 8),
+					scoreDate: fmtTime
+				});
+			}
 
-		res.send(JSON.stringify({data: scores}));
+			res.send(JSON.stringify({data: scores}));
+		});
 	});
 
 //XXX implement actual model
@@ -787,6 +790,20 @@ app.get("/api/v1/credits/remaining", function(req, res)
 				}));
 			});
 		});
+	});
+
+app.get("/api/v1/lounge/get", function(req, res)
+	{
+		res.setHeader('Content-Type', 'application/json');
+
+		//XXX build list of player states
+		//XXX build list of rooms
+		//XXX numeric statistics
+		//XXX current active games data
+
+		var loungeData = {};
+
+		res.send(JSON.stringify({"status": "ok", "data": loungeData}));
 	});
 
 /**

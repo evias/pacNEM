@@ -1357,6 +1357,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
     {
         var self = this;
 
+        //XXX make sure user notes username + address
+
         $("#pacnem-purge-trigger").click(function()
         {
             session_.clear();
@@ -1365,6 +1367,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         });
 
         return this;
+    };
+
+    this.displayLounge = function()
+    {
+        var self = this;
+        var player = self.getPlayerDetails();
+        API_.fetchLoungeInformations(player, function(loungeData)
+        {
+            $("#pacnem-lounge-wrapper").show();
+        });
     };
 
     /**

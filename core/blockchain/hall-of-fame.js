@@ -45,10 +45,10 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
     this.blockchain_ = chainDataLayer;
     this.db_ = dataLayer;
 
-    var gameHallOfFame_ = {"ranking": [], "history": {}, "trxIdList": {}};
+    this.gameHallOfFame_ = {"ranking": [], "history": {}, "trxIdList": {}};
 
     /**
-     * This method uses the pre-fetched `gameHallOfFame_.ranking` object
+     * This method uses the pre-fetched `self.gameHallOfFame_.ranking` object
      * which is already sorted.
      * 
      * @see     fetchBlockchainHallOfFame()
@@ -56,10 +56,10 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
      */
     this.getRanking = function()
     {
-        if (! gameHallOfFame_.ranking)
+        if (! self.gameHallOfFame_.ranking)
             return [];
 
-        return gameHallOfFame_.ranking;
+        return self.gameHallOfFame_.ranking;
     };
 
     /**
@@ -79,6 +79,11 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
     {
         var self = this;
         var cheesePayer = self.blockchain_.getVendorWallet();
+
+        if (lastTrxRead === null) {
+            // reset hall of fame - rebuilding from blockchain
+            gameHallOfFame_ = {"ranking": [], "history": {}, "trxIdList": {}};
+        }
 
         // read outgoing transactions of the account and check for the given mosaic to build a
         // blockchain-trust mosaic history.
@@ -111,7 +116,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
                 self.buildHallOfFameRanking();
 
                 if (callback) 
-                    callback(gameHallOfFame_);
+                    callback(self.gameHallOfFame_);
             }
 
         }, function(err) {
@@ -132,6 +137,9 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
     this.processHallOfFameTransactions = function(transactions)
     {
         var self = this;
+
+        //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Processing chunk of " + transactions.length + " Transactions for Hall of Fame.");
+
         var cheeseMosaicSlug = self.blockchain_.getNamespace() + ":" + Object.getOwnPropertyNames(self.blockchain_.getGameMosaicsConfiguration().scores)[0];
 
         var lastTrxRead = null;
@@ -154,11 +162,11 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
                 // message, so we should not care about this transaction.
                 continue;
 
-            if (gameHallOfFame_.trxIdList.hasOwnProperty(lastTrxHash))
+            if (self.gameHallOfFame_.trxIdList.hasOwnProperty(lastTrxHash))
                 // reading data we already know about.
                 continue;
 
-            gameHallOfFame_.trxIdList[lastTrxHash] = true;
+            self.gameHallOfFame_.trxIdList[lastTrxHash] = true;
 
             if (content.type != self.blockchain_.getSDK().model.transactionTypes.transfer
                 && content.type != self.blockchain_.getSDK().model.transactionTypes.multisigTransaction)
@@ -182,8 +190,8 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
             if (recipient === false)
                 continue;
 
-            if (! gameHallOfFame_.history.hasOwnProperty(recipient))
-                gameHallOfFame_.history[recipient] = [];
+            if (! self.gameHallOfFame_.history.hasOwnProperty(recipient))
+                self.gameHallOfFame_.history[recipient] = [];
 
             // The total cheese mosaics in this transaction 
             // represents the total score of the player.
@@ -205,8 +213,8 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
                     continue;
                 }
 
-                //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Score Found with player data: " + JSON.stringify(player));
-                gameHallOfFame_.history[recipient].push(player);
+                //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Score Found: " + player.score);
+                self.gameHallOfFame_.history[recipient].push(player);
             }
             catch (e) {
                 // could not parse the object in the transaction message as a valid JSON object
@@ -232,10 +240,10 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
     {
         var self = this;
         var allScores = [];
-        var players = Object.getOwnPropertyNames(gameHallOfFame_.history);
+        var players = Object.getOwnPropertyNames(self.gameHallOfFame_.history);
         for (var i = 0; i < players.length; i++) {
             var pAddress = players[i];
-            var pHistory = gameHallOfFame_.history[pAddress];
+            var pHistory = self.gameHallOfFame_.history[pAddress];
 
             for (var j = 0; j < pHistory.length; j++)
                 allScores.push(pHistory[j]);
@@ -243,9 +251,10 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
 
         if (allScores.length) {
             allScores.sort(scrcmp).reverse();
-            gameHallOfFame_.ranking = allScores.length > 10 ? allScores.splice(10) : allScores;
 
-            self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Ranking built: " + JSON.stringify(gameHallOfFame_.ranking));
+            self.gameHallOfFame_.ranking = allScores.length > 10 ? allScores.splice(0, 10) : allScores;
+
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Ranking built (" + self.gameHallOfFame_.ranking.length + "): " + JSON.stringify(self.gameHallOfFame_.ranking));
         }
 
         return allScores;
@@ -264,13 +273,13 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
     {
         var self = this;
 
-        if (! gameHallOfFame_.ranking.length) {
+        if (! self.gameHallOfFame_.ranking.length) {
             self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Empty Hall Of Fame ranking in processGameScores");
         }
 
         var currentTop10MinScore = 0;
         var currentHighScore     = 0;
-        var scores    = gameHallOfFame_.ranking;
+        var scores    = self.gameHallOfFame_.ranking;
         var cntScores = scores.length;
 
         if (cntScores)
@@ -420,7 +429,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
 
         var paidOutRewards = {"HallOfFameReward": {"mosaic": cheeseSlug, "quantity": countCheeses}};
 
-        self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Using Mosaics: " + cheeseSlug + ", " + hofSlug + ", " + atbSlug);
+        //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Using Mosaics: " + cheeseSlug + ", " + hofSlug + ", " + atbSlug);
 
         // Need mosaic definition of evias.pacnem:* mosaics to calculate 
         // adequate fees, so we get it from network.
@@ -480,7 +489,7 @@ var HallOfFame = function(io, logger, chainDataLayer, dataLayer)
                 self.blockchain_.getNetwork().config.id
             );
 
-            self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending Mosaic Transfer Transaction to " + pacman.address + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending Mosaic Transfer Transaction to " + pacman.address + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
 
             // (4) announce the mosaic transfer transaction on the NEM network
             nemSDK.model.transactions.send(privStore, entity, self.blockchain_.getEndpoint()).then(

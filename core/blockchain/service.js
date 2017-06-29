@@ -616,6 +616,7 @@ var service = function(io, nemSDK, logger)
 
         // read addresses in ended game state data
         var addresses = [];
+        var distinct  = {};
         for (var i = 0; i < players.length; i++) {
             if (! players[i].getAddress() || ! players[i].getAddress().length)
                 continue;
@@ -628,6 +629,10 @@ var service = function(io, nemSDK, logger)
                 //XXX add error log, someone tried to send invalid data
                 continue;
 
+            if (distinct.hasOwnProperty(address))
+                continue;
+
+            distinct[address] = true;
             addresses.push(address);
         }
 
