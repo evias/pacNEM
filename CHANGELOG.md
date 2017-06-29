@@ -1,6 +1,6 @@
 # PacNEM Change Log
 
-This project follows [Semantic Versioning](CONTRIBUTING.md).
+A PacMan game with NodeJS using NEM Blockchain
 
 ## v0.6.*
 

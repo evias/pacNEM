@@ -498,24 +498,27 @@ app.get("/api/v1/scores", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		var ranking = HallOfFame.getRanking();
-		var scores = [];
-		for (var i = 0; i < ranking.length; i++) {
-			var rScore  = ranking[i];
-			var fmtTime = rScore.timestamp.toISOString().replace(/T/, ' ')
-														.replace(/\..+/, '');
+		HallOfFame.fetchBlockchainHallOfFame(null, function(hallOfFame)
+		{
+			var ranking = hallOfFame.ranking;
+			var scores = [];
+			for (var i = 0; i < ranking.length; i++) {
+				var rScore  = ranking[i];
+				var fmtTime = rScore.timestamp.toISOString().replace(/T/, ' ')
+															.replace(/\..+/, '');
 
-			scores.push({
-				position: i+1,
-				score: rScore.score,
-				username: rScore.username,
-				address: rScore.address,
-				truncAddress: rScore.address.substr(0, 8),
-				scoreDate: fmtTime
-			});
-		}
+				scores.push({
+					position: i+1,
+					score: rScore.score,
+					username: rScore.username,
+					address: rScore.address,
+					truncAddress: rScore.address.substr(0, 8),
+					scoreDate: fmtTime
+				});
+			}
 
-		res.send(JSON.stringify({data: scores}));
+			res.send(JSON.stringify({data: scores}));
+		});
 	});
 
 //XXX implement actual model

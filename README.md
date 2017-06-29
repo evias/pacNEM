@@ -2,8 +2,6 @@
 
 A PacMan game with NodeJS using NEM Blockchain
 
-[![Build Status](https://travis-ci.org/evias/pacNEM.svg?branch=master)](https://travis-ci.org/evias/pacNEM)[![Coverage Status](https://coveralls.io/repos/evias/pacNEM/badge.svg?branch=master)](https://coveralls.io/r/evias/pacNEM?branch=master)
-
 An online version of the famous PacMan game. It features the ability to play online with up to 4 players on the same grid.
 
 This fork aims to specialize the game for the NEM blockchain. A first version of the NEM integration will save High Scores
@@ -31,6 +29,7 @@ node app.js
 
 ## Play:
 
+http://www.pacnem.com
 https://pacnem.herokuapp.com
 
 ### Pot de vin
