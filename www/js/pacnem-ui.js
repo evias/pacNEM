@@ -58,7 +58,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         socket_.on('ready', function(rawdata)
         {
-            $(".msgSelectRoom").hide();
+            self.hideLounge();
             $("#game").show();
             self.displayUserDetails(rawdata);
             ctrl_.serverReady(rawdata);
@@ -1097,7 +1097,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         var $recipient = $("#" + prefix + "-recipient");
         var $amount    = $("#" + prefix + "-amount");
         var $message   = $("#" + prefix + "-message");
-        var $receiving = $("#" + prefix + "-receiving ");
+        var $receiving = $("#" + prefix + "-receiving");
         var $status    = $("#" + prefix + "-status ");
         var $paid      = $("#" + prefix + "-amountPaid .amount");
         var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
@@ -1316,6 +1316,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                         ui.createSession();
 
                         ui.displayPlayerUI();
+                        ui.displayLounge();
                         $("#rooms").parent().show();
                         $(".pacnem-credits-submenu").removeClass("hidden");
                     };
@@ -1373,6 +1374,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
     this.setLoadingUI = function()
     {
+        if ($(".pacnem-loading-overlay").length) {
+            return $(".pacnem-loading-overlay").fadeIn("slow");
+        }
+
         var $wrapper = $("#pacNEMWrapper");
         var $overlay = $("<div class='pacnem-loading-overlay'></div>");
         $overlay.css({
@@ -1416,7 +1421,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         self.setLoadingUI();
         API_.fetchLoungeInformations(player, function(loungeData)
         {
-            console.log("[DEBUG] " + "Received lounge data: ", loungeData);
+            console.log("[DEBUG] " + "Received lounge data: ", JSON.stringify(loungeData));
             $("#pacnem-lounge-wrapper").fadeIn("slow", function()
             {
                 self.unsetLoadingUI();
@@ -1461,7 +1466,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 API_.fetchScores(function(scores)
                     {
                         self.initBackToPlayButtons();
-                        $(".msgSelectRoom").hide();
+                        self.hideLounge();
                         $("#pacnem-current-player-details").hide();
                         $("#pacnem-scores-wrapper").show();
                         self.unsetLoadingUI();
@@ -1469,9 +1474,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             }
             else {
                 $(this).attr("data-display", "0");
-                $(".msgSelectRoom").show();
                 $("#pacnem-scores-wrapper").hide();
                 $("#pacnem-current-player-details").show();
+                self.displayLounge();
             }
         });
     };
@@ -1498,7 +1503,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     {
                         self.initInvoicesButtons();
                         self.initBackToPlayButtons();
-                        $(".msgSelectRoom").hide();
+                        self.hideLounge();
                         //$("#pacnem-current-player-details").hide();
                         $("#pacnem-invoice-history-wrapper").show();
                         self.unsetLoadingUI();
@@ -1506,9 +1511,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             }
             else {
                 $(this).attr("data-display", "0");
-                $(".msgSelectRoom").show();
                 $("#pacnem-invoice-history-wrapper").hide();
                 //$("#pacnem-current-player-details").show();
+                self.displayLounge();
             }
 
             return false;
@@ -1603,6 +1608,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             self.updateUserFormWithSession(session_);
             self.createSession(session_);
             self.displayPlayerUI();
+            self.displayLounge();
 
             $("#rooms").parent().show();
 
@@ -1650,6 +1656,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      */
     this.initBackToPlayButtons = function()
     {
+        var self = this;
+
         $(".pacnem-back-to-play").off("click");
         $(".pacnem-back-to-play").on("click", function()
         {
@@ -1661,7 +1669,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
             var sess = new GameSession(API_);
             if (sess.identified())
-                $(".msgSelectRoom").show();
+                self.displayLounge();
         });
 
         return this;

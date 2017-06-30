@@ -184,7 +184,7 @@ var RoomManager = function(io)
 			if (includeAddresses === true)
 				player["address"] = map_member_address_[sock];
 
-			players[sid] = player;
+			players[sock] = player;
 		}
 
 		var dict = {

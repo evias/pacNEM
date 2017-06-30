@@ -116,32 +116,32 @@ app.configure(function() {
 
 // configure blockchain layer
 var blockchain = require('./core/blockchain/service.js');
-var chainDataLayer = new blockchain.service(io, nem, logger);
+var PacNEMBlockchain = new blockchain.service(io, nem, logger);
 
 // configure database layer
 var models = require('./core/db/models.js');
-var dataLayer = new models.pacnem(io, chainDataLayer);
+var PacNEMDB = new models.pacnem(io, PacNEMBlockchain);
 
 // configure our PaymentsCore implementation, handling payment
 // processor NEMBot communication
 var PaymentsCore = require("./core/blockchain/payments-core.js").PaymentsCore;
-var PaymentsProtocol = new PaymentsCore(io, logger, chainDataLayer, dataLayer);
+var PaymentsProtocol = new PaymentsCore(io, logger, PacNEMBlockchain, PacNEMDB);
 
 var HallOfFameCore = require("./core/blockchain/hall-of-fame.js").HallOfFame;
-var HallOfFame = new HallOfFameCore(io, logger, chainDataLayer, dataLayer);
+var HallOfFame = new HallOfFameCore(io, logger, PacNEMBlockchain, PacNEMDB);
 HallOfFame.fetchBlockchainHallOfFame();
 
 var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
-var PacNEMSockets  = new PacNEMProtocol(io, logger, chainDataLayer, dataLayer, HallOfFame);
+var PacNEMSockets  = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame);
 
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
-var PacNEM_Crons  = new JobsScheduler(logger, chainDataLayer, dataLayer);
+var PacNEM_Crons  = new JobsScheduler(logger, PacNEMBlockchain, PacNEMDB);
 PacNEM_Crons.hourly();
 
 var PacNEM_Frontend_Config = {
-	"business": chainDataLayer.getVendorWallet(),
-	"application": chainDataLayer.getPublicWallet(),
-	"namespace": chainDataLayer.getNamespace()
+	"business": PacNEMBlockchain.getVendorWallet(),
+	"application": PacNEMBlockchain.getPublicWallet(),
+	"namespace": PacNEMBlockchain.getNamespace()
 };
 
 /**
@@ -228,7 +228,7 @@ app.get('/resources/templates/:name', function(req, res)
 app.get("/sponsor", function(req, res)
 	{
 		var currentLanguage = i18n.language;
-		var currentNetwork  = chainDataLayer.getNetwork();
+		var currentNetwork  = PacNEMBlockchain.getNetwork();
 
 		var viewData = {
 			currentNetwork: currentNetwork,
@@ -243,7 +243,7 @@ app.get("/sponsor", function(req, res)
 .post("/sponsor", function(req, res)
 	{
 		var currentLanguage = i18n.language;
-		var currentNetwork  = chainDataLayer.getNetwork();
+		var currentNetwork  = PacNEMBlockchain.getNetwork();
 
 		var viewData = {
 			currentNetwork: currentNetwork,
@@ -302,7 +302,7 @@ app.get("/sponsor", function(req, res)
 
 		// Form input is valid!
 
-		dataLayer.NEMSponsor.findOne({email: input.email}, function(err, sponsor)
+		PacNEMDB.NEMSponsor.findOne({email: input.email}, function(err, sponsor)
 		{
 			if (err) {
 				// error reading sponsor
@@ -318,7 +318,7 @@ app.get("/sponsor", function(req, res)
 
 			var sponsorSlug = input.sponsorname.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
 
-			sponsor = new dataLayer.NEMSponsor({
+			sponsor = new PacNEMDB.NEMSponsor({
 				slug: sponsorSlug,
 				realName: input.realname,
 				sponsorName: input.sponsorname,
@@ -344,7 +344,7 @@ app.get("/sponsor", function(req, res)
 .get("/:lang", function(req, res)
 	{
 		var currentLanguage = req.params.lang;
-		var currentNetwork  = chainDataLayer.getNetwork();
+		var currentNetwork  = PacNEMBlockchain.getNetwork();
 
 		i18n.changeLanguage(currentLanguage);
 
@@ -362,7 +362,7 @@ app.get("/sponsor", function(req, res)
 .get("/", function(req, res)
 	{
 		var currentLanguage = i18n.language;
-		var currentNetwork  = chainDataLayer.getNetwork();
+		var currentNetwork  = PacNEMBlockchain.getNetwork();
 
 		var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
 
@@ -402,7 +402,7 @@ app.get("/api/v1/sessions/get", function(req, res)
 		};
 
 		// fetch an existing NEMGamer entry by XEM address, this
-		dataLayer.NEMGamer.findOne({"xem": input.xem, "username": input.username}, function(err, player)
+		PacNEMDB.NEMGamer.findOne({"xem": input.xem, "username": input.username}, function(err, player)
 		{
 			if (err || ! player) {
 				// error mode
@@ -413,7 +413,7 @@ app.get("/api/v1/sessions/get", function(req, res)
 			}
 
 			// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-			chainDataLayer.fetchHeartsByGamer(player);
+			PacNEMBlockchain.fetchHeartsByGamer(player);
 
 			// session retrieved.
 			return res.send(JSON.stringify({item: player}));
@@ -434,7 +434,7 @@ app.post("/api/v1/sessions/store", function(req, res)
 		};
 
 		// mongoDB model NEMGamer unique on xem address + username pair.
-		dataLayer.NEMGamer.findOne({"xem": input.xem, "username": input.username}, function(err, player)
+		PacNEMDB.NEMGamer.findOne({"xem": input.xem, "username": input.username}, function(err, player)
 		{
 			if (! err && player) {
 			// update mode
@@ -459,14 +459,14 @@ app.post("/api/v1/sessions/store", function(req, res)
 
 				if (input.validateHearts === true) {
 					// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-					chainDataLayer.fetchHeartsByGamer(player);
+					PacNEMBlockchain.fetchHeartsByGamer(player);
 				}
 
 				return res.send(JSON.stringify({item: player}));
 			}
 			else if (! player) {
 			// creation mode
-				var player = new dataLayer.NEMGamer({
+				var player = new PacNEMDB.NEMGamer({
 					username: input.username,
 					xem: input.xem,
 					lastScore: input.score,
@@ -479,7 +479,7 @@ app.post("/api/v1/sessions/store", function(req, res)
 
 				if (input.validateHearts === true) {
 					// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-					chainDataLayer.fetchHeartsByGamer(player);
+					PacNEMBlockchain.fetchHeartsByGamer(player);
 				}
 
 				return res.send(JSON.stringify({item: player}));
@@ -526,7 +526,7 @@ app.get("/api/v1/sponsors/random", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		//XXX implement dataLayer.NEMSponsor features
+		//XXX implement PacNEMDB.NEMSponsor features
 		var sponsor   = {};
 		var slugs 	  = ["easport", "atari", "nem", "evias"];
 		var names     = ["EA Sports", "Atari", "nem", "eVias"];
@@ -562,19 +562,19 @@ app.get("/api/v1/credits/buy", function(req, res)
 		var invoiceNumber = req.query.num ? req.query.num : null;
 
 		var payer = req.query.payer ? req.query.payer : undefined;
-		if (! payer.length || dataLayer.isApplicationWallet(payer))
+		if (! payer.length || PacNEMDB.isApplicationWallet(payer))
 			// cannot be one of the application wallets
 			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
 
 		var recipient = req.query.recipient ? req.query.recipient : config.get("pacnem.business"); // the App's MultiSig wallet
-		if (! recipient.length || !dataLayer.isApplicationWallet(recipient))
+		if (! recipient.length || !PacNEMDB.isApplicationWallet(recipient))
 			// must be one of the application wallets
 			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `recipient`."}));
 
 		var heartPrice = parseFloat(config.get("prices.heart")); // in XEM
 		var receivingHearts = Math.ceil(amount * heartPrice); // XEM price * (1 Heart / x XEM)
 		var invoiceAmount   = amount * 1000000; // convert amount to micro XEM
-		var currentNetwork  = chainDataLayer.getNetwork();
+		var currentNetwork  = PacNEMBlockchain.getNetwork();
 		var disableChannel  = req.query.chan ? req.query.chan == "0" : false;
 
 		var dbConditions = {
@@ -593,12 +593,12 @@ app.get("/api/v1/credits/buy", function(req, res)
 		//serverLog("DEBUG", JSON.stringify(dbConditions), "DEBUG");
 
 		// mongoDB model NEMPaymentChannel unique on xem address + message pair.
-		dataLayer.NEMPaymentChannel.findOne(dbConditions, function(err, invoice)
+		PacNEMDB.NEMPaymentChannel.findOne(dbConditions, function(err, invoice)
 		{
 			if (!err && ! invoice) {
 				// creation mode
 
-				var invoice = new dataLayer.NEMPaymentChannel({
+				var invoice = new PacNEMDB.NEMPaymentChannel({
 					recipientXEM: recipient,
 					payerXEM: payer,
 					amount: invoiceAmount,
@@ -673,7 +673,7 @@ app.get("/api/v1/credits/history", function(req, res)
 		var payer  = req.query.payer ? req.query.payer : undefined;
 		var number = req.query.number ? req.query.number : undefined;
 
-		if (! payer || ! payer.length || dataLayer.isApplicationWallet(payer))
+		if (! payer || ! payer.length || PacNEMDB.isApplicationWallet(payer))
 			// cannot be one of the application wallets
 			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
 
@@ -690,7 +690,7 @@ app.get("/api/v1/credits/history", function(req, res)
 			invoiceQuery["number"] = number;
 		}
 
-		dataLayer.NEMPaymentChannel.find(invoiceQuery, function(err, invoices)
+		PacNEMDB.NEMPaymentChannel.find(invoiceQuery, function(err, invoices)
 		{
 			if (err) {
 				var errorMessage = "Error occured on /credits/history: " + err;
@@ -759,12 +759,12 @@ app.get("/api/v1/credits/remaining", function(req, res)
 		res.setHeader('Content-Type', 'application/json');
 
 		var payer = req.query.payer ? req.query.payer : undefined;
-		if (! payer.length || dataLayer.isApplicationWallet(payer))
+		if (! payer.length || PacNEMDB.isApplicationWallet(payer))
 			// cannot be one of the application wallets
 			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
 
 		// fetch an existing NEMGamer entry by XEM address, this
-		dataLayer.NEMGamer.findOne({"xem": payer}, function(err, player)
+		PacNEMDB.NEMGamer.findOne({"xem": payer}, function(err, player)
 		{
 			if (err || ! player) {
 				// never played before
@@ -796,7 +796,10 @@ app.get("/api/v1/lounge/get", function(req, res)
 	{
 		res.setHeader('Content-Type', 'application/json');
 
-		var lounge = PacNEMSockets.getRoomManager().toDict();
+		var lounge  = PacNEMSockets.getRoomManager().toDict();
+		var allMosaics = PacNEMBlockchain.getGameMosaicsConfiguration();
+		var namespace  = PacNEMBlockchain.getNamespace();
+
 		var totalSessions    = lounge.players.length;
 		var activeSessions   = 0;
 		var inactiveSessions = 0;
@@ -832,7 +835,8 @@ app.get("/api/v1/lounge/get", function(req, res)
 					"inactive": inactiveSessions,
 					"lounge": loungeSessions,
 					"playing": playingSessions
-				} 
+				},
+				"mosaics": allMosaics
 			}
 		};
 
@@ -848,16 +852,16 @@ app.get("/api/v1/lounge/get", function(req, res)
 var port = process.env['PORT'] = process.env.PORT || 2908;
 server.listen(port, function()
 	{
-		var network    = chainDataLayer.getNetwork();
+		var network    = PacNEMBlockchain.getNetwork();
 		var blockchain = network.isTest ? "Testnet Blockchain" : network.isMijin ? "Mijin Private Blockchain" : "NEM Mainnet Public Blockchain";
-		var vendor 		= chainDataLayer.getVendorWallet();
-		var application = chainDataLayer.getPublicWallet();
-		var namespace   = chainDataLayer.getNamespace();
+		var vendor 		= PacNEMBlockchain.getVendorWallet();
+		var application = PacNEMBlockchain.getPublicWallet();
+		var namespace   = PacNEMBlockchain.getNamespace();
 
 		console.log("------------------------------------------------------------------------");
-		console.log("--                       PacNEM Blockchain DAG                        --");
+		console.log("--                       PacNEM Blockchain Game                       --");
 		console.log("--                                                                    --");
-		console.log("--   Decentralized Autonomous Game project using the NEM Blockchain   --")
+		console.log("--           Autonomous Game project using the NEM Blockchain         --")
 		console.log("------------------------------------------------------------------------");
 		console.log("-");
 		console.log("- PacNEM Game Server listening on Port %d in %s mode", this.address().port, app.settings.env);

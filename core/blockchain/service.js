@@ -26,28 +26,29 @@ var config = require("config"),
  * describe all mosaics used in the game - being Game Credits 
  * Mosaics, Scores Mosaics and Achievements Mosaics.
  */
+var pacNEM_NS_ = (process.env["APP_NAMESPACE"] || config.get("pacnem.namespace"));
 var pacNEM_mosaics = {
-    "credits": {"heart": true},
-    "scores": {"cheese": true},
+    "credits": {
+        "heart": {"icon": "glyphicon glyphicon-heart", "slug": [pacNEM_NS_, "heart"].join(":")}, 
+        "hearts--": {"icon": "glyphicon glyphicon-heart-empty", "slug": [pacNEM_NS_, "hearts--"].join(":")}},
+    "scores": {"cheese": {"icon": "glyphicon glyphicon-globe", "slug": [pacNEM_NS_, "cheese"].join(":")}},
     "rewards": {
         "purchases": {
-            "beta-player": {"icon": "glyphicon glyphicon-empty-star"},
-            "player": {"icon": "glyphicon glyphicon-user"}
-        },
-        "return_x2": {"n00b": true},
-        "return_x5": {"nember": true},
-        "return_x10": {"afficionado": true},
-        "return_x100": {"great-supporter": true},
+            "beta-player": {"icon": "glyphicon glyphicon-empty-star", "slug": [pacNEM_NS_, "beta-player"].join(":")},
+            "player": {"icon": "glyphicon glyphicon-user", "slug": [pacNEM_NS_, "player"].join(":")}},
+        "return_x2": {"n00b": {"icon": "glyphicon glyphicon-refresh", "slug": [pacNEM_NS_, "n00b"].join(":")}},
+        "return_x5": {"nember": {"icon": "glyphicon glyphicon-refresh", "slug": [pacNEM_NS_, "nember"].join(":")}},
+        "return_x10": {"afficionado": {"icon": "glyphicon glyphicon-refresh", "slug": [pacNEM_NS_, "afficionado"].join(":")}},
+        "return_x100": {"great-supporter": {"icon": "glyphicon glyphicon-refresh", "slug": [pacNEM_NS_, "great-supporter"].join(":")}},
         "high_score": {
-            "hall-of-famer": {"icon": "glyphicon glyphicon-king"}, 
-            "all-time-best-player": {"icon": "glyphicon glyphicon-queen"}
-        }
+            "hall-of-famer": {"icon": "glyphicon glyphicon-education", "slug": [pacNEM_NS_, "hall-of-famer"].join(":")}, 
+            "all-time-best-player": {"icon": "glyphicon glyphicon-sunglasses", "slug": [pacNEM_NS_, "all-time-best-player"].join(":")}}
     },
     "achievements": {
-        "combo_x3": {"multikill": {"minCombo": 3}},
-        "combo_x5": {"rampage": {"minCombo": 5}},
-        "combo_x7": {"ghostbuster": {"minCombo": 7}},
-        "combo_x10": {"godlike-101010": {"minCombo": 10}}
+        "combo_x3": {"multikill": {"minCombo": 3, "icon": "glyphicon glyphicon-fire", "slug": [pacNEM_NS_, "multikill"].join(":")}},
+        "combo_x5": {"rampage": {"minCombo": 5, "icon": "glyphicon glyphicon-fire", "slug": [pacNEM_NS_, "rampage"].join(":")}},
+        "combo_x7": {"ghostbuster": {"minCombo": 7, "icon": "glyphicon glyphicon-fire", "slug": [pacNEM_NS_, "ghostbuster"].join(":")}},
+        "combo_x10": {"godlike-101010": {"minCombo": 10, "icon": "glyphicon glyphicon-plane", "slug": [pacNEM_NS_, "godlike-101010"].join(":")}}
     }
 };
 
@@ -106,9 +107,6 @@ var service = function(io, nemSDK, logger)
     // - pacNEM_ : The Cosignatory Wallet is one of the 2 cosignatories of vendor_ (the public one, not the sign-bot..).
     var vendor_  = (process.env["APP_VENDOR"] || config.get("pacnem.business")).replace(/-/g, "");
     var pacNEM_  = (process.env["APP_PUBLIC"] || config.get("pacnem.application") || config.get("pacnem.business")).replace(/-/g, "");
-
-    // Configure the mosaics namespace to be used
-    var pacNEM_NS_ = (process.env["APP_NAMESPACE"] || config.get("pacnem.namespace"));
 
     var gameCreditsHistory_ = {};
 
