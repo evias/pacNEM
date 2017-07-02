@@ -172,5 +172,34 @@
         "loser_yoda_quote_3": "You will be. You... will... be. ",
         "loser_yoda_quote_4": "Fought well you have, my old Padawan ",
         "loser_yoda_quote_5": "Much to learn, you still have. "
+    },
+    "lounge": {
+        "label_players_online": "Players online",
+        "label_players_active": "Active players",
+        "label_players_inactive": "Inactive players",
+        "label_players_lounge": "in the Lounge",
+        "label_players_playing": "Currently playing",
+        "user_count_data_title": "Current Activity",
+        "mosaics_data_title": "Today's Mosaics on PacNEM",
+        "charts_data_title": "PacNEM in Numbers",
+        "games_data_title": "PacNEM Live",
+        "empty_mosaics_list": "Today PacNEM has not sent any Mosaics Transfers yet.."
+    },
+    "mosaics": {
+        "label_mosaic_heart": "Game Credits",
+        "label_mosaic_heart_redeem": "Played Credits",
+        "label_mosaic_cheese": "Score Token",
+        "label_mosaic_beta_player": "Beta Player",
+        "label_mosaic_player": "Player Token",
+        "label_mosaic_n00b": "PacNEM n00b",
+        "label_mosaic_nember": "PacNEMber",
+        "label_mosaic_afficionado": "Afficionado",
+        "label_mosaic_great_supporter": "PacNEM Family",
+        "label_mosaic_hall_of_famer": "Hall Of Famer",
+        "label_mosaic_all_time_best_player": "All Time BEST",
+        "label_mosaic_multikill": "Multi-Kill",
+        "label_mosaic_rampage": "Rampage",
+        "label_mosaic_ghostbuster": "Ghostbuster",
+        "label_mosaic_godlike_101010": "Godlike (101010)"
     }
 }
