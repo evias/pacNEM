@@ -39,14 +39,27 @@
             </h4>
 
             <div class="container-fluid pacnem-lounge-mosaics">
-                {{#unless lounge.mosaics.length}}
-                <p class="text-warning">{{t "lounge.empty_mosaics_list"}}</p>
-                {{/unless}}
-
-                {{#if lounge.mosaics.length}}
                 <ul>
                     {{#each lounge.mosaics.credits}}
-                    <li class="col-md-3">
+                    <li class="col-md-3" style="display: inline-block;">
+                        <div class="label label-default label-mosaic">
+                            <b>1&nbsp;<i class="{{icon}}"></i>
+                        </div>&nbsp;
+                        <a href="http://nem.io" target="_blank">{{slug}}</a>
+                    </li>
+                    {{/each}}
+
+                    {{#each lounge.mosaics.rewards.purchases}}
+                    <li class="col-md-3" style="display: inline-block;">
+                        <div class="label label-default label-mosaic">
+                            <b>1&nbsp;<i class="{{icon}}"></i>
+                        </div>&nbsp;
+                        <a href="http://nem.io" target="_blank">{{slug}}</a>
+                    </li>
+                    {{/each}}
+
+                    {{#each lounge.mosaics.rewards.high_score}}
+                    <li class="col-md-3" style="display: inline-block;">
                         <div class="label label-default label-mosaic">
                             <b>1&nbsp;<i class="{{icon}}"></i>
                         </div>&nbsp;
@@ -54,7 +67,6 @@
                     </li>
                     {{/each}}
                 </ul>
-                {{/if}}
             </div>
         </div>
     </div>

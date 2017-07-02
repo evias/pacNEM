@@ -1,4 +1,5 @@
 #!/usr/bin/nodejs
+
 /**
  * Part of the evias/pacNEM package.
  *
@@ -17,17 +18,17 @@
  */
 
 var app = require('express')(),
-	server = require('http').createServer(app),
-	io = require('socket.io').listen(server),
-	path = require('path'),
-	handlebars = require("handlebars"),
-	expressHbs = require("express-handlebars"),
-	auth = require("http-auth"),
-	mongoose = require("mongoose"),
-	bodyParser = require("body-parser"),
-	config = require("config"),
-	nem = require("nem-sdk").default,
-	i18n = require("i18next"),
+    server = require('http').createServer(app),
+    io = require('socket.io').listen(server),
+    path = require('path'),
+    handlebars = require("handlebars"),
+    expressHbs = require("express-handlebars"),
+    auth = require("http-auth"),
+    mongoose = require("mongoose"),
+    bodyParser = require("body-parser"),
+    config = require("config"),
+    nem = require("nem-sdk").default,
+    i18n = require("i18next"),
     i18nFileSystemBackend = require('i18next-node-fs-backend'),
     i18nMiddleware = require('i18next-express-middleware'),
     fs = require("fs"),
@@ -40,35 +41,35 @@ var logger = require('./core/logger.js');
 
 var __smartfilename = path.basename(__filename);
 
-var serverLog = function(req, msg, type)
-{
-	var logMsg = "[" + type + "] " + msg + " (" + (req.headers ? req.headers['x-forwarded-for'] : "?") + " - "
-			   + (req.connection ? req.connection.remoteAddress : "?") + " - "
-			   + (req.socket ? req.socket.remoteAddress : "?") + " - "
-			   + (req.connection && req.connection.socket ? req.connection.socket.remoteAddress : "?") + ")";
-	logger.info(__smartfilename, __line, logMsg);
+var serverLog = function(req, msg, type) {
+    var logMsg = "[" + type + "] " + msg + " (" + (req.headers ? req.headers['x-forwarded-for'] : "?") + " - " +
+        (req.connection ? req.connection.remoteAddress : "?") + " - " +
+        (req.socket ? req.socket.remoteAddress : "?") + " - " +
+        (req.connection && req.connection.socket ? req.connection.socket.remoteAddress : "?") + ")";
+    logger.info(__smartfilename, __line, logMsg);
 };
 
 // configure view engine (handlebars)
 app.engine(".hbs", expressHbs({
-	extname: ".hbs",
-	defaultLayout: "default.hbs",
-	layoutPath: "views/layouts"}));
+    extname: ".hbs",
+    defaultLayout: "default.hbs",
+    layoutPath: "views/layouts"
+}));
 app.set("view engine", "hbs");
 
 // configure translations with i18next
 i18n.use(i18nFileSystemBackend)
-	.init({
-		lng: "en",
-		fallbackLng: "en",
-		defaultNS: "translation",
-		whitelist: ["en", "de", "fr"],
-		nonExplicitWhitelist: true,
-		preload: ["en", "de", "fr"],
-		backend: {
-			loadPath: "locales/{{lng}}/{{ns}}.json"
-		}
-	});
+    .init({
+        lng: "en",
+        fallbackLng: "en",
+        defaultNS: "translation",
+        whitelist: ["en", "de", "fr"],
+        nonExplicitWhitelist: true,
+        preload: ["en", "de", "fr"],
+        backend: {
+            loadPath: "locales/{{lng}}/{{ns}}.json"
+        }
+    });
 
 // configure body-parser usage for POST API calls.
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -79,12 +80,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
  * COMMENT BLOCK if you wish to open the website
  * to the public.
  */
-if (! config.get("pacnem.isPublic", false)) {
-	var basicAuth = auth.basic({
-		realm: "This is a Highly Secured Area - Monkey at Work.",
-		file: __dirname + "/pacnem.htpasswd"
-	});
-	app.use(auth.connect(basicAuth));
+if (!config.get("pacnem.isPublic", false)) {
+    var basicAuth = auth.basic({
+        realm: "This is a Highly Secured Area - Monkey at Work.",
+        file: __dirname + "/pacnem.htpasswd"
+    });
+    app.use(auth.connect(basicAuth));
 }
 /**
  * End Basic HTTP Authentication BLOCK
@@ -100,15 +101,15 @@ if (! config.get("pacnem.isPublic", false)) {
  * and cross-request messages.
  */
 app.configure(function() {
-	app.use(session({
-		cookie: {maxAge: 60000},
-		secret: config.get("pacnem.secretKey"),
-		resave: false,
-		saveUninitialized: false
-	}));
+    app.use(session({
+        cookie: { maxAge: 60000 },
+        secret: config.get("pacnem.secretKey"),
+        resave: false,
+        saveUninitialized: false
+    }));
 
-	app.use(flash());
-	app.use(validator());
+    app.use(flash());
+    app.use(validator());
 });
 /**
  * End Application Middlewares
@@ -132,16 +133,16 @@ var HallOfFame = new HallOfFameCore(io, logger, PacNEMBlockchain, PacNEMDB);
 HallOfFame.fetchBlockchainHallOfFame();
 
 var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
-var PacNEMSockets  = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame);
+var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame);
 
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
-var PacNEM_Crons  = new JobsScheduler(logger, PacNEMBlockchain, PacNEMDB);
+var PacNEM_Crons = new JobsScheduler(logger, PacNEMBlockchain, PacNEMDB);
 PacNEM_Crons.hourly();
 
 var PacNEM_Frontend_Config = {
-	"business": PacNEMBlockchain.getVendorWallet(),
-	"application": PacNEMBlockchain.getPublicWallet(),
-	"namespace": PacNEMBlockchain.getNamespace()
+    "business": PacNEMBlockchain.getVendorWallet(),
+    "application": PacNEMBlockchain.getPublicWallet(),
+    "namespace": PacNEMBlockchain.getNamespace()
 };
 
 /**
@@ -149,13 +150,52 @@ var PacNEM_Frontend_Config = {
  *
  * - handlebars t() helper for template translations handling with i18next
  **/
-handlebars.registerHelper('t', function(key, sub)
-{
-	if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
-		// dynamic subnamespace
-		var key = key + "." + sub;
+handlebars.registerHelper('t', function(key, sub) {
+    if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
+    // dynamic subnamespace
+        var key = key + "." + sub;
 
-	return new handlebars.SafeString(i18n.t(key));
+    return new handlebars.SafeString(i18n.t(key));
+});
+
+/**
+ * Serving static Assets (images, CSS, JS files)
+ * @param {*} req 
+ * @param {*} res 
+ */
+var serveStaticFile = function(req, res, path) {
+    var file = req.params ? req.params[0] : "";
+    if (!file.length)
+        return res.send(404);
+
+    // make sure file exists
+    var path = __dirname + path + file;
+    if (!fs.existsSync(path)) {
+        console.log("file: '" + path + "' does not exist");
+        return res.send(404);
+    }
+
+    return res.sendfile(path);
+};
+
+/**
+ * Third Party static asset serving
+ * - Bootstrap
+ * - Handlebars
+ * - i18next
+ * - jQuery
+ */
+app.get('/3rdparty/*', function(req, res) {
+    return serveStaticFile(req, res, "/www/3rdparty/");
+});
+app.get('/img/*', function(req, res) {
+    return serveStaticFile(req, res, "/img/");
+});
+app.get('/css/*', function(req, res) {
+    return serveStaticFile(req, res, "/www/css/");
+});
+app.get('/js/*', function(req, res) {
+    return serveStaticFile(req, res, "/www/js/");
 });
 
 /**
@@ -164,42 +204,9 @@ handlebars.registerHelper('t', function(key, sub)
  * Also includes asynchronously loaded templates,
  * those are stored in views/partials/*.hbs files.
  */
-app.get('/favicon.ico', function(req, res)
-	{
-		res.sendfile(__dirname + '/www/favicon.ico');
-	})
-.get('/img/flags/:country.png', function(req, res)
-	{
-		res.sendfile(__dirname + '/img/flags/' + req.params.country + ".png");
-	})
-.get('/img/:image', function(req, res)
-	{
-		res.sendfile(__dirname + '/img/' + req.params.image);
-	})
-.get('/css/:sheet.css', function(req, res)
-	{
-		res.sendfile(__dirname + '/www/css/' + req.params.sheet + '.css');
-	})
-.get('/js/:source.js', function(req, res)
-	{
-		res.sendfile(__dirname + '/www/js/' + req.params.source + '.js');
-	});
-
-/**
- * Third Party assets Serving
- * - Bootstrap
- * - Handlebars
- * - i18next
- * - jQuery
- */
-app.get('/css/3rdparty/:sheet.css', function(req, res)
-	{
-		res.sendfile(__dirname + '/www/css/3rdparty/' + req.params.sheet + '.css');
-	})
-.get('/js/3rdparty/:source.js', function(req, res)
-	{
-		res.sendfile(__dirname + '/www/js/3rdparty/' + req.params.source + '.js');
-	});
+app.get('/favicon.ico', function(req, res) {
+    res.sendfile(__dirname + '/www/favicon.ico');
+});
 
 /**
  * - Asynchronous Template Serving
@@ -208,173 +215,166 @@ app.get('/css/3rdparty/:sheet.css', function(req, res)
  * The templates present in views/partials can be rendered
  * using the jQFileTemplate frontend implementation.
  */
-app.get('/resources/templates/:name', function(req, res)
-	{
-		res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
-	})
-.get('/locales/:lang', function(req, res)
-	{
-		var json = fs.readFileSync(__dirname + '/locales/' + req.params.lang + '/translation.json');
+app.get('/resources/templates/:name', function(req, res) {
+        res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
+    })
+    .get('/locales/:lang', function(req, res) {
+        var json = fs.readFileSync(__dirname + '/locales/' + req.params.lang + '/translation.json');
 
-		res.setHeader("Content-Type", "application/json; charset=utf-8");
-		res.send(json);
-	});
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.send(json);
+    });
 
 /**
  * Frontend Web Application Serving
  *
  * This part of the game is where the end-user is active.
  */
-app.get("/sponsor", function(req, res)
-	{
-		var currentLanguage = i18n.language;
-		var currentNetwork  = PacNEMBlockchain.getNetwork();
+app.get("/sponsor", function(req, res) {
+        var currentLanguage = i18n.language;
+        var currentNetwork = PacNEMBlockchain.getNetwork();
 
-		var viewData = {
-			currentNetwork: currentNetwork,
-			currentLanguage: currentLanguage,
-			PacNEM_Frontend_Config: PacNEM_Frontend_Config,
-			errors: {},
-			values: {}
-		};
+        var viewData = {
+            currentNetwork: currentNetwork,
+            currentLanguage: currentLanguage,
+            PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+            errors: {},
+            values: {}
+        };
 
-		res.render("sponsor", viewData);
-	})
-.post("/sponsor", function(req, res)
-	{
-		var currentLanguage = i18n.language;
-		var currentNetwork  = PacNEMBlockchain.getNetwork();
+        res.render("sponsor", viewData);
+    })
+    .post("/sponsor", function(req, res) {
+        var currentLanguage = i18n.language;
+        var currentNetwork = PacNEMBlockchain.getNetwork();
 
-		var viewData = {
-			currentNetwork: currentNetwork,
-			currentLanguage: currentLanguage,
-			PacNEM_Frontend_Config: PacNEM_Frontend_Config,
-			errors: {},
-			values: {}
-		};
+        var viewData = {
+            currentNetwork: currentNetwork,
+            currentLanguage: currentLanguage,
+            PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+            errors: {},
+            values: {}
+        };
 
-		var mandatoryFieldError = i18n.t("sponsor_engine.error_missing_mandatory_field");
+        var mandatoryFieldError = i18n.t("sponsor_engine.error_missing_mandatory_field");
 
-		//XXX SANITIZE
+        //XXX SANITIZE
 
-		//req.check("realname", mandatoryFieldError).notEmpty();
-		//req.check("email", mandatoryFieldError).notEmpty();
-		//req.check("email", mandatoryFieldError).isEmail();
-		//req.check("sponsorname", mandatoryFieldError).notEmpty();
-		//req.check("type_advertizing", mandatoryFieldError).notEmpty();
-		//req.check("description", mandatoryFieldError).notEmpty();
+        //req.check("realname", mandatoryFieldError).notEmpty();
+        //req.check("email", mandatoryFieldError).notEmpty();
+        //req.check("email", mandatoryFieldError).isEmail();
+        //req.check("sponsorname", mandatoryFieldError).notEmpty();
+        //req.check("type_advertizing", mandatoryFieldError).notEmpty();
+        //req.check("description", mandatoryFieldError).notEmpty();
 
-		var input = {
-			"realname" : req.body.realname,
-			"email" : req.body.email,
-			"sponsorname" : req.body.sponsorname,
-			"url" : req.body.url,
-			"type_advertizing" : req.body.type_advertizing,
-			"description": req.body.description
-		};
+        var input = {
+            "realname": req.body.realname,
+            "email": req.body.email,
+            "sponsorname": req.body.sponsorname,
+            "url": req.body.url,
+            "type_advertizing": req.body.type_advertizing,
+            "description": req.body.description
+        };
 
-		//var errors = req.validationErrors();
+        //var errors = req.validationErrors();
 
-		//if (errors) {
-			//XXX errors will be indexed by field name
+        //if (errors) {
+        //XXX errors will be indexed by field name
 
-		var errors  	= {};
-		var isFormValid = true;
-		var mandatories = ["realname", "email", "sponsorname", "type_advertizing", "description"];
-		for (var i in mandatories) {
-			var field = mandatories[i];
-			if (! input[field] || ! input[field].length) {
-				errors[field] = i18n.t("sponsor_engine.error_missing_mandatory_field");
-				isFormValid   = false;
-			}
-		}
+        var errors = {};
+        var isFormValid = true;
+        var mandatories = ["realname", "email", "sponsorname", "type_advertizing", "description"];
+        for (var i in mandatories) {
+            var field = mandatories[i];
+            if (!input[field] || !input[field].length) {
+                errors[field] = i18n.t("sponsor_engine.error_missing_mandatory_field");
+                isFormValid = false;
+            }
+        }
 
-		if (! isFormValid) {
-			viewData["errors"] = errors;
-			viewData["values"] = input;
-			return res.render("sponsor", viewData);
-		}
-		//}
+        if (!isFormValid) {
+            viewData["errors"] = errors;
+            viewData["values"] = input;
+            return res.render("sponsor", viewData);
+        }
+        //}
 
-		//serverLog(req, JSON.stringify(input), "[DEBUG]");
-		//serverLog(req, JSON.stringify(errors), "[DEBUG]");
-		//serverLog(req, JSON.stringify(isFormValid), "[DEBUG]");
+        //serverLog(req, JSON.stringify(input), "[DEBUG]");
+        //serverLog(req, JSON.stringify(errors), "[DEBUG]");
+        //serverLog(req, JSON.stringify(isFormValid), "[DEBUG]");
 
-		// Form input is valid!
+        // Form input is valid!
 
-		PacNEMDB.NEMSponsor.findOne({email: input.email}, function(err, sponsor)
-		{
-			if (err) {
-				// error reading sponsor
-				viewData.errors = {general: err};
-				return res.render("sponsor", viewData);
-			}
+        PacNEMDB.NEMSponsor.findOne({ email: input.email }, function(err, sponsor) {
+            if (err) {
+                // error reading sponsor
+                viewData.errors = { general: err };
+                return res.render("sponsor", viewData);
+            }
 
-			if (sponsor) {
-				// sponsor by email already exists!
-				viewData.errors = {general: i18n.t("sponsor_engine.error_email_unique")};
-				return res.render("sponsor", viewData);
-			}
+            if (sponsor) {
+                // sponsor by email already exists!
+                viewData.errors = { general: i18n.t("sponsor_engine.error_email_unique") };
+                return res.render("sponsor", viewData);
+            }
 
-			var sponsorSlug = input.sponsorname.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
+            var sponsorSlug = input.sponsorname.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
 
-			sponsor = new PacNEMDB.NEMSponsor({
-				slug: sponsorSlug,
-				realName: input.realname,
-				sponsorName: input.sponsorname,
-				email: input.email,
-				description: input.description,
-				websiteUrl: input.url,
-				advertType: input.type_advertizing,
-				createdAt: new Date().valueOf()
-			});
+            sponsor = new PacNEMDB.NEMSponsor({
+                slug: sponsorSlug,
+                realName: input.realname,
+                sponsorName: input.sponsorname,
+                email: input.email,
+                description: input.description,
+                websiteUrl: input.url,
+                advertType: input.type_advertizing,
+                createdAt: new Date().valueOf()
+            });
 
-			sponsor.save(function(err) {
-				if (err) {
-					// error saving sponsor
-					viewData.errors = {general: err};
-					return res.render("sponsor", viewData);
-				}
+            sponsor.save(function(err) {
+                if (err) {
+                    // error saving sponsor
+                    viewData.errors = { general: err };
+                    return res.render("sponsor", viewData);
+                }
 
-				req.flash("info", i18n.t("sponsor_engine.registered_success"));
-				return res.redirect("/");
-			})
-		});
-	})
-.get("/:lang", function(req, res)
-	{
-		var currentLanguage = req.params.lang;
-		var currentNetwork  = PacNEMBlockchain.getNetwork();
+                req.flash("info", i18n.t("sponsor_engine.registered_success"));
+                return res.redirect("/");
+            })
+        });
+    })
+    .get("/:lang", function(req, res) {
+        var currentLanguage = req.params.lang;
+        var currentNetwork = PacNEMBlockchain.getNetwork();
 
-		i18n.changeLanguage(currentLanguage);
+        i18n.changeLanguage(currentLanguage);
 
-		var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
+        var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
 
-		var viewData = {
-			currentNetwork: currentNetwork,
-			currentLanguage: currentLanguage,
-			PacNEM_Frontend_Config: PacNEM_Frontend_Config,
-			notificationMessage: notificationMessage
-		};
+        var viewData = {
+            currentNetwork: currentNetwork,
+            currentLanguage: currentLanguage,
+            PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+            notificationMessage: notificationMessage
+        };
 
-		res.render("play", viewData);
-	})
-.get("/", function(req, res)
-	{
-		var currentLanguage = i18n.language;
-		var currentNetwork  = PacNEMBlockchain.getNetwork();
+        res.render("play", viewData);
+    })
+    .get("/", function(req, res) {
+        var currentLanguage = i18n.language;
+        var currentNetwork = PacNEMBlockchain.getNetwork();
 
-		var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
+        var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
 
-		var viewData = {
-			currentNetwork: currentNetwork,
-			currentLanguage: currentLanguage,
-			PacNEM_Frontend_Config: PacNEM_Frontend_Config,
-			notificationMessage: notificationMessage
-		};
+        var viewData = {
+            currentNetwork: currentNetwork,
+            currentLanguage: currentLanguage,
+            PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+            notificationMessage: notificationMessage
+        };
 
-		res.render("play", viewData);
-	});
+        res.render("play", viewData);
+    });
 
 /**
  * API Routes
@@ -389,459 +389,439 @@ app.get("/sponsor", function(req, res)
  * The sponsoring feature will also be built using API
  * routes.
  */
-app.get("/api/v1/sessions/get", function(req, res)
-	{
-		res.setHeader('Content-Type', 'application/json');
+app.get("/api/v1/sessions/get", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
 
-		if (! req.query.address || ! req.query.address.length)
-			return res.send(JSON.stringify({"status": "error", "message": "Mandatory field `address` is missing."}));
+    if (!req.query.address || !req.query.address.length)
+        return res.send(JSON.stringify({ "status": "error", "message": "Mandatory field `address` is missing." }));
 
-		var input = {
-			"xem" : req.query.address.replace(/-/g, ""),
-			"username" : req.query.username
-		};
+    var input = {
+        "xem": req.query.address.replace(/-/g, ""),
+        "username": req.query.username
+    };
 
-		// fetch an existing NEMGamer entry by XEM address, this
-		PacNEMDB.NEMGamer.findOne({"xem": input.xem, "username": input.username}, function(err, player)
-		{
-			if (err || ! player) {
-				// error mode
-				var errorMessage = "Error occured on NEMGamer READ: " + err;
+    // fetch an existing NEMGamer entry by XEM address, this
+    PacNEMDB.NEMGamer.findOne({ "xem": input.xem, "username": input.username }, function(err, player) {
+        if (err || !player) {
+            // error mode
+            var errorMessage = "Error occured on NEMGamer READ: " + err;
 
-				serverLog(req, errorMessage, "ERROR");
-				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
-			}
+            serverLog(req, errorMessage, "ERROR");
+            return res.send(JSON.stringify({ "status": "error", "message": errorMessage }));
+        }
 
-			// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-			PacNEMBlockchain.fetchHeartsByGamer(player);
+        // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
+        PacNEMBlockchain.fetchHeartsByGamer(player);
 
-			// session retrieved.
-			return res.send(JSON.stringify({item: player}));
-		});
-	});
+        // session retrieved.
+        return res.send(JSON.stringify({ item: player }));
+    });
+});
 
-app.post("/api/v1/sessions/store", function(req, res)
-	{
-		res.setHeader('Content-Type', 'application/json');
+app.post("/api/v1/sessions/store", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
 
-		var input = {
-			"xem" : req.body.xem.replace(/-/g, ""),
-			"username" : req.body.username.replace(/[^A-Za-z0-9\-_\.]/g, ""),
-			"score": parseInt(req.body.score),
-			"type": req.body.type.replace(/[^a-z0-9\-]/g, ""),
-			"sid": req.body.sid.replace(/[^A-Za-z0-9\-_\.#~]/g, ""),
-			"validateHearts": parseInt(req.body.validateHearts) === 1
-		};
+    var input = {
+        "xem": req.body.xem.replace(/-/g, ""),
+        "username": req.body.username.replace(/[^A-Za-z0-9\-_\.]/g, ""),
+        "score": parseInt(req.body.score),
+        "type": req.body.type.replace(/[^a-z0-9\-]/g, ""),
+        "sid": req.body.sid.replace(/[^A-Za-z0-9\-_\.#~]/g, ""),
+        "validateHearts": parseInt(req.body.validateHearts) === 1
+    };
 
-		// mongoDB model NEMGamer unique on xem address + username pair.
-		PacNEMDB.NEMGamer.findOne({"xem": input.xem, "username": input.username}, function(err, player)
-		{
-			if (! err && player) {
-			// update mode
-				var highScore = input.score > player.highScore ? input.score : player.highScore;
+    // mongoDB model NEMGamer unique on xem address + username pair.
+    PacNEMDB.NEMGamer.findOne({ "xem": input.xem, "username": input.username }, function(err, player) {
+        if (!err && player) {
+            // update mode
+            var highScore = input.score > player.highScore ? input.score : player.highScore;
 
-				player.username  = input.username;
-				player.xem 		 = input.xem;
-				player.lastScore = input.score;
-				player.highScore = highScore;
-				player.updatedAt = new Date().valueOf();
+            player.username = input.username;
+            player.xem = input.xem;
+            player.lastScore = input.score;
+            player.highScore = highScore;
+            player.updatedAt = new Date().valueOf();
 
-				if (! player.socketIds || ! player.socketIds.length)
-					player.socketIds = [input.sid];
-				else {
-					var sockets = player.socketIds;
-					sockets.push(input.sid);
+            if (!player.socketIds || !player.socketIds.length)
+                player.socketIds = [input.sid];
+            else {
+                var sockets = player.socketIds;
+                sockets.push(input.sid);
 
-					player.socketIds = sockets;
-				}
+                player.socketIds = sockets;
+            }
 
-				player.save();
+            player.save();
 
-				if (input.validateHearts === true) {
-					// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-					PacNEMBlockchain.fetchHeartsByGamer(player);
-				}
+            if (input.validateHearts === true) {
+                // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
+                PacNEMBlockchain.fetchHeartsByGamer(player);
+            }
 
-				return res.send(JSON.stringify({item: player}));
-			}
-			else if (! player) {
-			// creation mode
-				var player = new PacNEMDB.NEMGamer({
-					username: input.username,
-					xem: input.xem,
-					lastScore: input.score,
-					highScore: input.score,
-					socketIds: [input.sid],
-					countGames: 0,
-					createdAt: new Date().valueOf()
-				});
-				player.save();
+            return res.send(JSON.stringify({ item: player }));
+        } else if (!player) {
+            // creation mode
+            var player = new PacNEMDB.NEMGamer({
+                username: input.username,
+                xem: input.xem,
+                lastScore: input.score,
+                highScore: input.score,
+                socketIds: [input.sid],
+                countGames: 0,
+                createdAt: new Date().valueOf()
+            });
+            player.save();
 
-				if (input.validateHearts === true) {
-					// read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-					PacNEMBlockchain.fetchHeartsByGamer(player);
-				}
+            if (input.validateHearts === true) {
+                // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
+                PacNEMBlockchain.fetchHeartsByGamer(player);
+            }
 
-				return res.send(JSON.stringify({item: player}));
-			}
-			else {
-			// error mode
-				var errorMessage = "Error occured on NEMGamer update: " + err;
+            return res.send(JSON.stringify({ item: player }));
+        } else {
+            // error mode
+            var errorMessage = "Error occured on NEMGamer update: " + err;
 
-				serverLog(req, errorMessage, "ERROR");
-				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
-			}
-		});
-	});
+            serverLog(req, errorMessage, "ERROR");
+            return res.send(JSON.stringify({ "status": "error", "message": errorMessage }));
+        }
+    });
+});
 
-app.get("/api/v1/scores", function(req, res)
-	{
-		res.setHeader('Content-Type', 'application/json');
+app.get("/api/v1/scores", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
 
-		HallOfFame.fetchBlockchainHallOfFame(null, function(hallOfFame)
-		{
-			var ranking = hallOfFame.ranking;
-			var scores = [];
-			for (var i = 0; i < ranking.length; i++) {
-				var rScore  = ranking[i];
-				var fmtTime = rScore.timestamp.toISOString().replace(/T/, ' ')
-															.replace(/\..+/, '');
+    HallOfFame.fetchBlockchainHallOfFame(null, function(hallOfFame) {
+        var ranking = hallOfFame.ranking;
+        var scores = [];
+        for (var i = 0; i < ranking.length; i++) {
+            var rScore = ranking[i];
+            var fmtTime = rScore.timestamp.toISOString().replace(/T/, ' ')
+                .replace(/\..+/, '');
 
-				scores.push({
-					position: i+1,
-					score: rScore.score,
-					username: rScore.username,
-					address: rScore.address,
-					truncAddress: rScore.address.substr(0, 8),
-					scoreDate: fmtTime
-				});
-			}
+            scores.push({
+                position: i + 1,
+                score: rScore.score,
+                username: rScore.username,
+                address: rScore.address,
+                truncAddress: rScore.address.substr(0, 8),
+                scoreDate: fmtTime
+            });
+        }
 
-			res.send(JSON.stringify({data: scores}));
-		});
-	});
+        res.send(JSON.stringify({ data: scores }));
+    });
+});
 
 //XXX implement actual model
-app.get("/api/v1/sponsors/random", function(req, res)
-	{
-		res.setHeader('Content-Type', 'application/json');
+app.get("/api/v1/sponsors/random", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
 
-		//XXX implement PacNEMDB.NEMSponsor features
-		var sponsor   = {};
-		var slugs 	  = ["easport", "atari", "nem", "evias"];
-		var names     = ["EA Sports", "Atari", "nem", "eVias"];
-		var addresses = [
-			"TD2WIZ-UPOHCE-65RJ72-ICJCAO-GGWX7S-NORJCD-2Y6J",
-			"TBY4WF-4LSRAI-7REVQP-P3MBD3-BN4IZE-EDMY7K-IYXV",
-			"TAS5KA-R4WWIB-7JX64U-DPGMCX-ZGQ77U-ZIRY3D-BJB6",
-			"TBWZKN-LDTIVE-GBQ5OG-BGY3NI-JWLAHB-I2RS5B-YV7M"];
+    //XXX implement PacNEMDB.NEMSponsor features
+    var sponsor = {};
+    var slugs = ["easport", "atari", "nem", "evias"];
+    var names = ["EA Sports", "Atari", "nem", "eVias"];
+    var addresses = [
+        "TD2WIZ-UPOHCE-65RJ72-ICJCAO-GGWX7S-NORJCD-2Y6J",
+        "TBY4WF-4LSRAI-7REVQP-P3MBD3-BN4IZE-EDMY7K-IYXV",
+        "TAS5KA-R4WWIB-7JX64U-DPGMCX-ZGQ77U-ZIRY3D-BJB6",
+        "TBWZKN-LDTIVE-GBQ5OG-BGY3NI-JWLAHB-I2RS5B-YV7M"
+    ];
 
-		var rId = Math.floor(Math.random() * 99999);
-		var rAddr = Math.floor(Math.random() * 4);
+    var rId = Math.floor(Math.random() * 99999);
+    var rAddr = Math.floor(Math.random() * 4);
 
-		sponsor.slug = slugs[rAddr];
-		sponsor.name = names[rAddr];
-		sponsor.xem  = addresses[rAddr];
-		sponsor.description = i18n.t("sponsors.example_description");
-		sponsor.imageUrl    = "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300";
-		sponsor.websiteUrl  = "https://github.com/evias";
+    sponsor.slug = slugs[rAddr];
+    sponsor.name = names[rAddr];
+    sponsor.xem = addresses[rAddr];
+    sponsor.description = i18n.t("sponsors.example_description");
+    sponsor.imageUrl = "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300";
+    sponsor.websiteUrl = "https://github.com/evias";
 
-		res.send(JSON.stringify({item: sponsor}));
-	});
+    res.send(JSON.stringify({ item: sponsor }));
+});
 
-app.get("/api/v1/credits/buy", function(req, res)
-	{
-		res.setHeader('Content-Type', 'application/json');
+app.get("/api/v1/credits/buy", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
 
-		var amount = parseFloat(config.get("prices.entry"));
+    var amount = parseFloat(config.get("prices.entry"));
 
-		var clientSocketId = req.query.usid ? req.query.usid : null;
-		if (! clientSocketId || ! clientSocketId.length)
-			return res.send(JSON.stringify({"status": "error", "message": "Mandatory field `Client Socket ID` is invalid."}));
+    var clientSocketId = req.query.usid ? req.query.usid : null;
+    if (!clientSocketId || !clientSocketId.length)
+        return res.send(JSON.stringify({ "status": "error", "message": "Mandatory field `Client Socket ID` is invalid." }));
 
-		var invoiceNumber = req.query.num ? req.query.num : null;
+    var invoiceNumber = req.query.num ? req.query.num : null;
 
-		var payer = req.query.payer ? req.query.payer : undefined;
-		if (! payer.length || PacNEMDB.isApplicationWallet(payer))
-			// cannot be one of the application wallets
-			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
+    var payer = req.query.payer ? req.query.payer : undefined;
+    if (!payer.length || PacNEMDB.isApplicationWallet(payer))
+    // cannot be one of the application wallets
+        return res.send(JSON.stringify({ "status": "error", "message": "Invalid value for field `payer`." }));
 
-		var recipient = req.query.recipient ? req.query.recipient : config.get("pacnem.business"); // the App's MultiSig wallet
-		if (! recipient.length || !PacNEMDB.isApplicationWallet(recipient))
-			// must be one of the application wallets
-			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `recipient`."}));
+    var recipient = req.query.recipient ? req.query.recipient : config.get("pacnem.business"); // the App's MultiSig wallet
+    if (!recipient.length || !PacNEMDB.isApplicationWallet(recipient))
+    // must be one of the application wallets
+        return res.send(JSON.stringify({ "status": "error", "message": "Invalid value for field `recipient`." }));
 
-		var heartPrice = parseFloat(config.get("prices.heart")); // in XEM
-		var receivingHearts = Math.ceil(amount * heartPrice); // XEM price * (1 Heart / x XEM)
-		var invoiceAmount   = amount * 1000000; // convert amount to micro XEM
-		var currentNetwork  = PacNEMBlockchain.getNetwork();
-		var disableChannel  = req.query.chan ? req.query.chan == "0" : false;
+    var heartPrice = parseFloat(config.get("prices.heart")); // in XEM
+    var receivingHearts = Math.ceil(amount * heartPrice); // XEM price * (1 Heart / x XEM)
+    var invoiceAmount = amount * 1000000; // convert amount to micro XEM
+    var currentNetwork = PacNEMBlockchain.getNetwork();
+    var disableChannel = req.query.chan ? req.query.chan == "0" : false;
 
-		var dbConditions = {
-			payerXEM: payer,
-			recipientXEM: recipient
-		};
+    var dbConditions = {
+        payerXEM: payer,
+        recipientXEM: recipient
+    };
 
-		// when no invoiceNumber is given, create or retrieve in following statuses
-		dbConditions["status"] = { $in: ["not_paid", "identified", "unconfirmed", "paid_partly", "paid"] };
-		if (invoiceNumber && invoiceNumber.length) {
-			// load invoice by number
-			dbConditions["number"] = decodeURIComponent(invoiceNumber);
-			delete dbConditions["status"];
-		}
+    // when no invoiceNumber is given, create or retrieve in following statuses
+    dbConditions["status"] = { $in: ["not_paid", "identified", "unconfirmed", "paid_partly", "paid"] };
+    if (invoiceNumber && invoiceNumber.length) {
+        // load invoice by number
+        dbConditions["number"] = decodeURIComponent(invoiceNumber);
+        delete dbConditions["status"];
+    }
 
-		//serverLog("DEBUG", JSON.stringify(dbConditions), "DEBUG");
+    //serverLog("DEBUG", JSON.stringify(dbConditions), "DEBUG");
 
-		// mongoDB model NEMPaymentChannel unique on xem address + message pair.
-		PacNEMDB.NEMPaymentChannel.findOne(dbConditions, function(err, invoice)
-		{
-			if (!err && ! invoice) {
-				// creation mode
+    // mongoDB model NEMPaymentChannel unique on xem address + message pair.
+    PacNEMDB.NEMPaymentChannel.findOne(dbConditions, function(err, invoice) {
+        if (!err && !invoice) {
+            // creation mode
 
-				var invoice = new PacNEMDB.NEMPaymentChannel({
-					recipientXEM: recipient,
-					payerXEM: payer,
-					amount: invoiceAmount,
-					amountPaid: 0,
-					amountUnconfirmed: 0,
-					status: "not_paid",
-					countHearts: receivingHearts,
-					createdAt: new Date().valueOf()
-				});
-				invoice.save(function(err)
-					{
-						PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice)
-							{
-								// payment channel created, end create-invoice response.
+            var invoice = new PacNEMDB.NEMPaymentChannel({
+                recipientXEM: recipient,
+                payerXEM: payer,
+                amount: invoiceAmount,
+                amountPaid: 0,
+                amountUnconfirmed: 0,
+                status: "not_paid",
+                countHearts: receivingHearts,
+                createdAt: new Date().valueOf()
+            });
+            invoice.save(function(err) {
+                PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice) {
+                    // payment channel created, end create-invoice response.
 
-								res.send(JSON.stringify({
-									status: "ok",
-									item: {
-										network: currentNetwork,
-										qrData: invoice.getQRData(),
-										invoice: invoice
-									}
-								}));
-							});
-					});
+                    res.send(JSON.stringify({
+                        status: "ok",
+                        item: {
+                            network: currentNetwork,
+                            qrData: invoice.getQRData(),
+                            invoice: invoice
+                        }
+                    }));
+                });
+            });
 
-				return false;
-			}
-			else if (err) {
-				// error mode
-				var errorMessage = "Error occured on NEMPaymentChannel update: " + err;
+            return false;
+        } else if (err) {
+            // error mode
+            var errorMessage = "Error occured on NEMPaymentChannel update: " + err;
 
-				serverLog(req, errorMessage, "ERROR");
-				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
-			}
+            serverLog(req, errorMessage, "ERROR");
+            return res.send(JSON.stringify({ "status": "error", "message": errorMessage }));
+        }
 
-			if (disableChannel === true) {
-				res.send(JSON.stringify({
-					status: "ok",
-					item: {
-						network: currentNetwork,
-						qrData: invoice.getQRData(),
-						invoice: invoice
-					}
-				}));
-			}
-			else {
+        if (disableChannel === true) {
+            res.send(JSON.stringify({
+                status: "ok",
+                item: {
+                    network: currentNetwork,
+                    qrData: invoice.getQRData(),
+                    invoice: invoice
+                }
+            }));
+        } else {
 
-				// update mode, invoice already exists, create payment channel proxy
+            // update mode, invoice already exists, create payment channel proxy
 
-				PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice)
-					{
-						// payment channel created, end create-invoice response.
+            PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice) {
+                // payment channel created, end create-invoice response.
 
-						res.send(JSON.stringify({
-							status: "ok",
-							item: {
-								network: currentNetwork,
-								qrData: invoice.getQRData(),
-								invoice: invoice
-							}
-						}));
-					});
-			}
-		});
-	});
+                res.send(JSON.stringify({
+                    status: "ok",
+                    item: {
+                        network: currentNetwork,
+                        qrData: invoice.getQRData(),
+                        invoice: invoice
+                    }
+                }));
+            });
+        }
+    });
+});
 
-app.get("/api/v1/credits/history", function(req, res)
-	{
-		res.setHeader('Content-Type', 'application/json');
+app.get("/api/v1/credits/history", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
 
-		var payer  = req.query.payer ? req.query.payer : undefined;
-		var number = req.query.number ? req.query.number : undefined;
+    var payer = req.query.payer ? req.query.payer : undefined;
+    var number = req.query.number ? req.query.number : undefined;
 
-		if (! payer || ! payer.length || PacNEMDB.isApplicationWallet(payer))
-			// cannot be one of the application wallets
-			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
+    if (!payer || !payer.length || PacNEMDB.isApplicationWallet(payer))
+    // cannot be one of the application wallets
+        return res.send(JSON.stringify({ "status": "error", "message": "Invalid value for field `payer`." }));
 
-		var invoiceQuery = {
-			payerXEM: payer,
-			status: {$in: ["not_paid", 
-						   "expired", 
-						   "unconfirmed", 
-						   "paid_partly", 
-						   "paid"]}
-		};
+    var invoiceQuery = {
+        payerXEM: payer,
+        status: {
+            $in: ["not_paid",
+                "expired",
+                "unconfirmed",
+                "paid_partly",
+                "paid"
+            ]
+        }
+    };
 
-		if (number && number.length) {
-			invoiceQuery["number"] = number;
-		}
+    if (number && number.length) {
+        invoiceQuery["number"] = number;
+    }
 
-		PacNEMDB.NEMPaymentChannel.find(invoiceQuery, function(err, invoices)
-		{
-			if (err) {
-				var errorMessage = "Error occured on /credits/history: " + err;
-				serverLog(req, errorMessage, "ERROR");
-				return res.send(JSON.stringify({"status": "error", "message": errorMessage}));
-			}
+    PacNEMDB.NEMPaymentChannel.find(invoiceQuery, function(err, invoices) {
+        if (err) {
+            var errorMessage = "Error occured on /credits/history: " + err;
+            serverLog(req, errorMessage, "ERROR");
+            return res.send(JSON.stringify({ "status": "error", "message": errorMessage }));
+        }
 
-			if (!invoices || !invoices.length)
-				return res.send(JSON.stringify({"status": "ok", data: []}));
+        if (!invoices || !invoices.length)
+            return res.send(JSON.stringify({ "status": "ok", data: [] }));
 
-			// VERIFY all invoices state and amounts by iterating blockchain
-			// transactions. This ensure that we never send a wrong Invoice State
-			// through this API - it will always be validated by blockchain data.
-			PaymentsProtocol.fetchInvoicesRealHistory(invoices, null, function(invoicesHistory)
-			{
-				if (invoicesHistory === false)
-					return res.send(JSON.stringify({"status": "ok", data: []}));
+        // VERIFY all invoices state and amounts by iterating blockchain
+        // transactions. This ensure that we never send a wrong Invoice State
+        // through this API - it will always be validated by blockchain data.
+        PaymentsProtocol.fetchInvoicesRealHistory(invoices, null, function(invoicesHistory) {
+            if (invoicesHistory === false)
+                return res.send(JSON.stringify({ "status": "ok", data: [] }));
 
-				// return list of invoices
-				var invoicesData = [];
-				for (var num in invoicesHistory) {
-					var currentInvoice = invoicesHistory[num].invoice;
+            // return list of invoices
+            var invoicesData = [];
+            for (var num in invoicesHistory) {
+                var currentInvoice = invoicesHistory[num].invoice;
 
-					var statusLabelClass = "label-default";
-					var statusLabelIcon  = "glyphicon glyphicon-time";
+                var statusLabelClass = "label-default";
+                var statusLabelIcon = "glyphicon glyphicon-time";
 
-					if (currentInvoice.isPaid) {
-						statusLabelClass = "label-success";
-						statusLabelIcon  = "glyphicon glyphicon-ok";
-					}
-					else if (currentInvoice.status == "paid_partly") {
-						statusLabelClass = "label-info";
-						statusLabelIcon  = "glyphicon glyphicon-download-alt";
-					}
+                if (currentInvoice.isPaid) {
+                    statusLabelClass = "label-success";
+                    statusLabelIcon = "glyphicon glyphicon-ok";
+                } else if (currentInvoice.status == "paid_partly") {
+                    statusLabelClass = "label-info";
+                    statusLabelIcon = "glyphicon glyphicon-download-alt";
+                }
 
-					var fmtCreatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
-					var fmtUpdatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
+                var fmtCreatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
+                var fmtUpdatedAt = new Date(currentInvoice.createdAt).toISOString().replace(/T/, ' ').replace(/\..+/, '');
 
-					invoicesData.push({
-						number: currentInvoice.number,
-						recipient: currentInvoice.recipientXEM,
-						truncRecipient: currentInvoice.getTruncatedRecipient(),
-						amount: (currentInvoice.amount),
-						amountPaid: (currentInvoice.amountPaid),
-						amountFmt: (currentInvoice.amount / Math.pow(10, 6)),
-						amountPaidFmt: (currentInvoice.amountPaid / Math.pow(10, 6)),
-						status: currentInvoice.status,
-						createdAt: fmtCreatedAt,
-						updatedAt: fmtUpdatedAt,
-						statusLabelClass: statusLabelClass,
-						statusLabelIcon: statusLabelIcon
-					});
-				}
+                invoicesData.push({
+                    number: currentInvoice.number,
+                    recipient: currentInvoice.recipientXEM,
+                    truncRecipient: currentInvoice.getTruncatedRecipient(),
+                    amount: (currentInvoice.amount),
+                    amountPaid: (currentInvoice.amountPaid),
+                    amountFmt: (currentInvoice.amount / Math.pow(10, 6)),
+                    amountPaidFmt: (currentInvoice.amountPaid / Math.pow(10, 6)),
+                    status: currentInvoice.status,
+                    createdAt: fmtCreatedAt,
+                    updatedAt: fmtUpdatedAt,
+                    statusLabelClass: statusLabelClass,
+                    statusLabelIcon: statusLabelIcon
+                });
+            }
 
-				if (number && number.length && invoicesData.length === 1)
-					// single invoice data
-					return res.send(JSON.stringify({"status": "ok", item: invoicesData.pop()}));
+            if (number && number.length && invoicesData.length === 1)
+            // single invoice data
+                return res.send(JSON.stringify({ "status": "ok", item: invoicesData.pop() }));
 
-				return res.send(JSON.stringify({"status": "ok", data: invoicesData}));
-			});
-		});
-	});
+            return res.send(JSON.stringify({ "status": "ok", data: invoicesData }));
+        });
+    });
+});
 
-app.get("/api/v1/credits/remaining", function(req, res)
-	{
-		res.setHeader('Content-Type', 'application/json');
+app.get("/api/v1/credits/remaining", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
 
-		var payer = req.query.payer ? req.query.payer : undefined;
-		if (! payer.length || PacNEMDB.isApplicationWallet(payer))
-			// cannot be one of the application wallets
-			return res.send(JSON.stringify({"status": "error", "message": "Invalid value for field `payer`."}));
+    var payer = req.query.payer ? req.query.payer : undefined;
+    if (!payer.length || PacNEMDB.isApplicationWallet(payer))
+    // cannot be one of the application wallets
+        return res.send(JSON.stringify({ "status": "error", "message": "Invalid value for field `payer`." }));
 
-		// fetch an existing NEMGamer entry by XEM address, this
-		PacNEMDB.NEMGamer.findOne({"xem": payer}, function(err, player)
-		{
-			if (err || ! player) {
-				// never played before
+    // fetch an existing NEMGamer entry by XEM address, this
+    PacNEMDB.NEMGamer.findOne({ "xem": payer }, function(err, player) {
+        if (err || !player) {
+            // never played before
 
-				return res.send(JSON.stringify({
-					status: "ok",
-					item: 0
-				}));
-			}
+            return res.send(JSON.stringify({
+                status: "ok",
+                item: 0
+            }));
+        }
 
-			// get a "last credit state from db"
-			player.credits(function(err, credit)
-			{
-				var remaining = 0;
+        // get a "last credit state from db"
+        player.credits(function(err, credit) {
+            var remaining = 0;
 
-				if (! err && credit) {
-					remaining = credit.getCountRemaining();
-				}
+            if (!err && credit) {
+                remaining = credit.getCountRemaining();
+            }
 
-				res.send(JSON.stringify({
-					status: "ok",
-					item: remaining
-				}));
-			});
-		});
-	});
+            res.send(JSON.stringify({
+                status: "ok",
+                item: remaining
+            }));
+        });
+    });
+});
 
-app.get("/api/v1/lounge/get", function(req, res)
-	{
-		res.setHeader('Content-Type', 'application/json');
+app.get("/api/v1/lounge/get", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
 
-		var lounge  = PacNEMSockets.getRoomManager().toDict();
-		var allMosaics = PacNEMBlockchain.getGameMosaicsConfiguration();
-		var namespace  = PacNEMBlockchain.getNamespace();
+    var lounge = PacNEMSockets.getRoomManager().toDict();
+    var allMosaics = PacNEMBlockchain.getGameMosaicsConfiguration();
+    var namespace = PacNEMBlockchain.getNamespace();
 
-		var totalSessions    = lounge.players.length;
-		var activeSessions   = 0;
-		var inactiveSessions = 0;
-		var loungeSessions   = 0;
-		var playingSessions  = 0;
+    var totalSessions = lounge.players.length;
+    var activeSessions = 0;
+    var inactiveSessions = 0;
+    var loungeSessions = 0;
+    var playingSessions = 0;
 
-		for (var rId in lounge.rooms) {
-			var currentRoom = lounge.rooms[rId];
-			var cntMembers  = currentRoom.toDict().usernames.length;
+    for (var rId in lounge.rooms) {
+        var currentRoom = lounge.rooms[rId];
+        var cntMembers = currentRoom.toDict().usernames.length;
 
-			switch (currentRoom.getStatus()) {
-				default:
-				case "join":
-					loungeSessions += cntMembers;
-					activeSessions += cntMembers;
-					break;
+        switch (currentRoom.getStatus()) {
+            default:
+                case "join":
+                loungeSessions += cntMembers;
+            activeSessions += cntMembers;
+            break;
 
-				case "wait":
-				case "play":
-					playingSessions += cntMembers;
-					activeSessions += cntMembers;
-					break;
-			}
-		}
+            case "wait":
+                    case "play":
+                    playingSessions += cntMembers;
+                activeSessions += cntMembers;
+                break;
+        }
+    }
 
-		var inactiveSessions = totalSessions - activeSessions;
-		var loungeData = {
-			"details": lounge,
-			"lounge": {
-				"sessions": {
-					"total": totalSessions,
-					"active": activeSessions,
-					"inactive": inactiveSessions,
-					"lounge": loungeSessions,
-					"playing": playingSessions
-				},
-				"mosaics": allMosaics
-			}
-		};
+    var inactiveSessions = totalSessions - activeSessions;
+    var loungeData = {
+        "details": lounge,
+        "lounge": {
+            "sessions": {
+                "total": totalSessions || 0,
+                "active": activeSessions || 0,
+                "inactive": inactiveSessions || 0,
+                "lounge": loungeSessions || 0,
+                "playing": playingSessions || 0
+            },
+            "mosaics": allMosaics
+        }
+    };
 
-		res.send(JSON.stringify({"status": "ok", "data": loungeData}));
-	});
+    res.send(JSON.stringify({ "status": "ok", "data": loungeData }));
+});
 
 /**
  * Now listen for connections on the Web Server.
@@ -850,25 +830,24 @@ app.get("/api/v1/lounge/get", function(req, res)
  * available from the Browser.
  */
 var port = process.env['PORT'] = process.env.PORT || 2908;
-server.listen(port, function()
-	{
-		var network    = PacNEMBlockchain.getNetwork();
-		var blockchain = network.isTest ? "Testnet Blockchain" : network.isMijin ? "Mijin Private Blockchain" : "NEM Mainnet Public Blockchain";
-		var vendor 		= PacNEMBlockchain.getVendorWallet();
-		var application = PacNEMBlockchain.getPublicWallet();
-		var namespace   = PacNEMBlockchain.getNamespace();
+server.listen(port, function() {
+    var network = PacNEMBlockchain.getNetwork();
+    var blockchain = network.isTest ? "Testnet Blockchain" : network.isMijin ? "Mijin Private Blockchain" : "NEM Mainnet Public Blockchain";
+    var vendor = PacNEMBlockchain.getVendorWallet();
+    var application = PacNEMBlockchain.getPublicWallet();
+    var namespace = PacNEMBlockchain.getNamespace();
 
-		console.log("------------------------------------------------------------------------");
-		console.log("--                       PacNEM Blockchain Game                       --");
-		console.log("--                                                                    --");
-		console.log("--           Autonomous Game project using the NEM Blockchain         --")
-		console.log("------------------------------------------------------------------------");
-		console.log("-");
-		console.log("- PacNEM Game Server listening on Port %d in %s mode", this.address().port, app.settings.env);
-		console.log("- PacNEM Game is using blockchain: " + blockchain);
-		console.log("- PacNEM Vendor Wallet is: " + vendor);
-		console.log("- PacNEM Application Wallet is: " + application);
-		console.log("- PacNEM is using Namespace: " + namespace);
-		console.log("-")
-		console.log("------------------------------------------------------------------------");
-	});
+    console.log("------------------------------------------------------------------------");
+    console.log("--                       PacNEM Blockchain Game                       --");
+    console.log("--                                                                    --");
+    console.log("--           Autonomous Game project using the NEM Blockchain         --")
+    console.log("------------------------------------------------------------------------");
+    console.log("-");
+    console.log("- PacNEM Game Server listening on Port %d in %s mode", this.address().port, app.settings.env);
+    console.log("- PacNEM Game is using blockchain: " + blockchain);
+    console.log("- PacNEM Vendor Wallet is: " + vendor);
+    console.log("- PacNEM Application Wallet is: " + application);
+    console.log("- PacNEM is using Namespace: " + namespace);
+    console.log("-")
+    console.log("------------------------------------------------------------------------");
+});

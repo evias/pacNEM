@@ -293,7 +293,7 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 
 				self.template_.render("lounge-container", function(compileWith)
 				{
-					$("#pacnem-lounge-wrapper").html(compileWith(response));
+					$("#pacnem-lounge-wrapper").html(compileWith(response.data));
 					return callback(loungeData);
 				});
 			}
