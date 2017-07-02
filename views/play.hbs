@@ -50,25 +50,20 @@
                     <span>{{t "guest.play_mode_explain"}}</span>
                 </p>
                 <div class="row hide-on-auth">
-                    <div class="col-md-12 text-left pacnem-game-mode-wrapper">
+                    <div class="col-md-12 text-center pacnem-game-mode-wrapper">
                         <ul style="list-style: none; margin: 0; padding: 0;">
-                            <li class="text-left">
-                                <div class="radio">
-                                    <label><input type="radio" class="pacnem-gamemode-trigger" name="play_type" value="sponsored" />{{t "guest.play_type_sponsored"}}</label>
-                                </div>
+                            <li style="display: inline-block;">
+                                <button class="btn btn-lg btn-primary pacnem-gamemode-trigger" data-value="sponsored">
+                                    <i class="glyphicon glyphicon-globe"></i>&nbsp;
+                                    <span>{{t "guest.play_type_sponsored"}}</span>
+                                </button>
                             </li>
-                            <li class="text-left">
-                                <div class="radio">
-                                    <label><input type="radio" class="pacnem-gamemode-trigger" name="play_type" value="pay-per-play" />{{t "guest.play_type_payperplay"}}</label>
-                                </div>
+                            <li style="display: inline-block;">
+                                <button class="btn btn-lg btn-success pacnem-gamemode-trigger" data-value="pay-per-play">
+                                    <img src="/img/NEM_100x100.png" style="height: 20px;"/>&nbsp;
+                                    <span>{{t "guest.play_type_payperplay"}}</span>
+                                </button>
                             </li>
-                            <!--
-                            <li class="text-left">
-                                <div class="radio">
-                                    <label><input type="radio" class="pacnem-gamemode-trigger" name="play_type" value="share-per-play" />{{t "guest.play_type_shareperplay"}}</label>
-                                </div>
-                            </li>
-                            -->
                         </ul>
                     </div>
                 </div>

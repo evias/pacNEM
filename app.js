@@ -602,12 +602,25 @@ app.get("/api/v1/credits/buy", function(req, res) {
                 PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice) {
                     // payment channel created, end create-invoice response.
 
+                    var statusLabelClass = "label-default";
+                    var statusLabelIcon = "glyphicon glyphicon-time";
+
+                    if (invoice.isPaid) {
+                        statusLabelClass = "label-success";
+                        statusLabelIcon = "glyphicon glyphicon-ok";
+                    } else if (invoice.status == "paid_partly") {
+                        statusLabelClass = "label-info";
+                        statusLabelIcon = "glyphicon glyphicon-download-alt";
+                    }
+
                     res.send(JSON.stringify({
                         status: "ok",
                         item: {
                             network: currentNetwork,
                             qrData: invoice.getQRData(),
-                            invoice: invoice
+                            invoice: invoice,
+                            statusLabelClass: statusLabelClass,
+                            statusLabelIcon: statusLabelIcon
                         }
                     }));
                 });
@@ -622,19 +635,31 @@ app.get("/api/v1/credits/buy", function(req, res) {
             return res.send(JSON.stringify({ "status": "error", "message": errorMessage }));
         }
 
+        // update mode, invoice already exists, create payment channel proxy
+
+        var statusLabelClass = "label-default";
+        var statusLabelIcon = "glyphicon glyphicon-time";
+
+        if (invoice.isPaid) {
+            statusLabelClass = "label-success";
+            statusLabelIcon = "glyphicon glyphicon-ok";
+        } else if (invoice.status == "paid_partly") {
+            statusLabelClass = "label-info";
+            statusLabelIcon = "glyphicon glyphicon-download-alt";
+        }
+
         if (disableChannel === true) {
             res.send(JSON.stringify({
                 status: "ok",
                 item: {
                     network: currentNetwork,
                     qrData: invoice.getQRData(),
-                    invoice: invoice
+                    invoice: invoice,
+                    statusLabelClass: statusLabelClass,
+                    statusLabelIcon: statusLabelIcon
                 }
             }));
         } else {
-
-            // update mode, invoice already exists, create payment channel proxy
-
             PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice) {
                 // payment channel created, end create-invoice response.
 
@@ -643,7 +668,9 @@ app.get("/api/v1/credits/buy", function(req, res) {
                     item: {
                         network: currentNetwork,
                         qrData: invoice.getQRData(),
-                        invoice: invoice
+                        invoice: invoice,
+                        statusLabelClass: statusLabelClass,
+                        statusLabelIcon: statusLabelIcon
                     }
                 }));
             });
@@ -780,39 +807,28 @@ app.get("/api/v1/lounge/get", function(req, res) {
     var allMosaics = PacNEMBlockchain.getGameMosaicsConfiguration();
     var namespace = PacNEMBlockchain.getNamespace();
 
-    var totalSessions = lounge.players.length;
-    var activeSessions = 0;
-    var inactiveSessions = 0;
+    var totalSessions = Object.getOwnPropertyNames(lounge.players).length;
     var loungeSessions = 0;
     var playingSessions = 0;
 
     for (var rId in lounge.rooms) {
         var currentRoom = lounge.rooms[rId];
-        var cntMembers = currentRoom.toDict().usernames.length;
+        var cntMembers = Object.getOwnPropertyNames(currentRoom.toDictionary().usernames).length;
 
-        switch (currentRoom.getStatus()) {
-            default:
-                case "join":
-                loungeSessions += cntMembers;
-            activeSessions += cntMembers;
-            break;
+        //DEBUG console.log("[DEBUG] [API] [ROOMS] currentRoom: " + JSON.stringify(currentRoom.toDictionary()));
 
-            case "wait":
-                    case "play":
-                    playingSessions += cntMembers;
-                activeSessions += cntMembers;
-                break;
+        var status = currentRoom.getStatus();
+        if (status === "play" || status === "wait") {
+            playingSessions += cntMembers;
         }
     }
 
-    var inactiveSessions = totalSessions - activeSessions;
+    loungeSessions = totalSessions - playingSessions;
     var loungeData = {
         "details": lounge,
         "lounge": {
             "sessions": {
                 "total": totalSessions || 0,
-                "active": activeSessions || 0,
-                "inactive": inactiveSessions || 0,
                 "lounge": loungeSessions || 0,
                 "playing": playingSessions || 0
             },

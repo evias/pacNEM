@@ -1,34 +1,27 @@
-body
-{
-	text-align: center;
+body {
+    text-align: center;
 }
 
-canvas
-{
-	display: inline-block;
+canvas {
+    display: inline-block;
     margin-bottom: 5px;
 }
 
-.game
-{
+.game {
     margin-bottom: 12px;
 }
 
-#rooms
-{
+#rooms {
     margin-top: 10px;
 }
 
-ul.members
-{
+ul.members {
     list-style: none;
-
     margin: 0;
     padding: 0;
 }
 
-ul.members li.member
-{
+ul.members li.member {
     min-height: 20px;
     max-height: 40px;
 }
@@ -36,6 +29,7 @@ ul.members li.member
 ul.members li.member .member-name {
     word-break: break-all;
 }
+
 
 /**
  * PacNEM overwrite by Grégory Saive. Following
@@ -45,7 +39,18 @@ ul.members li.member .member-name {
  *
  * @link https://github.com/evias/pacNEM
  */
-p, table, span, a, ins, del, blockquote, textarea, input, select, button {
+
+p,
+table,
+span,
+a,
+ins,
+del,
+blockquote,
+textarea,
+input,
+select,
+button {
     font-family: Roboto;
 }
 
@@ -56,9 +61,11 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
 .page-header .NEMified img {
     max-height: 40px;
 }
+
 .page-header .greaterNEM {
     font-size: 40px;
 }
+
 .page-header .pacNEMTitle {
     font-family: Roboto;
     font-size: 30px;
@@ -67,6 +74,7 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
     text-shadow: #dcdcdc 2px 2px;
     margin-top: -7px;
 }
+
 .page-header .pacNEMTitle .smallerTitle {
     font-size: 15px;
 }
@@ -87,7 +95,7 @@ p, table, span, a, ins, del, blockquote, textarea, input, select, button {
 
 .pacnem-lounge .lounge-title {
     margin-left: 15px;
-    border-bottom: 1px solid ;
+    border-bottom: 1px solid;
 }
 
 #pacNEMWrapper {
@@ -102,11 +110,14 @@ footer {
     font-size: 9pt;
 }
 
-.row.page-header { border-bottom: 0px; }
+.row.page-header {
+    border-bottom: 0px;
+}
 
 .navbar {
     margin-bottom: 0;
 }
+
 .navbar-brand {
     width: 100%;
     margin: auto;
@@ -138,7 +149,17 @@ footer {
     .custom-navbar .nav.navbar-nav li {
         font-size: 1.3em;
     }
-    p, table, span, a, ins, del, blockquote, textarea, input, select, button {
+    p,
+    table,
+    span,
+    a,
+    ins,
+    del,
+    blockquote,
+    textarea,
+    input,
+    select,
+    button {
         font-size: 1.1em;
     }
 }
@@ -152,10 +173,10 @@ footer {
     }
 }
 
-
 .xem-address {
     text-transform: uppercase;
 }
+
 .network-error {
     margin-top: 8px;
 }
@@ -187,21 +208,57 @@ footer {
     width: 60px;
 }
 
- .label-bigger {
+.label-bigger {
     font-size: 95% !important;
- }
+}
 
-.p0 { padding: 0; }
-.m0 { margin: 0; }
-.mt5 { margin-top: 5px; }
-.mt10 { margin-top: 10px; }
-.mb5 { margin-bottom: 5px; }
-.mb10 { margin-bottom: 10px; }
-.ml5 { margin-left: 5px; }
-.ml10 { margin-left: 10px; }
-.mr5 { margin-right: 5px; }
-.mr10 { margin-right: 10px; }
-.m5 { margin: 5px; }
+.tooltip-mosaic {
+    font-size: 110%;
+}
+
+.p0 {
+    padding: 0;
+}
+
+.m0 {
+    margin: 0;
+}
+
+.mt5 {
+    margin-top: 5px;
+}
+
+.mt10 {
+    margin-top: 10px;
+}
+
+.mb5 {
+    margin-bottom: 5px;
+}
+
+.mb10 {
+    margin-bottom: 10px;
+}
+
+.ml5 {
+    margin-left: 5px;
+}
+
+.ml10 {
+    margin-left: 10px;
+}
+
+.mr5 {
+    margin-right: 5px;
+}
+
+.mr10 {
+    margin-right: 10px;
+}
+
+.m5 {
+    margin: 5px;
+}
 
 .importantText {
     font-weight: 900;
@@ -212,9 +269,11 @@ footer {
     border: 1px solid #550101;
 }
 
+
 /**
  * NEM specific colors and font
  */
+
 .NEMifiedText {
     font-family: Roboto;
     color: #000;
@@ -222,33 +281,95 @@ footer {
     text-shadow: none;
 }
 
-.bgNEMOrange { background-color: #f7a800; }
-.bgNEMBlue { background-color: #67b2e8; }
-.bgNEMGreen { background-color: #00c4b3; }
+.bgNEMOrange {
+    background-color: #f7a800;
+}
 
-.bbNEMOrange { border-bottom: 1px solid #f7a800; }
-.bbNEMBlue { border-bottom: 1px solid #67b2e8; }
-.bbNEMGreen { border-bottom: 1px solid #00c4b3; }
+.bgNEMBlue {
+    background-color: #67b2e8;
+}
 
-.btNEMOrange { border-top: 1px solid #f7a800; }
-.btNEMBlue { border-top: 1px solid #67b2e8; }
-.btNEMGreen { border-top: 1px solid #00c4b3; }
+.bgNEMGreen {
+    background-color: #00c4b3;
+}
 
-.blNEMOrange { border-left: 1px solid #f7a800; }
-.blNEMBlue { border-left: 1px solid #67b2e8; }
-.blNEMGreen { border-left: 1px solid #00c4b3; }
+.bbNEMOrange {
+    border-bottom: 1px solid #f7a800;
+}
 
-.brNEMOrange { border-right: 1px solid #f7a800; }
-.brNEMBlue { border-right: 1px solid #67b2e8; }
-.brNEMGreen { border-right: 1px solid #00c4b3; }
+.bbNEMBlue {
+    border-bottom: 1px solid #67b2e8;
+}
 
-.colNEMOrange { color: #f7a800; }
-.colNEMBlue { color: #67b2e8; }
-.colNEMGreen { color: #00c4b3; }
+.bbNEMGreen {
+    border-bottom: 1px solid #00c4b3;
+}
 
-.bgcNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: center center; }
-.bglNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: left center; }
-.bgrNEMLogo { background-image: url(/img/NEM_100x100.png); background-repeat: no-repeat; background-position: right center; }
+.btNEMOrange {
+    border-top: 1px solid #f7a800;
+}
+
+.btNEMBlue {
+    border-top: 1px solid #67b2e8;
+}
+
+.btNEMGreen {
+    border-top: 1px solid #00c4b3;
+}
+
+.blNEMOrange {
+    border-left: 1px solid #f7a800;
+}
+
+.blNEMBlue {
+    border-left: 1px solid #67b2e8;
+}
+
+.blNEMGreen {
+    border-left: 1px solid #00c4b3;
+}
+
+.brNEMOrange {
+    border-right: 1px solid #f7a800;
+}
+
+.brNEMBlue {
+    border-right: 1px solid #67b2e8;
+}
+
+.brNEMGreen {
+    border-right: 1px solid #00c4b3;
+}
+
+.colNEMOrange {
+    color: #f7a800;
+}
+
+.colNEMBlue {
+    color: #67b2e8;
+}
+
+.colNEMGreen {
+    color: #00c4b3;
+}
+
+.bgcNEMLogo {
+    background-image: url(/img/NEM_100x100.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.bglNEMLogo {
+    background-image: url(/img/NEM_100x100.png);
+    background-repeat: no-repeat;
+    background-position: left center;
+}
+
+.bgrNEMLogo {
+    background-image: url(/img/NEM_100x100.png);
+    background-repeat: no-repeat;
+    background-position: right center;
+}
 
 .list-group.players-list .list-group-item.player-row {
     border-radius: 10px;
@@ -258,8 +379,8 @@ footer {
 
 blockquote.bq-minimal-centered {
     /*background: url(/img/blockquote.png) no-repeat 0 0;*/
-    width: 75%; 
-    margin: auto; 
+    width: 75%;
+    margin: auto;
     border: 0px;
     font-style: italic;
 }
@@ -269,12 +390,15 @@ blockquote.bq-minimal-centered {
     margin-top: 0px;
 }
 
-.game-end-title.winner {text-shadow: 3px 3px 0px #4fe15b;}
-.game-end-title.loser {text-shadow: 3px 3px 0px #f7a800;}
+.game-end-title.winner {
+    text-shadow: 3px 3px 0px #4fe15b;
+}
+
+.game-end-title.loser {
+    text-shadow: 3px 3px 0px #f7a800;
+}
 
 .summary-bg-wrapper {
     background: url(/img/pacnem_placeholder_white-small.png) no-repeat 0;
     height: 170px;
 }
-
-
