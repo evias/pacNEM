@@ -289,12 +289,12 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate)
 					req.overrideMimeType("application/json;charset=UTF-8");
 			},
 			success: function(response) {
-				var history = response.data;
+				var loungeData = response.data;
 
-				self.template_.render("pacnem-lounge-container", function(compileWith)
+				self.template_.render("lounge-container", function(compileWith)
 				{
-					$("#pacnem-lounge-wrapper").html(compileWith(response));
-					return callback(history);
+					$("#pacnem-lounge-wrapper").html(compileWith(response.data));
+					return callback(loungeData);
 				});
 			}
 		});

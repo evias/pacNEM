@@ -1,0 +1,70 @@
+
+<div id="pacnem_lounge" class="row col-md-12">
+    <div class="row">
+        <div class="col-md-3">
+            <h4 class="wrapper-title text-left">
+                <i class="glyphicon glyphicon-user"></i>&nbsp;{{t "lounge.user_count_data_title"}}
+            </h4>
+
+            <table class="table table-condensed">
+                <thead style="display: none;"><th>&nbsp;</th><th>&nbsp;</th></thead>
+                <tbody>
+                    <tr>
+                        <td class="text-left">{{t "lounge.label_players_online"}} :</td>
+                        <td class="text-left">{{lounge.sessions.total}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">{{t "lounge.label_players_active"}} :</td>
+                        <td class="text-left">{{lounge.sessions.active}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">{{t "lounge.label_players_inactive"}} :</td>
+                        <td class="text-left">{{lounge.sessions.inactive}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">{{t "lounge.label_players_lounge"}} :</td>
+                        <td class="text-left">{{lounge.sessions.lounge}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">{{t "lounge.label_players_playing"}} :</td>
+                        <td class="text-left">{{lounge.sessions.playing}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-md-9">
+            <h4 class="wrapper-title text-left">
+                <i class="glyphicon glyphicon-star"></i>&nbsp;{{t "lounge.mosaics_data_title"}}
+            </h4>
+
+            <div class="container-fluid pacnem-lounge-mosaics">
+                <ul style="margin: 0; padding: 0;">
+                    {{#each lounge.mosaics.credits}}
+                    <li style="display: inline-block;">
+                        <div class="{{label}} label-mosaic" title="{{slug}}" data-tooltip="{{slug}}">
+                            <b>1&nbsp;<i class="{{icon}}"></i></b>
+                        </div>
+                    </li>
+                    {{/each}}
+
+                    {{#each lounge.mosaics.rewards.purchases}}
+                    <li style="display: inline-block;">
+                        <div class="{{label}} label-mosaic" title="{{slug}}" data-tooltip="{{slug}}">
+                            <b>1&nbsp;<i class="{{icon}}"></i></b>
+                        </div>
+                    </li>
+                    {{/each}}
+
+                    {{#each lounge.mosaics.rewards.high_score}}
+                    <li style="display: inline-block;">
+                        <div class="{{label}} label-mosaic" title="{{slug}}" data-tooltip="{{slug}}">
+                            <b>1&nbsp;<i class="{{icon}}"></i></b>
+                        </div>
+                    </li>
+                    {{/each}}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
