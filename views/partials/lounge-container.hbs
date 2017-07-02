@@ -39,31 +39,28 @@
             </h4>
 
             <div class="container-fluid pacnem-lounge-mosaics">
-                <ul>
+                <ul style="margin: 0; padding: 0;">
                     {{#each lounge.mosaics.credits}}
-                    <li class="col-md-3" style="display: inline-block;">
-                        <div class="label label-default label-mosaic">
-                            <b>1&nbsp;<i class="{{icon}}"></i>
-                        </div>&nbsp;
-                        <a href="http://nem.io" target="_blank">{{slug}}</a>
+                    <li style="display: inline-block;">
+                        <div class="{{label}} label-mosaic" title="{{slug}}" data-tooltip="{{slug}}">
+                            <b>1&nbsp;<i class="{{icon}}"></i></b>
+                        </div>
                     </li>
                     {{/each}}
 
                     {{#each lounge.mosaics.rewards.purchases}}
-                    <li class="col-md-3" style="display: inline-block;">
-                        <div class="label label-default label-mosaic">
-                            <b>1&nbsp;<i class="{{icon}}"></i>
-                        </div>&nbsp;
-                        <a href="http://nem.io" target="_blank">{{slug}}</a>
+                    <li style="display: inline-block;">
+                        <div class="{{label}} label-mosaic" title="{{slug}}" data-tooltip="{{slug}}">
+                            <b>1&nbsp;<i class="{{icon}}"></i></b>
+                        </div>
                     </li>
                     {{/each}}
 
                     {{#each lounge.mosaics.rewards.high_score}}
-                    <li class="col-md-3" style="display: inline-block;">
-                        <div class="label label-default label-mosaic">
-                            <b>1&nbsp;<i class="{{icon}}"></i>
-                        </div>&nbsp;
-                        <a href="http://nem.io" target="_blank">{{slug}}</a>
+                    <li style="display: inline-block;">
+                        <div class="{{label}} label-mosaic" title="{{slug}}" data-tooltip="{{slug}}">
+                            <b>1&nbsp;<i class="{{icon}}"></i></b>
+                        </div>
                     </li>
                     {{/each}}
                 </ul>
