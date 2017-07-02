@@ -29,29 +29,29 @@
     var pacNEM_NS_ = (process.env["APP_NAMESPACE"] || config.get("pacnem.namespace"));
     var pacNEM_mosaics = {
         "credits": {
-            "heart": { "icon": "glyphicon glyphicon-heart", "label": "label label-success", "slug": [pacNEM_NS_, "heart"].join(":") },
-            "hearts--": { "icon": "glyphicon glyphicon-heart-empty", "label": "label label-danger", "slug": [pacNEM_NS_, "hearts--"].join(":") }
+            "heart": { "icon": "glyphicon glyphicon-heart", "label": "label label-success", "slug": [pacNEM_NS_, "heart"].join(":"), "title": "mosaics.label_mosaic_heart" },
+            "hearts--": { "icon": "glyphicon glyphicon-heart-empty", "label": "label label-danger", "slug": [pacNEM_NS_, "hearts--"].join(":"), "title": "mosaics.label_mosaic_heart_redeem" }
         },
-        "scores": { "cheese": { "icon": "glyphicon glyphicon-globe", "label": "label label-primary", "slug": [pacNEM_NS_, "cheese"].join(":") } },
+        "scores": { "cheese": { "icon": "glyphicon glyphicon-globe", "label": "label label-primary", "slug": [pacNEM_NS_, "cheese"].join(":"), "title": "mosaics.label_mosaic_cheese" } },
         "rewards": {
             "purchases": {
-                "beta-player": { "icon": "glyphicon glyphicon-star-empty", "label": "label label-warning", "slug": [pacNEM_NS_, "beta-player"].join(":") },
-                "player": { "icon": "glyphicon glyphicon-user", "label": "label label-warning", "slug": [pacNEM_NS_, "player"].join(":") }
+                "beta-player": { "icon": "glyphicon glyphicon-star-empty", "label": "label label-warning", "slug": [pacNEM_NS_, "beta-player"].join(":"), "title": "mosaics.label_mosaic_beta_player" },
+                "player": { "icon": "glyphicon glyphicon-user", "label": "label label-warning", "slug": [pacNEM_NS_, "player"].join(":"), "title": "mosaics.label_mosaic_player" }
             },
-            "return_x2": { "n00b": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "n00b"].join(":") } },
-            "return_x5": { "nember": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "nember"].join(":") } },
-            "return_x10": { "afficionado": { "icon": "glyphicon glyphicon-refresh", "label": "label label-info", "slug": [pacNEM_NS_, "afficionado"].join(":") } },
-            "return_x100": { "great-supporter": { "icon": "glyphicon glyphicon-refresh", "label": "label label-primary", "slug": [pacNEM_NS_, "great-supporter"].join(":") } },
+            "return_x2": { "n00b": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "n00b"].join(":"), "title": "mosaics.label_mosaic_n00b" } },
+            "return_x5": { "nember": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "nember"].join(":"), "title": "mosaics.label_mosaic_nember" } },
+            "return_x10": { "afficionado": { "icon": "glyphicon glyphicon-refresh", "label": "label label-info", "slug": [pacNEM_NS_, "afficionado"].join(":"), "title": "mosaics.label_mosaic_afficionado" } },
+            "return_x100": { "great-supporter": { "icon": "glyphicon glyphicon-refresh", "label": "label label-primary", "slug": [pacNEM_NS_, "great-supporter"].join(":"), "title": "mosaics.label_mosaic_great_supporter" } },
             "high_score": {
-                "hall-of-famer": { "icon": "glyphicon glyphicon-education", "label": "label label-info", "slug": [pacNEM_NS_, "hall-of-famer"].join(":") },
-                "all-time-best-player": { "icon": "glyphicon glyphicon-sunglasses", "label": "label label-success", "slug": [pacNEM_NS_, "all-time-best-player"].join(":") }
+                "hall-of-famer": { "icon": "glyphicon glyphicon-education", "label": "label label-info", "slug": [pacNEM_NS_, "hall-of-famer"].join(":"), "title": "mosaics.label_mosaic_hall_of_famer" },
+                "all-time-best-player": { "icon": "glyphicon glyphicon-sunglasses", "label": "label label-success", "slug": [pacNEM_NS_, "all-time-best-player"].join(":"), "title": "mosaics.label_mosaic_all_time_best_player" }
             }
         },
         "achievements": {
-            "combo_x3": { "multikill": { "minCombo": 3, "icon": "glyphicon glyphicon-fire", "label": "label label-warning", "slug": [pacNEM_NS_, "multikill"].join(":") } },
-            "combo_x5": { "rampage": { "minCombo": 5, "icon": "glyphicon glyphicon-fire", "label": "label label-info", "slug": [pacNEM_NS_, "rampage"].join(":") } },
-            "combo_x7": { "ghostbuster": { "minCombo": 7, "icon": "glyphicon glyphicon-fire", "label": "label label-primary", "slug": [pacNEM_NS_, "ghostbuster"].join(":") } },
-            "combo_x10": { "godlike-101010": { "minCombo": 10, "icon": "glyphicon glyphicon-plane", "label": "label label-success", "slug": [pacNEM_NS_, "godlike-101010"].join(":") } }
+            "combo_x3": { "multikill": { "minCombo": 3, "icon": "glyphicon glyphicon-fire", "label": "label label-warning", "slug": [pacNEM_NS_, "multikill"].join(":"), "title": "mosaics.label_mosaic_multikill" } },
+            "combo_x5": { "rampage": { "minCombo": 5, "icon": "glyphicon glyphicon-fire", "label": "label label-info", "slug": [pacNEM_NS_, "rampage"].join(":"), "title": "mosaics.label_mosaic_rampage" } },
+            "combo_x7": { "ghostbuster": { "minCombo": 7, "icon": "glyphicon glyphicon-fire", "label": "label label-primary", "slug": [pacNEM_NS_, "ghostbuster"].join(":"), "title": "mosaics.label_mosaic_ghostbuster" } },
+            "combo_x10": { "godlike-101010": { "minCombo": 10, "icon": "glyphicon glyphicon-plane", "label": "label label-success", "slug": [pacNEM_NS_, "godlike-101010"].join(":"), "title": "mosaics.label_mosaic_godlike_101010" } }
         }
     };
 
@@ -265,6 +265,9 @@
          *
          * We will fetch all transactions only for accounts which we know they
          * own evias.pacnem:heart Mosaics.
+         * 
+         * This method is also responsible for saving other available mosaics
+         * which will be displayed in the PacNEM Lounge as in "Daily Mosaics on PacNEM".
          *
          * @param  NEMGamer gamer
          */
@@ -476,9 +479,7 @@
             var bPlayerMosaicName = Object.getOwnPropertyNames(pacNEM_mosaics.rewards.purchases)[0];
             var playerMosaicName = Object.getOwnPropertyNames(pacNEM_mosaics.rewards.purchases)[1];
 
-            //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]",
-            //DEBUG            "Now sending " + paymentChannel.countHearts + " hearts for invoice " + paymentChannel.number
-            //DEBUG            + " sent to " + paymentChannel.getPayer() + " paid by " + vendor_ + " signed with " + pacNEM_);
+            //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Now sending " + paymentChannel.countHearts + " hearts for invoice " + paymentChannel.number + " sent to " + paymentChannel.getPayer() + " paid by " + vendor_ + " signed with " + pacNEM_);
 
             // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
             var message = paymentChannel.number + " - Thank you! Greg.";
@@ -533,7 +534,7 @@
                         // Prepare the multisig mosaic transfer transaction object and broadcast
                         var transactionEntity = nem_.model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
 
-                        logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Now sending Multisig Transaction to " + gamerXEM + " for invoice " + paymentChannel.number + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
+                        //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Now sending Multisig Transaction to " + gamerXEM + " for invoice " + paymentChannel.number + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
 
                         nem_.model.transactions.send(privStore, transactionEntity, node_).then(
                             function(res) {
@@ -546,10 +547,7 @@
                                 }
 
                                 var trxHash = res.transactionHash.data;
-                                logger_.info(
-                                    "[NEM] [PAYMENT]", "[CREATED]",
-                                    "Created a multi-signature Mosaic transfer transaction for " + countHearts + " " + heartsSlug +
-                                    " sent to " + gamerXEM + " for invoice " + paymentChannel.number);
+                                //DEBUG logger_.info("[NEM] [PAYMENT]", "[CREATED]", "Created a multi-signature Mosaic transfer transaction for " + countHearts + " " + heartsSlug + " sent to " + gamerXEM + " for invoice " + paymentChannel.number);
 
                                 // update `paymentChannel` to contain the transaction hash too and make sure history is kept.
                                 paymentChannel.heartsTransactionHash = trxHash;
@@ -705,7 +703,7 @@
                                 }
 
                                 var trxHash = res.transactionHash.data;
-                                logger_.info("[NEM] [CREDITS SINK]", "[CREATED]", "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug + " sent to " + sinkXEM);
+                                //DEBUG logger_.info("[NEM] [CREDITS SINK]", "[CREATED]", "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug + " sent to " + sinkXEM);
                             },
                             function(err) {
                                 logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + vendor_ + " to " + sinkXEM + " with error: " + err);

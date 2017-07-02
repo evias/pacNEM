@@ -23,10 +23,10 @@
  * @see https://github.com/QuantumMechanics/NEM-sdk
  * http://stackoverflow.com/a/11197343
  */
-var extendObj = function(){
-    for(var i=1; i<arguments.length; i++) {
-        for(var key in arguments[i]) {
-            if(arguments[i].hasOwnProperty(key)) {
+var extendObj = function() {
+    for (var i = 1; i < arguments.length; i++) {
+        for (var key in arguments[i]) {
+            if (arguments[i].hasOwnProperty(key)) {
                 arguments[0][key] = arguments[i][key];
             }
         }
