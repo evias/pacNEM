@@ -29,29 +29,29 @@
     var pacNEM_NS_ = (process.env["APP_NAMESPACE"] || config.get("pacnem.namespace"));
     var pacNEM_mosaics = {
         "credits": {
-            "heart": { "icon": "glyphicon glyphicon-heart", "label": "label label-success", "slug": [pacNEM_NS_, "heart"].join(":") },
-            "hearts--": { "icon": "glyphicon glyphicon-heart-empty", "label": "label label-danger", "slug": [pacNEM_NS_, "hearts--"].join(":") }
+            "heart": { "icon": "glyphicon glyphicon-heart", "label": "label label-success", "slug": [pacNEM_NS_, "heart"].join(":"), "title": "mosaics.label_mosaic_heart" },
+            "hearts--": { "icon": "glyphicon glyphicon-heart-empty", "label": "label label-danger", "slug": [pacNEM_NS_, "hearts--"].join(":"), "title": "mosaics.label_mosaic_heart_redeem" }
         },
-        "scores": { "cheese": { "icon": "glyphicon glyphicon-globe", "label": "label label-primary", "slug": [pacNEM_NS_, "cheese"].join(":") } },
+        "scores": { "cheese": { "icon": "glyphicon glyphicon-globe", "label": "label label-primary", "slug": [pacNEM_NS_, "cheese"].join(":"), "title": "mosaics.label_mosaic_cheese" } },
         "rewards": {
             "purchases": {
-                "beta-player": { "icon": "glyphicon glyphicon-star-empty", "label": "label label-warning", "slug": [pacNEM_NS_, "beta-player"].join(":") },
-                "player": { "icon": "glyphicon glyphicon-user", "label": "label label-warning", "slug": [pacNEM_NS_, "player"].join(":") }
+                "beta-player": { "icon": "glyphicon glyphicon-star-empty", "label": "label label-warning", "slug": [pacNEM_NS_, "beta-player"].join(":"), "title": "mosaics.label_mosaic_beta_player" },
+                "player": { "icon": "glyphicon glyphicon-user", "label": "label label-warning", "slug": [pacNEM_NS_, "player"].join(":"), "title": "mosaics.label_mosaic_player" }
             },
-            "return_x2": { "n00b": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "n00b"].join(":") } },
-            "return_x5": { "nember": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "nember"].join(":") } },
-            "return_x10": { "afficionado": { "icon": "glyphicon glyphicon-refresh", "label": "label label-info", "slug": [pacNEM_NS_, "afficionado"].join(":") } },
-            "return_x100": { "great-supporter": { "icon": "glyphicon glyphicon-refresh", "label": "label label-primary", "slug": [pacNEM_NS_, "great-supporter"].join(":") } },
+            "return_x2": { "n00b": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "n00b"].join(":"), "title": "mosaics.label_mosaic_n00b" } },
+            "return_x5": { "nember": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "nember"].join(":"), "title": "mosaics.label_mosaic_nember" } },
+            "return_x10": { "afficionado": { "icon": "glyphicon glyphicon-refresh", "label": "label label-info", "slug": [pacNEM_NS_, "afficionado"].join(":"), "title": "mosaics.label_mosaic_afficionado" } },
+            "return_x100": { "great-supporter": { "icon": "glyphicon glyphicon-refresh", "label": "label label-primary", "slug": [pacNEM_NS_, "great-supporter"].join(":"), "title": "mosaics.label_mosaic_great_supporter" } },
             "high_score": {
-                "hall-of-famer": { "icon": "glyphicon glyphicon-education", "label": "label label-info", "slug": [pacNEM_NS_, "hall-of-famer"].join(":") },
-                "all-time-best-player": { "icon": "glyphicon glyphicon-sunglasses", "label": "label label-success", "slug": [pacNEM_NS_, "all-time-best-player"].join(":") }
+                "hall-of-famer": { "icon": "glyphicon glyphicon-education", "label": "label label-info", "slug": [pacNEM_NS_, "hall-of-famer"].join(":"), "title": "mosaics.label_mosaic_hall_of_famer" },
+                "all-time-best-player": { "icon": "glyphicon glyphicon-sunglasses", "label": "label label-success", "slug": [pacNEM_NS_, "all-time-best-player"].join(":"), "title": "mosaics.label_mosaic_all_time_best_player" }
             }
         },
         "achievements": {
-            "combo_x3": { "multikill": { "minCombo": 3, "icon": "glyphicon glyphicon-fire", "label": "label label-warning", "slug": [pacNEM_NS_, "multikill"].join(":") } },
-            "combo_x5": { "rampage": { "minCombo": 5, "icon": "glyphicon glyphicon-fire", "label": "label label-info", "slug": [pacNEM_NS_, "rampage"].join(":") } },
-            "combo_x7": { "ghostbuster": { "minCombo": 7, "icon": "glyphicon glyphicon-fire", "label": "label label-primary", "slug": [pacNEM_NS_, "ghostbuster"].join(":") } },
-            "combo_x10": { "godlike-101010": { "minCombo": 10, "icon": "glyphicon glyphicon-plane", "label": "label label-success", "slug": [pacNEM_NS_, "godlike-101010"].join(":") } }
+            "combo_x3": { "multikill": { "minCombo": 3, "icon": "glyphicon glyphicon-fire", "label": "label label-warning", "slug": [pacNEM_NS_, "multikill"].join(":"), "title": "mosaics.label_mosaic_multikill" } },
+            "combo_x5": { "rampage": { "minCombo": 5, "icon": "glyphicon glyphicon-fire", "label": "label label-info", "slug": [pacNEM_NS_, "rampage"].join(":"), "title": "mosaics.label_mosaic_rampage" } },
+            "combo_x7": { "ghostbuster": { "minCombo": 7, "icon": "glyphicon glyphicon-fire", "label": "label label-primary", "slug": [pacNEM_NS_, "ghostbuster"].join(":"), "title": "mosaics.label_mosaic_ghostbuster" } },
+            "combo_x10": { "godlike-101010": { "minCombo": 10, "icon": "glyphicon glyphicon-plane", "label": "label label-success", "slug": [pacNEM_NS_, "godlike-101010"].join(":"), "title": "mosaics.label_mosaic_godlike_101010" } }
         }
     };
 

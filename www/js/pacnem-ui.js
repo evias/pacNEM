@@ -27,8 +27,7 @@
  *
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  */
-var GameUI = function(config, socket, controller, $, jQFileTemplate)
-{
+var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     var config_ = config;
     var socket_ = socket;
     var ctrl_ = controller;
@@ -52,12 +51,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.init = function()
-    {
+    this.init = function() {
         var self = this;
 
-        socket_.on('ready', function(rawdata)
-        {
+        socket_.on('ready', function(rawdata) {
             self.hideLounge();
             $("#game").show();
             self.displayUserDetails(rawdata);
@@ -72,12 +69,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         socket_.on('update', ctrl_.serverUpdate);
 
-        socket_.on('rooms_update', function(rawdata)
-        {
+        socket_.on('rooms_update', function(rawdata) {
             var data = JSON.parse(rawdata);
-            var sid  = data['sid'];
+            var sid = data['sid'];
             var $rooms = $("#rooms");
-            var rooms  = data["rooms"];
+            var rooms = data["rooms"];
             var isAuth = $("#username").val().length > 0 && $("#address").val().length > 0;
 
             $("#pacNEM-sessionId").val(sid);
@@ -93,20 +89,19 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             self.displayRooms($rooms, sid, data);
 
             //if (! rooms.length)
-                // create a new room, no one else online
-                //socket_.emit("create_room");
+            // create a new room, no one else online
+            //socket_.emit("create_room");
         });
 
-        socket_.on("pacnem_heart_sync", function(rawdata)
-        {
+        socket_.on("pacnem_heart_sync", function(rawdata) {
             var data = JSON.parse(rawdata);
             var player = self.getPlayerDetails();
 
-            if (! player.address || ! player.address.length)
+            if (!player.address || !player.address.length)
                 return false;
 
             if (player.address !== data.address)
-                // this update is not for this session
+            // this update is not for this session
                 return false;
 
             var credits = data.credits;
@@ -121,8 +116,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
             if (credits > 0) {
                 $("#pacNEM-needs-payment").val("0");
-            }
-            else
+            } else
                 $("#pacNEM-needs-payment").val("1");
 
             if (typeof session_ != 'undefined' && session_.details_.hearts != data) {
@@ -133,8 +127,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             $(".pacnem-invoice-close-trigger").show();
         });
 
-        socket_.on("pacnem_payment_success", function(rawdata)
-        {
+        socket_.on("pacnem_payment_success", function(rawdata) {
             var data = JSON.parse(rawdata);
             var sess = self.getPlayerDetails();
 
@@ -164,12 +157,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  string suffix   [description]
      * @return GameUI
      */
-    this.animateHeartsCounter = function($element, start, end, suffix)
-    {
+    this.animateHeartsCounter = function($element, start, end, suffix) {
         jQuery({ Counter: start }).animate({ Counter: parseInt(end) }, {
             duration: 1000,
             easing: 'swing',
-            step: function () {
+            step: function() {
                 $element.text(Math.ceil(this.Counter) + suffix);
             }
         });
@@ -181,29 +173,28 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  {[type]} rawdata
      * @return GameUI
      */
-    this.displayUserDetails = function(rawdata)
-    {
+    this.displayUserDetails = function(rawdata) {
         var self = this;
         var $details = $("#pacnem-current-room-wrapper ul.list-group").first();
         var $userRow = $details.find("li.hidden").first();
-        var players  = ctrl_.getPlayers();
+        var players = ctrl_.getPlayers();
 
         // interpret data, prepare display
         var data = JSON.parse(rawdata);
 
         if (players.length)
-            // clear players list first
+        // clear players list first
             $details.find(".player-row").remove();
 
-        for (var i = 0 ; i < players.length ; i++) {
-            var $row  = $userRow.clone().removeClass("hidden").addClass("player-row");
+        for (var i = 0; i < players.length; i++) {
+            var $row = $userRow.clone().removeClass("hidden").addClass("player-row");
             var color = PACMAN_COLORS[i % PACMAN_COLORS.length];
 
             var hex = color.replace(/#/, '');
             var rgb = [
-                parseInt(hex.substring(0, hex.length/3), 16),
-                parseInt(hex.substring(hex.length/3, 2*hex.length/3), 16),
-                parseInt(hex.substring(2*hex.length/3, 3*hex.length/3), 16)
+                parseInt(hex.substring(0, hex.length / 3), 16),
+                parseInt(hex.substring(hex.length / 3, 2 * hex.length / 3), 16),
+                parseInt(hex.substring(2 * hex.length / 3, 3 * hex.length / 3), 16)
             ];
 
             // set player name and add to DOM
@@ -226,8 +217,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  {string} rawdata
      * @return void
      */
-    this.displayGameSummary = function(rawdata)
-    {
+    this.displayGameSummary = function(rawdata) {
         var self = this;
         var data = JSON.parse(rawdata);
 
@@ -247,34 +237,32 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         // sort by descending score to have high score ranking
         data.pacmans.sort(scrcmp).reverse();
         data.winnerName = data.pacmans[0].username;
-        data.isWinner   = self.getPlayerDetails().username == data.winnerName;
-        data.isLoser    = ! data.isWinner;
+        data.isWinner = self.getPlayerDetails().username == data.winnerName;
+        data.isLoser = !data.isWinner;
 
         var rand = Math.floor(Math.random() * 5 + 1);
-        var key  = data.isWinner ? "winner" : "loser";
+        var key = data.isWinner ? "winner" : "loser";
         data.yodaQuote = "summary." + key + "_yoda_quote_" + rand;
 
-        template_.render("summary-box", function(compileWith)
-            {
-                // add server side generated summary HTML to a modal
-                // boxes wrapper.
-                var html = $("#pacnem-modal-wrapper").html();
-                $("#pacnem-modal-wrapper").html(html + compileWith(data));
+        template_.render("summary-box", function(compileWith) {
+            // add server side generated summary HTML to a modal
+            // boxes wrapper.
+            var html = $("#pacnem-modal-wrapper").html();
+            $("#pacnem-modal-wrapper").html(html + compileWith(data));
 
-                $(".pacnem-summary-modal").first().modal({
-                    backdrop: "static",
-                    keyboard: false,
-                    show: true
-                });
+            $(".pacnem-summary-modal").first().modal({
+                backdrop: "static",
+                keyboard: false,
+                show: true
             });
+        });
     };
 
     /**
      * helper for displaying Create Room button
      * @return GameUI
      */
-    this.displayCreateRoom = function()
-    {
+    this.displayCreateRoom = function() {
         var $button = $(".roomCreateNew").first();
         $button.removeClass("hidden");
 
@@ -285,8 +273,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * helper for hiding Create Room button
      * @return GameUI
      */
-    this.hideCreateRoom = function()
-    {
+    this.hideCreateRoom = function() {
         var $button = $(".roomCreateNew").first();
         $button.addClass("hidden");
 
@@ -298,16 +285,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return {[type]} [description]
      */
-    this.enableCreateRoom = function()
-    {
+    this.enableCreateRoom = function() {
         var self = this;
         var $button = $(".roomCreateNew").first();
 
         $button.removeAttr("disabled").removeClass("disabled");
         $button.off("click");
-        $button.on("click", function() { 
-            var player = self.getPlayerDetails(); 
-            socket_.emit("create_room", JSON.stringify(player)); 
+        $button.on("click", function() {
+            var player = self.getPlayerDetails();
+            socket_.emit("create_room", JSON.stringify(player));
         });
 
         return this;
@@ -318,8 +304,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return {[type]} [description]
      */
-    this.disableCreateRoom = function()
-    {
+    this.disableCreateRoom = function() {
         var $button = $(".roomCreateNew").first();
 
         if (!$button)
@@ -338,11 +323,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  {[type]} data
      * @return integer  Count of available rooms
      */
-    this.displayRooms = function($rooms, sid, data)
-    {
+    this.displayRooms = function($rooms, sid, data) {
         var self = this;
 
-        if (! data["rooms"].length) {
+        if (!data["rooms"].length) {
             self.displayCreateRoom();
             self.enableCreateRoom();
             return 0;
@@ -350,7 +334,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         var playerInRoom = false;
         for (var i = 0; i < data["rooms"].length; i++) {
-            var inThisRoom = self.displayRoom(i+1, $rooms, sid, data["rooms"][i], data["users"], data["addresses"]);
+            var inThisRoom = self.displayRoom(i + 1, $rooms, sid, data["rooms"][i], data["users"], data["addresses"]);
 
             if (inThisRoom && !ctrl_.isRoomMembershipAcknowledged(data["rooms"][i]["id"]))
                 ctrl_.ackRoomMember(data["rooms"][i]["id"]);
@@ -375,8 +359,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  integer   delay
      * @return GameUI
      */
-    this.displayRoomAction = function(rooms, $button, callback, delay)
-    {
+    this.displayRoomAction = function(rooms, $button, callback, delay) {
         if (typeof delay != 'undefined' && !isNaN(parseInt(delay)))
             $button.find(".seconds-counter").text(delay);
 
@@ -403,13 +386,12 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @return boolean  Whether current Player is Member of the
      *                  displayed room or not
      */
-    this.displayRoom = function(roomIndex, $rooms, sid, roomdata, usersdata, xemdata)
-    {
+    this.displayRoom = function(roomIndex, $rooms, sid, roomdata, usersdata, xemdata) {
         var self = this;
 
         var is_member = $.inArray(sid, roomdata['users']) != -1;
-        var template  = $("#room-template").html();
-        var $rooms    = $("#rooms");
+        var template = $("#room-template").html();
+        var $rooms = $("#rooms");
         var $thisRoom = $("<div/>").html(template);
 
         $thisRoom.addClass("hidden").appendTo($rooms);
@@ -422,7 +404,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         var $title = $thisRoom.find(".lounge-title");
         $title.find(".room-enum").first().text(roomIndex);
 
-        var randIdx  = Math.floor(Math.random()*(99-1+1)+1);
+        var randIdx = Math.floor(Math.random() * (99 - 1 + 1) + 1);
         var titleCol = "colNEMGreen";
         if (randIdx % 3 == 0)
             titleCol = "colNEMOrange";
@@ -431,23 +413,23 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
         if (titleCol != "colNEMGreen")
             $title.removeClass("colNEMGreen")
-                  .addClass(titleCol);
+            .addClass(titleCol);
 
-        var $members  = $thisRoom.find(".room-members-wrapper ul");
-        var $memberRow= $thisRoom.find(".room-members-wrapper ul li.hidden").first();
+        var $members = $thisRoom.find(".room-members-wrapper ul");
+        var $memberRow = $thisRoom.find(".room-members-wrapper ul li.hidden").first();
 
         // players array will now be filled with current room's users
         players = [];
 
         // now create the members entries for this room
-        for (var i = 0 ; i < roomdata['users'].length ; i++) {
+        for (var i = 0; i < roomdata['users'].length; i++) {
             var socketId = roomdata['users'][i];
             var user = usersdata[socketId] ? usersdata[socketId] : socketId;
-            var xem  = xemdata[socketId];
+            var xem = xemdata[socketId];
 
             $currentRow = $memberRow.clone()
-                                  .removeClass("hidden")
-                                  .appendTo($members);
+                .removeClass("hidden")
+                .appendTo($members);
 
             $currentRow.find(".socket-id").first().text(socketId);
             $currentRow.find(".member-name").first().text(user);
@@ -475,9 +457,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  object room
      * @return GameUI
      */
-    this.configureRoomActions = function($domRoom, room)
-    {
-        var self      = this;
+    this.configureRoomActions = function($domRoom, room) {
+        var self = this;
         var is_member = $.inArray(socket_.id, room['users']) != -1;
 
         // define which buttons must be active
@@ -487,8 +468,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 self.displayRoomAction(room, $button, function($btn, room) {
                     socket_.emit("run_game");
                 });
-            }
-            else if (room["status"] == "wait") {
+            } else if (room["status"] == "wait") {
                 var $button = $domRoom.find(".roomActionCancel").first();
 
                 self.displayRoomAction(room, $button, function($btn, room) {
@@ -502,8 +482,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 socket_.emit("leave_room");
                 socket_.emit("notify");
                 $(".roomActionJoin").removeAttr("disabled")
-                                    .removeClass("btn-default")
-                                    .addClass("btn-primary");
+                    .removeClass("btn-default")
+                    .addClass("btn-primary");
 
                 self.enableCreateRoom();
             });
@@ -511,13 +491,12 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             // Members of Room must first Leave a Room before they can
             // Join another Room.
             $(".roomActionJoin").attr("disabled", "disabled")
-                                .removeClass("btn-primary")
-                                .addClass("btn-default");
+                .removeClass("btn-primary")
+                .addClass("btn-default");
 
             // also disable room creation (needs leave first)
             self.disableCreateRoom();
-        }
-        else if (room["status"] == "join") {
+        } else if (room["status"] == "join") {
             var $button = $domRoom.find(".roomActionJoin").first();
 
             if (room["is_full"])
@@ -526,8 +505,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                 self.displayRoomAction(room, $button, function($btn, room) {
                     var player = self.getPlayerDetails();
                     socket_.emit("join_room", JSON.stringify({
-                        "room_id": room["id"], 
-                        "details": player}));
+                        "room_id": room["id"],
+                        "details": player
+                    }));
                     self.disableCreateRoom();
                 });
             }
@@ -545,10 +525,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  GameSession session
      * @return Object
      */
-    this.getPlayerDetails = function(session)
-    {
+    this.getPlayerDetails = function(session) {
         var username = $("#username").val();
-        var address  = $("#address").val();
+        var address = $("#address").val();
 
         if (!username.length && session && session.getPlayer().length)
             username = session.getPlayer();
@@ -559,10 +538,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         if (!username.length || !address.length) {
             // createSession not possible, either user name or XEM
             // address could not be retrieved.
-            return {"username": "", "address": ""};
+            return { "username": "", "address": "" };
         }
 
-        return {"username": username, "address": address.replace(/-/g, '')};
+        return { "username": username, "address": address.replace(/-/g, '') };
     };
 
     /**
@@ -571,17 +550,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  GameSession session
      * @return GameUI
      */
-    this.updateUserFormWithSession = function(session)
-    {
+    this.updateUserFormWithSession = function(session) {
         var username = $("#username").val();
-        var address  = $("#address").val();
+        var address = $("#address").val();
 
-        if (! username.length) {
+        if (!username.length) {
             $("#username").val(session.getPlayer());
             username = session.getPlayer();
         }
 
-        if (! address.length) {
+        if (!address.length) {
             $("#address").val(session.getAddress());
             address = session.getAddress();
         }
@@ -594,35 +572,32 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.createSession = function(session)
-    {
+    this.createSession = function(session) {
         var self = this;
         var details = this.getPlayerDetails();
 
         if (typeof session != 'undefined')
-            // use saved session
+        // use saved session
             session_ = session;
         else
-            // save the game session details
+        // save the game session details
             session_ = new GameSession(API_, details.username, details.address, ctrl_.getPlayMode());
 
         ctrl_.setSession(session_);
 
-        if (ctrl_.isPlayMode("sponsored") && ! ctrl_.isAdvertised()) {
+        if (ctrl_.isPlayMode("sponsored") && !ctrl_.isAdvertised()) {
             // this is a page reload! show the Sponsor modal box because
             // advertising has not been done for this socket id!
 
             ctrl_.setAdvertised(true);
-            self.setSponsoredUI(function(ui, sponsor)
-                {
-                    // now display the advertisement
-                    ui.displaySponsorAdvertisement(function(ui)
-                    {
-                        // and finally, emit the session creation
-                        socket_.emit('change_username', JSON.stringify(details));
-                        socket_.emit("notify");
-                    });
+            self.setSponsoredUI(function(ui, sponsor) {
+                // now display the advertisement
+                ui.displaySponsorAdvertisement(function(ui) {
+                    // and finally, emit the session creation
+                    socket_.emit('change_username', JSON.stringify(details));
+                    socket_.emit("notify");
                 });
+            });
 
             return this;
         }
@@ -633,7 +608,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         socket_.emit("notify");
 
         // return whether an invoice is needed or not
-        return ! session_.details_.hearts;
+        return !session_.details_.hearts;
     };
 
     /**
@@ -644,8 +619,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.displayPlayerUI = function()
-    {
+    this.displayPlayerUI = function() {
         // top navigation bar update
         $("#currentUser-username").html("&nbsp;" + $("#username").val());
         $("#currentUser").fadeIn("slow");
@@ -676,29 +650,26 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return {[type]} [description]
      */
-    this.setSponsoredUI = function(callback)
-    {
+    this.setSponsoredUI = function(callback) {
         var self = this;
 
-        API_.getRandomSponsor(function(sponsor)
-            {
-                // got a sponsor, now we'll have a valid address input for sure.
-                $(".error-input").removeClass("error-input");
-                $(".error-block").hide();
-                $(".error-block .error").text("");
+        API_.getRandomSponsor(function(sponsor) {
+            // got a sponsor, now we'll have a valid address input for sure.
+            $(".error-input").removeClass("error-input");
+            $(".error-block").hide();
+            $(".error-block .error").text("");
 
-                $("#address").val(sponsor.xem);
-                $("#address").prop("disabled", true);
-                $("#address").attr("data-sponsor", "1");
+            $("#address").val(sponsor.xem);
+            $("#address").prop("disabled", true);
+            $("#address").attr("data-sponsor", "1");
 
-                //XXX sponsored mode should hide or obfuscate sponsored wallet address
+            //XXX sponsored mode should hide or obfuscate sponsored wallet address
 
-                $("#username").attr("data-sponsor", sponsor.slug);
+            $("#username").attr("data-sponsor", sponsor.slug);
 
-                ctrl_.setSponsor(sponsor);
-                self.prepareSponsoredJoin(sponsor, function(ui)
-                    { callback(ui); });
-            });
+            ctrl_.setSponsor(sponsor);
+            self.prepareSponsoredJoin(sponsor, function(ui) { callback(ui); });
+        });
     };
 
     /**
@@ -709,8 +680,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.unsetSponsoredUI = function()
-    {
+    this.unsetSponsoredUI = function() {
         $("#address").val("");
         $("#address").prop("disabled", false);
         $("#address").attr("data-sponsor", "0");
@@ -731,24 +701,22 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  NEMSponsor sponsor
      * @return GameUI
      */
-    this.prepareSponsoredJoin = function(sponsor, callback)
-    {
+    this.prepareSponsoredJoin = function(sponsor, callback) {
         var self = this;
 
-        if ($(".pacnem-sponsor-modal[data-sponsor='" + sponsor.slug  + "']").length)
-            // sponsor window already available
+        if ($(".pacnem-sponsor-modal[data-sponsor='" + sponsor.slug + "']").length)
+        // sponsor window already available
             return this;
 
-        template_.render("sponsor-box", function(compileWith)
-            {
-                // add server side generated sponsor HTML to a modal
-                // boxes wrapper.
-                var html = $("#pacnem-modal-wrapper").html();
-                $("#pacnem-modal-wrapper").html(html + compileWith(sponsor));
+        template_.render("sponsor-box", function(compileWith) {
+            // add server side generated sponsor HTML to a modal
+            // boxes wrapper.
+            var html = $("#pacnem-modal-wrapper").html();
+            $("#pacnem-modal-wrapper").html(html + compileWith(sponsor));
 
-                if (callback)
-                    callback(self);
-            });
+            if (callback)
+                callback(self);
+        });
 
         return this;
     };
@@ -760,8 +728,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  Function callback
      * @return GameUI
      */
-    this.displaySponsorAdvertisement = function(callback)
-    {
+    this.displaySponsorAdvertisement = function(callback) {
         $(".pacnem-sponsor-modal").first().modal({
             backdrop: "static",
             keyboard: false,
@@ -771,20 +738,18 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         var self = this;
         var start = new Date().getTime();
 
-        var updateCounter = function()
-        {
+        var updateCounter = function() {
             var secs = parseInt($("#pacnem-sponsor-close-trigger .seconds").first().text());
             var n = secs - 1;
 
             if (n < 0)
                 n = 0;
 
-            $("#pacnem-sponsor-close-trigger .seconds").first().text(""+n);
+            $("#pacnem-sponsor-close-trigger .seconds").first().text("" + n);
             $("#pacnem-sponsor-close-trigger").attr("data-remaining", n);
         };
 
-        var closeSponsor = function(i)
-        {
+        var closeSponsor = function(i) {
             clearInterval(i);
             $(".pacnem-sponsor-modal").first().modal("hide");
             $("#pacnem-sponsor-close-trigger").removeAttr("data-remaining");
@@ -809,37 +774,35 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  NEMSponsor sponsor
      * @return GameUI
      */
-    this.prepareInvoiceBox = function(callback)
-    {
+    this.prepareInvoiceBox = function(callback) {
         var self = this;
 
         if ($(".pacnem-invoice-modal").length)
-            // always create a new invoice
+        // always create a new invoice
             $(".pacnem-invoice-modal").remove();
 
-        template_.render("invoice-box", function(compileWith)
-            {
-                // i know.. come on, just using nem :D
-                var rBytes = ctrl_.nem().crypto.nacl.randomBytes(8);
-                var seed   = ctrl_.nem().crypto.nacl.randomBytes(4);
+        template_.render("invoice-box", function(compileWith) {
+            // i know.. come on, just using nem :D
+            var rBytes = ctrl_.nem().crypto.nacl.randomBytes(8);
+            var seed = ctrl_.nem().crypto.nacl.randomBytes(4);
 
-                var unsafe = ctrl_.nem().utils.convert.ua2hex(rBytes);
-                var seed   = ctrl_.nem().utils.convert.ua2hex(seed);
+            var unsafe = ctrl_.nem().utils.convert.ua2hex(rBytes);
+            var seed = ctrl_.nem().utils.convert.ua2hex(seed);
 
-                var token  = unsafe + seed;
-                var prefix = "pacnem-invoice-" + token.substr(0, 6);
+            var token = unsafe + seed;
+            var prefix = "pacnem-invoice-" + token.substr(0, 6);
 
-                // add server side generated invoice HTML to a modal
-                // boxes wrapper.
-                var html = $("#pacnem-modal-wrapper").html();
-                $("#pacnem-modal-wrapper").html(html + compileWith({
-                    invoicePrefix: prefix,
-                    token_: token
-                }));
+            // add server side generated invoice HTML to a modal
+            // boxes wrapper.
+            var html = $("#pacnem-modal-wrapper").html();
+            $("#pacnem-modal-wrapper").html(html + compileWith({
+                invoicePrefix: prefix,
+                token_: token
+            }));
 
-                if (callback)
-                    callback(self);
-            });
+            if (callback)
+                callback(self);
+        });
 
         return this;
     };
@@ -857,8 +820,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  Function callback
      * @return GameUI
      */
-    this.watchInvoice = function(callback)
-    {
+    this.watchInvoice = function(callback) {
         var self = this;
 
         /**
@@ -871,13 +833,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
          * 
          * @param {string|object} rawData 
          */
-        var processPaymentData_ = function(ui, rawData)
-        {
+        var processPaymentData_ = function(ui, rawData) {
             var data = null;
             if (typeof rawData == 'object') {
                 data = rawData;
-            }
-            else if (typeof rawData == 'string') {
+            } else if (typeof rawData == 'string') {
                 data = JSON.parse(rawData);
             }
             //DEBUG else {
@@ -886,36 +846,34 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
             console.log("[DEBUG] " + "processing payment status data: ", data);
 
-            if (! data)
+            if (!data)
                 return false;
 
             var amountPaid = typeof data.paymentData != 'undefined' ? data.paymentData.amountPaid : data.amountPaid;
             var amountUnconfirmed = typeof data.paymentData != 'undefined' ? data.paymentData.amountUnconfirmed : data.amountUnconfirmed;
             var newStatus = typeof data.paymentData != 'undefined' ? data.paymentData.status : data.status;
 
-            var statusClass  = newStatus == 'unconfirmed' ? "info" : "success";
-            var statusIcon   = newStatus == 'unconfirmed' ? "glyphicon-time" : "glyphicon-check";
+            var statusClass = newStatus == 'unconfirmed' ? "info" : "success";
+            var statusIcon = newStatus == 'unconfirmed' ? "glyphicon-time" : "glyphicon-check";
 
             var prefix = $("#pacnem-invoice-prefix").val();
-            var $status      = $("#" + prefix + "-status");
-            var $paid        = $("#" + prefix + "-amountPaid .amount");
+            var $status = $("#" + prefix + "-status");
+            var $paid = $("#" + prefix + "-amountPaid .amount");
             var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
 
             $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + newStatus + "</span>")
-                    .removeClass("text-danger").addClass("text-" + statusClass);
+                .removeClass("text-danger").addClass("text-" + statusClass);
 
             if (amountPaid) {
                 $paid.text(amountPaid / 1000000);
                 $paid.parents(".wrap-amount").first().show();
-            }
-            else
+            } else
                 $paid.parents(".wrap-amount").first().hide();
 
             if (amountUnconfirmed) {
                 $unconfirmed.text(amountUnconfirmed / 1000000);
                 $unconfirmed.parents(".wrap-amount").first().show();
-            }
-            else
+            } else
                 $unconfirmed.parents(".wrap-amount").first().hide();
 
             if (newStatus == "paid") {
@@ -928,12 +886,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             }
         };
 
-        var closeableInvoiceModalBox = function(ui, callback)
-        {
+        var closeableInvoiceModalBox = function(ui, callback) {
             $(".pacnem-invoice-close-trigger").show();
             $(".pacnem-invoice-close-trigger").off("click");
-            $(".pacnem-invoice-close-trigger").on("click", function()
-            {
+            $(".pacnem-invoice-close-trigger").on("click", function() {
                 $(".pacnem-invoice-modal").modal("hide");
                 callback(ui);
                 return false;
@@ -952,10 +908,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
          * 
          * @param {GameUI} ui 
          */
-        var registerStatusHttpFallback = function(ui, seconds = 30)
-        {
-            var fn_getState = function()
-            {
+        var registerStatusHttpFallback = function(ui, seconds = 30) {
+            var fn_getState = function() {
                 var player = self.getPlayerDetails();
                 var prefix = $("#pacnem-invoice-prefix").val();
                 var number = $("#" + prefix + "-message").text().trim();
@@ -969,12 +923,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     return false;
                 }
 
-                API_.checkInvoiceStatus(player, socket_.id, number, function(paymentUpdateData)
-                {
+                API_.checkInvoiceStatus(player, socket_.id, number, function(paymentUpdateData) {
                     console.log("[DEBUG] " + "Invoice State API JSON: '" + JSON.stringify(paymentUpdateData) + "' untouched: ", paymentUpdateData);
 
                     if (paymentUpdateData) {
-                        var done = {"paid": true, "overpaid": true};
+                        var done = { "paid": true, "overpaid": true };
                         if (paymentUpdateData.status && done.hasOwnProperty(paymentUpdateData.status)) {
                             // make invoice closeable in case the invoice is stated Paid
                             // and stop http fallback requests
@@ -995,20 +948,18 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
             // when the invoice is closed, the ajax fallback should
             // be turned off.
-            $invoiceBox.on("shown.bs.hidden", function()
-            {
+            $invoiceBox.on("shown.bs.hidden", function() {
                 clearInterval(interval_);
             });
 
             // after 5 minutes without updates, check only every other minute
-            setInterval(function()
-            {
+            setInterval(function() {
                 var prefix = $("#pacnem-invoice-prefix").val();
                 var status = $("#" + prefix + "-status").text().trim();
-                var done = {"paid": true, "overpaid": true};
+                var done = { "paid": true, "overpaid": true };
 
                 clearInterval(interval_);
-                if (! done.hasOwnProperty(status)) {
+                if (!done.hasOwnProperty(status)) {
                     // now every minute we will check for an update of the invoice
                     registerStatusHttpFallback(ui, 120);
                 }
@@ -1016,8 +967,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
 
             // register "I have Paid!" button listener
             $(".pacnem-invoice-refresh-trigger").off("click");
-            $(".pacnem-invoice-refresh-trigger").on("click", function()
-            {
+            $(".pacnem-invoice-refresh-trigger").on("click", function() {
                 fn_getState();
                 return false;
             });
@@ -1030,8 +980,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
          * 
          * @param {GameUI} ui 
          */
-        var registerInvoiceStatusUpdateListener = function(ui)
-        {
+        var registerInvoiceStatusUpdateListener = function(ui) {
             var player = self.getPlayerDetails();
 
             // Frontend to Backend WebSocket Handler
@@ -1042,8 +991,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             // `pacnem_payment_status_update`. The data sent through this
             // websocket will contain a `status` field and a `paymentData`
             // field containing the details of the said payment.
-            socket_.on("pacnem_payment_status_update", function(rawdata)
-            {
+            socket_.on("pacnem_payment_status_update", function(rawdata) {
                 return processPaymentData_(ui, rawdata);
             });
 
@@ -1055,30 +1003,27 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         // pre-show event should trigger an ajax request to load the
         // dynamic invoice fields.
         var $invoiceBox = $(".pacnem-invoice-modal").first();
-        $invoiceBox.on("shown.bs.modal", function()
-            {
-                var player  = self.getPlayerDetails();
+        $invoiceBox.on("shown.bs.modal", function() {
+            var player = self.getPlayerDetails();
 
-                // update info of the invoice now that we will display it because
-                // we now have an address and username.
-                API_.getInvoice(player, socket_.id, null, function(data)
-                {
-                    self.fillInvoiceModal(data, false);
+            // update info of the invoice now that we will display it because
+            // we now have an address and username.
+            API_.getInvoice(player, socket_.id, null, function(data) {
+                self.fillInvoiceModal(data, false);
 
-                    if (data.status != 'paid' && data.status != 'overpaid') {
-                        registerInvoiceStatusUpdateListener(self);
-                    }
-                });
-
-                $(".pacnem-invoice-close-trigger").off("click");
-                $(".pacnem-invoice-close-trigger").on("click", function()
-                {
-                    $(".pacnem-invoice-modal").modal("hide");
-                    callback(self);
-                    return false;
-                });
-                //XXX $("#pacnem-invoice-show-trigger").off("click");
+                if (data.status != 'paid' && data.status != 'overpaid') {
+                    registerInvoiceStatusUpdateListener(self);
+                }
             });
+
+            $(".pacnem-invoice-close-trigger").off("click");
+            $(".pacnem-invoice-close-trigger").on("click", function() {
+                $(".pacnem-invoice-modal").modal("hide");
+                callback(self);
+                return false;
+            });
+            //XXX $("#pacnem-invoice-show-trigger").off("click");
+        });
 
         // all configured, show.
         $invoiceBox.modal({
@@ -1090,22 +1035,21 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         return this;
     };
 
-    this.fillInvoiceModal = function(data, closeable = false)
-    {
+    this.fillInvoiceModal = function(data, closeable = false) {
         var prefix = $("#pacnem-invoice-prefix").val();
         var $number = $("#" + prefix + "-id");
         var $recipient = $("#" + prefix + "-recipient");
-        var $amount    = $("#" + prefix + "-amount");
-        var $message   = $("#" + prefix + "-message");
+        var $amount = $("#" + prefix + "-amount");
+        var $message = $("#" + prefix + "-message");
         var $receiving = $("#" + prefix + "-receiving");
-        var $status    = $("#" + prefix + "-status ");
-        var $paid      = $("#" + prefix + "-amountPaid .amount");
+        var $status = $("#" + prefix + "-status ");
+        var $paid = $("#" + prefix + "-amountPaid .amount");
         var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
-        var fmtAmount  = (data.invoice.amount / 1000000) + " XEM";
+        var fmtAmount = (data.invoice.amount / 1000000) + " XEM";
 
         var rcvHeartsHtml = '<div><div class="label label-success label-mosaic"><b>' + data.invoice.countHearts + '&nbsp;<i class="glyphicon glyphicon-heart"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:heart</a></div>';
         var rcvPlayerHtml = '<div><div class="label label-default label-mosaic"><b>1&nbsp;<i class="glyphicon glyphicon-user"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:player</a></div>';
-        var rcvBetaHtml   = '<div><div class="label label-primary label-mosaic"><b>1&nbsp;<i class="glyphicon glyphicon-star-empty"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:beta-player</a></div>';
+        var rcvBetaHtml = '<div><div class="label label-primary label-mosaic"><b>1&nbsp;<i class="glyphicon glyphicon-star-empty"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:beta-player</a></div>';
 
         $number.html(data.invoice.number);
         $recipient.html(data.invoice.recipientXEM);
@@ -1114,33 +1058,31 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         $receiving.html(rcvHeartsHtml + rcvPlayerHtml + rcvBetaHtml);
         $status.text(data.invoice.status).addClass("text-danger");
 
-        var statusClass  = "danger";
-        var statusIcon   = "glyphicon-time";
+        var statusClass = "danger";
+        var statusIcon = "glyphicon-time";
 
         if (data.invoice.status == "paid") {
             statusClass = "success";
-            statusIcon  = "glyphicon-check";
+            statusIcon = "glyphicon-check";
 
             $paid.text(data.invoice.amountPaid / 1000000);
             $paid.parents(".wrap-amount").first().show();
-        }
-        else if (data.invoice.status == "paid_partly") {
+        } else if (data.invoice.status == "paid_partly") {
             statusClass = "success";
-            statusIcon  = "glyphicon-time";
+            statusIcon = "glyphicon-time";
 
             $paid.text(data.invoice.amountPaid / 1000000);
             $paid.parents(".wrap-amount").first().show();
-        }
-        else if (data.invoice.status == "unconfirmed") {
+        } else if (data.invoice.status == "unconfirmed") {
             statusClass = "warning";
-            statusIcon  = "glyphicon-time";
+            statusIcon = "glyphicon-time";
 
             $unconfirmed.text(data.invoice.amountUnconfirmed / 1000000);
             $unconfirmed.parents(".wrap-amount").first().show();
         }
 
         $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + data.invoice.status + "</span>")
-               .removeClass("text-danger").addClass("text-" + statusClass);
+            .removeClass("text-danger").addClass("text-" + statusClass);
 
         var qrHtml = kjua({
             size: 256,
@@ -1162,23 +1104,19 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             $(".pacnem-invoice-close-trigger").show();
 
         $(".pacnem-invoice-close-trigger").off("click");
-        $(".pacnem-invoice-close-trigger").on("click", function()
-        {
+        $(".pacnem-invoice-close-trigger").on("click", function() {
             $(".pacnem-invoice-modal").modal("hide");
             return false;
         });
     };
 
-    this.displayInvoice = function(invoiceNumber)
-    {
+    this.displayInvoice = function(invoiceNumber) {
         var self = this;
         var player = self.getPlayerDetails();
 
         self.setLoadingUI();
-        self.prepareInvoiceBox(function(ui)
-        {
-            API_.getInvoice(player, socket_.id, invoiceNumber, function(data)
-            {
+        self.prepareInvoiceBox(function(ui) {
+            API_.getInvoice(player, socket_.id, invoiceNumber, function(data) {
                 self.fillInvoiceModal(data, true);
                 self.unsetLoadingUI();
             });
@@ -1193,8 +1131,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * @param  Function callback
      * @return GameUI
      */
-    this.displayShareEngine = function(callback)
-    {
+    this.displayShareEngine = function(callback) {
         alert("Invoice not implemented yet!");
 
         callback(this);
@@ -1209,22 +1146,19 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return {[type]}        [description]
      */
-    this.formValidate = function()
-    {
+    this.formValidate = function() {
         // first validate that a game mode is selected
         var $selectedMode = $("input[type=radio][name=play_type]:checked");
-        if (! $selectedMode.length) {
+        if (!$selectedMode.length) {
             // set error mode
             $(".pacnem-game-mode-wrapper").first().addClass("panel").addClass("panel-danger");
             return false;
-        }
-        else
-            // no error
+        } else
+        // no error
             $(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");
 
         // now validate input fields
-        var validators = [
-            {
+        var validators = [{
                 "selector": "#username",
                 "required": true,
                 "reg_exp": /[A-Za-z0-9\-\_\.]+/
@@ -1240,34 +1174,34 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             }
         ];
 
-        var self  = this;
+        var self = this;
         var valid = true;
         for (i in validators) {
             var selector = validators[i].selector;
             var required = validators[i].required;
-            var reg_exp  = validators[i].reg_exp;
+            var reg_exp = validators[i].reg_exp;
             var callback = validators[i].callback;
 
             if (typeof selector == 'undefined')
                 continue;
 
             var $dom_element = $(selector);
-            if (! $dom_element.length)
-                // DOM Element does not exist
+            if (!$dom_element.length)
+            // DOM Element does not exist
                 continue;
 
             var value = undefined;
             switch ($dom_element[0].tagName) {
                 default:
-                case 'input':
-                case 'select':
-                case 'textarea':
+                    case 'input':
+                    case 'select':
+                    case 'textarea':
                     value = $dom_element.val();
-                    break;
+                break;
             }
 
-            if ((required && !value.length)
-            || (reg_exp && !value.match(reg_exp))) {
+            if ((required && !value.length) ||
+                (reg_exp && !value.match(reg_exp))) {
                 $dom_element.addClass("error-input");
                 valid = false;
             }
@@ -1277,8 +1211,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
                     $dom_element.addClass("error-input");
                     valid = false;
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 // print error beneath input-group (in span.error-block)
                 var $input_group = $dom_element.parents(".input-group").first();
                 var $error_block = $input_group.siblings(".error-block").first();
@@ -1298,44 +1231,38 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.initAuthButton = function()
-    {
+    this.initAuthButton = function() {
         var self = this;
 
         $("#pacnem-save-trigger").off("click");
-        $("#pacnem-save-trigger").click(function()
-        {
+        $("#pacnem-save-trigger").click(function() {
             $(".error-input").removeClass("error-input");
             $(".error-block").hide();
             $(".error-block .error").text("");
 
             if (self.formValidate()) {
 
-                var postPaymentCallback = function(ui)
-                    {
-                        ui.createSession();
+                var postPaymentCallback = function(ui) {
+                    ui.createSession();
 
-                        ui.displayPlayerUI();
-                        ui.displayLounge();
-                        $("#rooms").parent().show();
-                        $(".pacnem-credits-submenu").removeClass("hidden");
-                    };
+                    ui.displayPlayerUI();
+                    ui.displayLounge();
+                    $("#rooms").parent().show();
+                    $(".pacnem-credits-submenu").removeClass("hidden");
+                };
 
                 if (ctrl_.isPlayMode("sponsored")) {
                     ctrl_.sponsorizeName(ctrl_.getSponsor());
                     ctrl_.setAdvertised(true);
 
                     self.displaySponsorAdvertisement(postPaymentCallback);
-                }
-                else if (ctrl_.isPlayMode("pay-per-play")) {
+                } else if (ctrl_.isPlayMode("pay-per-play")) {
 
                     var player = self.getPlayerDetails();
-                    API_.fetchRemainingHearts(player, function(data)
-                    {
+                    API_.fetchRemainingHearts(player, function(data) {
                         if (data > 0) {
                             postPaymentCallback(self)
-                        }
-                        else {
+                        } else {
                             self.watchInvoice(postPaymentCallback);
                         }
                     });
@@ -1356,14 +1283,12 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.initPurgeButton = function()
-    {
+    this.initPurgeButton = function() {
         var self = this;
 
         //XXX make sure user notes username + address
 
-        $("#pacnem-purge-trigger").click(function()
-        {
+        $("#pacnem-purge-trigger").click(function() {
             session_.clear();
             window.location.href = "/";
             return false;
@@ -1372,8 +1297,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         return this;
     };
 
-    this.setLoadingUI = function()
-    {
+    this.setLoadingUI = function() {
         if ($(".pacnem-loading-overlay").length) {
             return $(".pacnem-loading-overlay").fadeIn("slow");
         }
@@ -1392,17 +1316,25 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             "display": "none"
         });
 
-        $wrapper.css({"position": "relative"});
+        $wrapper.css({ "position": "relative" });
         $overlay.prependTo($wrapper);
         $overlay.fadeIn("slow");
+
+        // XXX 30 seconds timeout for abort
     };
 
-    this.unsetLoadingUI = function()
-    {
+    this.unsetLoadingUI = function() {
         var $wrapper = $("#pacNEMWrapper");
         var $overlay = $wrapper.find(".pacnem-loading-overlay").first();
 
         $overlay.fadeOut("slow");
+    };
+
+    this.initTooltips = function() {
+        $("[data-toggle='tooltip']").tooltip({
+            html: true,
+            template: '<div class="tooltip tooltip-mosaic"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
+        });
     };
 
     /**
@@ -1413,18 +1345,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.displayLounge = function()
-    {
+    this.displayLounge = function() {
         var self = this;
         var player = self.getPlayerDetails();
 
         self.setLoadingUI();
-        API_.fetchLoungeInformations(player, function(loungeData)
-        {
-            console.log("[DEBUG] " + "Received lounge data: ", JSON.stringify(loungeData));
-            $("#pacnem-lounge-wrapper").fadeIn("slow", function()
-            {
+        API_.fetchLoungeInformations(player, function(loungeData) {
+            $("#pacnem-lounge-wrapper").fadeIn("slow", function() {
                 self.unsetLoadingUI();
+                self.initTooltips();
             });
         });
 
@@ -1436,10 +1365,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      * 
      * @return GameUI
      */
-    this.hideLounge = function(callback = null)
-    {
-        $("#pacnem-lounge").fadeOut("slow", function()
-        {
+    this.hideLounge = function(callback = null) {
+        $("#pacnem-lounge").fadeOut("slow", function() {
             if (callback)
                 return callback();
         });
@@ -1452,27 +1379,23 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.initScoresButton = function()
-    {
+    this.initScoresButton = function() {
         var self = this;
 
-        $("#pacnem-scores-trigger").on("click", function()
-        {
+        $("#pacnem-scores-trigger").on("click", function() {
             var flag = $(this).attr("data-display");
 
             if (flag == "0") {
                 $(this).attr("data-display", "1");
                 self.setLoadingUI();
-                API_.fetchScores(function(scores)
-                    {
-                        self.initBackToPlayButtons();
-                        self.hideLounge();
-                        $("#pacnem-current-player-details").hide();
-                        $("#pacnem-scores-wrapper").show();
-                        self.unsetLoadingUI();
-                    });
-            }
-            else {
+                API_.fetchScores(function(scores) {
+                    self.initBackToPlayButtons();
+                    self.hideLounge();
+                    $("#pacnem-current-player-details").hide();
+                    $("#pacnem-scores-wrapper").show();
+                    self.unsetLoadingUI();
+                });
+            } else {
                 $(this).attr("data-display", "0");
                 $("#pacnem-scores-wrapper").hide();
                 $("#pacnem-current-player-details").show();
@@ -1486,30 +1409,26 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.initPurchasesButtons = function()
-    {
+    this.initPurchasesButtons = function() {
         var self = this;
 
         $("#pacnem-invoice-history-trigger").off("click");
-        $("#pacnem-invoice-history-trigger").on("click", function()
-        {
+        $("#pacnem-invoice-history-trigger").on("click", function() {
             var flag = $(this).attr("data-display");
             var player = self.getPlayerDetails();
 
-            if (! flag || ! flag.length || flag == "0") {
+            if (!flag || !flag.length || flag == "0") {
                 $(this).attr("data-display", "1");
                 self.setLoadingUI();
-                API_.fetchPurchaseHistory(player, function(history)
-                    {
-                        self.initInvoicesButtons();
-                        self.initBackToPlayButtons();
-                        self.hideLounge();
-                        //$("#pacnem-current-player-details").hide();
-                        $("#pacnem-invoice-history-wrapper").show();
-                        self.unsetLoadingUI();
-                    });
-            }
-            else {
+                API_.fetchPurchaseHistory(player, function(history) {
+                    self.initInvoicesButtons();
+                    self.initBackToPlayButtons();
+                    self.hideLounge();
+                    //$("#pacnem-current-player-details").hide();
+                    $("#pacnem-invoice-history-wrapper").show();
+                    self.unsetLoadingUI();
+                });
+            } else {
                 $(this).attr("data-display", "0");
                 $("#pacnem-invoice-history-wrapper").hide();
                 //$("#pacnem-current-player-details").show();
@@ -1520,11 +1439,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         });
 
         $("#pacnem-invoice-show-trigger").off("click");
-        $("#pacnem-invoice-show-trigger").on("click", function()
-        {
+        $("#pacnem-invoice-show-trigger").on("click", function() {
             self.setLoadingUI();
-            self.prepareInvoiceBox(function(ui)
-            {
+            self.prepareInvoiceBox(function(ui) {
                 self.watchInvoice(function() {});
 
                 $(".pacnem-invoice-close-trigger").show();
@@ -1535,13 +1452,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
         });
     };
 
-    this.initInvoicesButtons = function()
-    {
+    this.initInvoicesButtons = function() {
         var self = this;
 
         $(".pacnem-invoice-display-trigger").off("click");
-        $(".pacnem-invoice-display-trigger").on("click", function()
-        {
+        $(".pacnem-invoice-display-trigger").on("click", function() {
             var number = $(this).attr("data-invoice-number");
             if (number && number.length) {
                 self.displayInvoice(number);
@@ -1556,12 +1471,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.initGameModes = function()
-    {
+    this.initGameModes = function() {
         var self = this;
 
-        $(".pacnem-gamemode-trigger").on("click", function()
-        {
+        $(".pacnem-gamemode-trigger").on("click", function() {
             var thisMode = $(this).val();
 
             ctrl_.setPlayMode(thisMode);
@@ -1574,8 +1487,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             if ("pay-per-play" == thisMode) {
                 $(".pacnem-credits-submenu").removeClass("hidden");
                 self.prepareInvoiceBox(function(ui) {});
-            }
-            else
+            } else
                 $(".pacnem-credits-submenu").removeClass("hidden").addClass("hidden");
 
             // game mode choice has been done now, next is username and address.
@@ -1590,9 +1502,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return Game UI
      */
-    this.initDOMListeners = function()
-    {
-        var self   = this;
+    this.initDOMListeners = function() {
+        var self = this;
         rooms_ctr_ = $("#rooms");
 
         this.initAuthButton();
@@ -1617,8 +1528,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
             }
 
             // XXX + check game mode and enable/disable buttons with error messages
-        }
-        else
+        } else
             $("#rooms").parent().hide();
 
         return this;
@@ -1632,16 +1542,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.registerKeyListeners = function()
-    {
+    this.registerKeyListeners = function() {
         document.onkeydown = function(e) {
-            if([37, 38, 39, 40].indexOf(e.keyCode) > -1)
+            if ([37, 38, 39, 40].indexOf(e.keyCode) > -1)
                 socket_.emit('keydown', e.keyCode);
         };
 
         window.addEventListener("keydown", function(e) {
             // space and arrow keys
-            if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1)
+            if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1)
                 e.preventDefault();
         }, false);
 
@@ -1654,13 +1563,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate)
      *
      * @return GameUI
      */
-    this.initBackToPlayButtons = function()
-    {
+    this.initBackToPlayButtons = function() {
         var self = this;
 
         $(".pacnem-back-to-play").off("click");
-        $(".pacnem-back-to-play").on("click", function()
-        {
+        $(".pacnem-back-to-play").on("click", function() {
             $("#pacnem-scores-trigger").attr("data-display", "0");
             $("#pacnem-scores-wrapper").hide();
             $("#pacnem-invoice-history-trigger").attr("data-display", "0");
