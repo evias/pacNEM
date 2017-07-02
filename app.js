@@ -602,12 +602,25 @@ app.get("/api/v1/credits/buy", function(req, res) {
                 PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice) {
                     // payment channel created, end create-invoice response.
 
+                    var statusLabelClass = "label-default";
+                    var statusLabelIcon = "glyphicon glyphicon-time";
+
+                    if (invoice.isPaid) {
+                        statusLabelClass = "label-success";
+                        statusLabelIcon = "glyphicon glyphicon-ok";
+                    } else if (invoice.status == "paid_partly") {
+                        statusLabelClass = "label-info";
+                        statusLabelIcon = "glyphicon glyphicon-download-alt";
+                    }
+
                     res.send(JSON.stringify({
                         status: "ok",
                         item: {
                             network: currentNetwork,
                             qrData: invoice.getQRData(),
-                            invoice: invoice
+                            invoice: invoice,
+                            statusLabelClass: statusLabelClass,
+                            statusLabelIcon: statusLabelIcon
                         }
                     }));
                 });
@@ -622,19 +635,31 @@ app.get("/api/v1/credits/buy", function(req, res) {
             return res.send(JSON.stringify({ "status": "error", "message": errorMessage }));
         }
 
+        // update mode, invoice already exists, create payment channel proxy
+
+        var statusLabelClass = "label-default";
+        var statusLabelIcon = "glyphicon glyphicon-time";
+
+        if (invoice.isPaid) {
+            statusLabelClass = "label-success";
+            statusLabelIcon = "glyphicon glyphicon-ok";
+        } else if (invoice.status == "paid_partly") {
+            statusLabelClass = "label-info";
+            statusLabelIcon = "glyphicon glyphicon-download-alt";
+        }
+
         if (disableChannel === true) {
             res.send(JSON.stringify({
                 status: "ok",
                 item: {
                     network: currentNetwork,
                     qrData: invoice.getQRData(),
-                    invoice: invoice
+                    invoice: invoice,
+                    statusLabelClass: statusLabelClass,
+                    statusLabelIcon: statusLabelIcon
                 }
             }));
         } else {
-
-            // update mode, invoice already exists, create payment channel proxy
-
             PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice) {
                 // payment channel created, end create-invoice response.
 
@@ -643,7 +668,9 @@ app.get("/api/v1/credits/buy", function(req, res) {
                     item: {
                         network: currentNetwork,
                         qrData: invoice.getQRData(),
-                        invoice: invoice
+                        invoice: invoice,
+                        statusLabelClass: statusLabelClass,
+                        statusLabelIcon: statusLabelIcon
                     }
                 }));
             });
@@ -788,7 +815,7 @@ app.get("/api/v1/lounge/get", function(req, res) {
         var currentRoom = lounge.rooms[rId];
         var cntMembers = Object.getOwnPropertyNames(currentRoom.toDictionary().usernames).length;
 
-        console.log("[DEBUG] [API] [ROOMS] currentRoom: " + JSON.stringify(currentRoom.toDictionary()));
+        //DEBUG console.log("[DEBUG] [API] [ROOMS] currentRoom: " + JSON.stringify(currentRoom.toDictionary()));
 
         var status = currentRoom.getStatus();
         if (status === "play" || status === "wait") {

@@ -844,7 +844,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             //DEBUG    console.log("[DEBUG] " + "processPaymentData_ with: ", rawData, " with typeof: " + typeof rawData);
             //DEBUG }
 
-            console.log("[DEBUG] " + "processing payment status data: ", data);
+            //DEBUG console.log("[DEBUG] " + "processing payment status data: ", data);
 
             if (!data)
                 return false;
@@ -853,16 +853,23 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             var amountUnconfirmed = typeof data.paymentData != 'undefined' ? data.paymentData.amountUnconfirmed : data.amountUnconfirmed;
             var newStatus = typeof data.paymentData != 'undefined' ? data.paymentData.status : data.status;
 
-            var statusClass = newStatus == 'unconfirmed' ? "info" : "success";
-            var statusIcon = newStatus == 'unconfirmed' ? "glyphicon-time" : "glyphicon-check";
+            var statusClass = typeof data.paymentData != 'undefined' ? data.paymentData.statusLabelClass : data.statusLabelClass;
+            var statusIcon = typeof data.paymentData != 'undefined' ? data.paymentData.statusLabelIcon : data.statusLabelIcon;
 
             var prefix = $("#pacnem-invoice-prefix").val();
             var $status = $("#" + prefix + "-status");
             var $paid = $("#" + prefix + "-amountPaid .amount");
             var $unconfirmed = $("#" + prefix + "-amountUnconfirmed .amount");
 
-            $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + newStatus + "</span>")
-                .removeClass("text-danger").addClass("text-" + statusClass);
+            $status.html("<span class='" + statusIcon + "'></span> <span>" + newStatus + "</span>")
+                .removeClass("label-default")
+                .removeClass("label-success")
+                .removeClass("label-info")
+                .removeClass("label-bigger")
+                .removeClass("label")
+                .addClass("label")
+                .addClass(statusClass)
+                .addClass("label-bigger");
 
             if (amountPaid) {
                 $paid.text(amountPaid / 1000000);
@@ -909,7 +916,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
          * @param {GameUI} ui 
          */
         var registerStatusHttpFallback = function(ui, seconds = 30) {
-            var fn_getState = function() {
+            var fn_getState = function(subCallback) {
                 var player = self.getPlayerDetails();
                 var prefix = $("#pacnem-invoice-prefix").val();
                 var number = $("#" + prefix + "-message").text().trim();
@@ -935,7 +942,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                             closeableInvoiceModalBox(self, callback);
                         }
 
-                        return processPaymentData_(self, paymentUpdateData);
+                        processPaymentData_(self, paymentUpdateData);
+
+                        if (subCallback)
+                            return subCallback();
                     }
                 });
             };
@@ -968,7 +978,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             // register "I have Paid!" button listener
             $(".pacnem-invoice-refresh-trigger").off("click");
             $(".pacnem-invoice-refresh-trigger").on("click", function() {
-                fn_getState();
+                var $btn = $(this);
+                ui.setLoadingObject($btn);
+                fn_getState(function() {
+                    ui.unsetLoadingObject($btn);
+                });
                 return false;
             });
         };
@@ -1058,8 +1072,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         $receiving.html(rcvHeartsHtml + rcvPlayerHtml + rcvBetaHtml);
         $status.text(data.invoice.status).addClass("text-danger");
 
-        var statusClass = "danger";
-        var statusIcon = "glyphicon-time";
+        var newStatus = data.invoice.status;
+        var statusClass = data.statusLabelClass;
+        var statusIcon = data.statusLabelIcon;
 
         if (data.invoice.status == "paid") {
             statusClass = "success";
@@ -1083,6 +1098,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
         $status.html("<span class='glyphicon " + statusIcon + "'></span> <span>" + data.invoice.status + "</span>")
             .removeClass("text-danger").addClass("text-" + statusClass);
+
+        $status.html("<span class='" + statusIcon + "'></span> <span>" + newStatus + "</span>")
+            .removeClass("label-default")
+            .removeClass("label-success")
+            .removeClass("label-info")
+            .removeClass("label-bigger")
+            .removeClass("label")
+            .addClass("label")
+            .addClass(statusClass)
+            .addClass("label-bigger");
 
         var qrHtml = kjua({
             size: 256,
@@ -1244,7 +1269,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
                 var postPaymentCallback = function(ui) {
                     ui.createSession();
-
                     ui.displayPlayerUI();
                     ui.displayLounge();
                     $("#rooms").parent().show();
@@ -1297,6 +1321,33 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         return this;
     };
 
+    this.setLoadingObject = function($element) {
+        if (!$element.length)
+            return false;
+
+        var $icon = $element.find("i.glyphicon");
+        var iid = "evs_obj_" + new Date().valueOf();
+        if ($icon.length) {
+            $icon.addClass(iid);
+            $element.attr("data-iconbk", iid);
+            $icon.appendTo($("#pacnem-element-sink"));
+
+            var $load = $("<img src='/img/loading_32.gif' />");
+            $load.prependTo($element);
+        }
+    };
+
+    this.unsetLoadingObject = function($element) {
+        var iid = $element.attr("data-iconbk");
+
+        if (iid.length) {
+            var $icon = $("." + iid);
+
+            $element.find("img").remove();
+            $icon.prependTo($element);
+        }
+    };
+
     this.setLoadingUI = function() {
         if ($(".pacnem-loading-overlay").length) {
             return $(".pacnem-loading-overlay").fadeIn("slow");
@@ -1318,16 +1369,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
         $wrapper.css({ "position": "relative" });
         $overlay.prependTo($wrapper);
+        $overlay.attr("data-display", 1);
         $overlay.fadeIn("slow");
-
-        // XXX 30 seconds timeout for abort
     };
 
     this.unsetLoadingUI = function() {
         var $wrapper = $("#pacNEMWrapper");
         var $overlay = $wrapper.find(".pacnem-loading-overlay").first();
 
-        $overlay.fadeOut("slow");
+        if ($overlay.is(":visible"))
+            $overlay.fadeOut("slow");
     };
 
     this.initTooltips = function() {
@@ -1366,7 +1417,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @return GameUI
      */
     this.hideLounge = function(callback = null) {
-        $("#pacnem-lounge").fadeOut("slow", function() {
+        $("#pacnem-lounge-wrapper").fadeOut("slow", function() {
             if (callback)
                 return callback();
         });
@@ -1389,8 +1440,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 $(this).attr("data-display", "1");
                 self.setLoadingUI();
                 API_.fetchScores(function(scores) {
+                    self.preparePageChange();
                     self.initBackToPlayButtons();
-                    self.hideLounge();
                     $("#pacnem-current-player-details").hide();
                     $("#pacnem-scores-wrapper").show();
                     self.unsetLoadingUI();
@@ -1402,6 +1453,12 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 self.displayLounge();
             }
         });
+    };
+
+    this.preparePageChange = function() {
+        $("#pacnem-scores-wrapper").hide();
+        $("#pacnem-invoice-history-wrapper").hide();
+        this.hideLounge();
     };
 
     /**
@@ -1417,13 +1474,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             var flag = $(this).attr("data-display");
             var player = self.getPlayerDetails();
 
+            $(".pacnem-credits-submenu").first().dropdown("toggle");
+
             if (!flag || !flag.length || flag == "0") {
                 $(this).attr("data-display", "1");
                 self.setLoadingUI();
                 API_.fetchPurchaseHistory(player, function(history) {
+                    self.preparePageChange();
                     self.initInvoicesButtons();
                     self.initBackToPlayButtons();
-                    self.hideLounge();
                     //$("#pacnem-current-player-details").hide();
                     $("#pacnem-invoice-history-wrapper").show();
                     self.unsetLoadingUI();
@@ -1440,6 +1499,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
         $("#pacnem-invoice-show-trigger").off("click");
         $("#pacnem-invoice-show-trigger").on("click", function() {
+            $(".pacnem-credits-submenu").first().dropdown("toggle");
             self.setLoadingUI();
             self.prepareInvoiceBox(function(ui) {
                 self.watchInvoice(function() {});
@@ -1475,7 +1535,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         var self = this;
 
         $(".pacnem-gamemode-trigger").on("click", function() {
-            var thisMode = $(this).val();
+            var thisMode = $(this).attr("data-value");
 
             ctrl_.setPlayMode(thisMode);
 
