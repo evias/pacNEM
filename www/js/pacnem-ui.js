@@ -1172,15 +1172,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @return {[type]}        [description]
      */
     this.formValidate = function() {
-        // first validate that a game mode is selected
-        var $selectedMode = $("input[type=radio][name=play_type]:checked");
-        if (!$selectedMode.length) {
-            // set error mode
-            $(".pacnem-game-mode-wrapper").first().addClass("panel").addClass("panel-danger");
-            return false;
-        } else
-        // no error
-            $(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");
+        $(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");
 
         // now validate input fields
         var validators = [{
