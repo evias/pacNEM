@@ -780,39 +780,28 @@ app.get("/api/v1/lounge/get", function(req, res) {
     var allMosaics = PacNEMBlockchain.getGameMosaicsConfiguration();
     var namespace = PacNEMBlockchain.getNamespace();
 
-    var totalSessions = lounge.players.length;
-    var activeSessions = 0;
-    var inactiveSessions = 0;
+    var totalSessions = Object.getOwnPropertyNames(lounge.players).length;
     var loungeSessions = 0;
     var playingSessions = 0;
 
     for (var rId in lounge.rooms) {
         var currentRoom = lounge.rooms[rId];
-        var cntMembers = currentRoom.toDict().usernames.length;
+        var cntMembers = Object.getOwnPropertyNames(currentRoom.toDictionary().usernames).length;
 
-        switch (currentRoom.getStatus()) {
-            default:
-                case "join":
-                loungeSessions += cntMembers;
-            activeSessions += cntMembers;
-            break;
+        console.log("[DEBUG] [API] [ROOMS] currentRoom: " + JSON.stringify(currentRoom.toDictionary()));
 
-            case "wait":
-                    case "play":
-                    playingSessions += cntMembers;
-                activeSessions += cntMembers;
-                break;
+        var status = currentRoom.getStatus();
+        if (status === "play" || status === "wait") {
+            playingSessions += cntMembers;
         }
     }
 
-    var inactiveSessions = totalSessions - activeSessions;
+    loungeSessions = totalSessions - playingSessions;
     var loungeData = {
         "details": lounge,
         "lounge": {
             "sessions": {
                 "total": totalSessions || 0,
-                "active": activeSessions || 0,
-                "inactive": inactiveSessions || 0,
                 "lounge": loungeSessions || 0,
                 "playing": playingSessions || 0
             },

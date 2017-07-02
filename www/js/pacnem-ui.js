@@ -1308,7 +1308,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             "position": "absolute",
             "zIndex": 10,
             "backgroundColor": "rgba(255,255,255, 0.8)",
-            "backgroundImage": "url(/img/loading_32.gif)",
+            "backgroundImage": "url(/img/loading_nem.gif)",
             "backgroundRepeat": "no-repeat",
             "backgroundPosition": "center",
             "height": "100%",

@@ -265,6 +265,9 @@
          *
          * We will fetch all transactions only for accounts which we know they
          * own evias.pacnem:heart Mosaics.
+         * 
+         * This method is also responsible for saving other available mosaics
+         * which will be displayed in the PacNEM Lounge as in "Daily Mosaics on PacNEM".
          *
          * @param  NEMGamer gamer
          */
@@ -476,9 +479,7 @@
             var bPlayerMosaicName = Object.getOwnPropertyNames(pacNEM_mosaics.rewards.purchases)[0];
             var playerMosaicName = Object.getOwnPropertyNames(pacNEM_mosaics.rewards.purchases)[1];
 
-            //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]",
-            //DEBUG            "Now sending " + paymentChannel.countHearts + " hearts for invoice " + paymentChannel.number
-            //DEBUG            + " sent to " + paymentChannel.getPayer() + " paid by " + vendor_ + " signed with " + pacNEM_);
+            //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Now sending " + paymentChannel.countHearts + " hearts for invoice " + paymentChannel.number + " sent to " + paymentChannel.getPayer() + " paid by " + vendor_ + " signed with " + pacNEM_);
 
             // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
             var message = paymentChannel.number + " - Thank you! Greg.";
@@ -533,7 +534,7 @@
                         // Prepare the multisig mosaic transfer transaction object and broadcast
                         var transactionEntity = nem_.model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
 
-                        logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Now sending Multisig Transaction to " + gamerXEM + " for invoice " + paymentChannel.number + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
+                        //DEBUG logger_.info("[NEM] [PAYMENT]", "[DEBUG]", "Now sending Multisig Transaction to " + gamerXEM + " for invoice " + paymentChannel.number + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
 
                         nem_.model.transactions.send(privStore, transactionEntity, node_).then(
                             function(res) {
@@ -546,10 +547,7 @@
                                 }
 
                                 var trxHash = res.transactionHash.data;
-                                logger_.info(
-                                    "[NEM] [PAYMENT]", "[CREATED]",
-                                    "Created a multi-signature Mosaic transfer transaction for " + countHearts + " " + heartsSlug +
-                                    " sent to " + gamerXEM + " for invoice " + paymentChannel.number);
+                                //DEBUG logger_.info("[NEM] [PAYMENT]", "[CREATED]", "Created a multi-signature Mosaic transfer transaction for " + countHearts + " " + heartsSlug + " sent to " + gamerXEM + " for invoice " + paymentChannel.number);
 
                                 // update `paymentChannel` to contain the transaction hash too and make sure history is kept.
                                 paymentChannel.heartsTransactionHash = trxHash;
@@ -705,7 +703,7 @@
                                 }
 
                                 var trxHash = res.transactionHash.data;
-                                logger_.info("[NEM] [CREDITS SINK]", "[CREATED]", "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug + " sent to " + sinkXEM);
+                                //DEBUG logger_.info("[NEM] [CREDITS SINK]", "[CREATED]", "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug + " sent to " + sinkXEM);
                             },
                             function(err) {
                                 logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + vendor_ + " to " + sinkXEM + " with error: " + err);
