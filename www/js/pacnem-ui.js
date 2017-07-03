@@ -104,7 +104,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             // this update is not for this session
                 return false;
 
-            console.log("[DEBUG] " + "Synchronize Mosaics: " + rawdata);
+            //DEBUG console.log("[DEBUG] " + "Synchronize Mosaics: " + rawdata);
 
             var credits = data.credits;
 
@@ -265,6 +265,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 backdrop: "static",
                 keyboard: false,
                 show: true
+            });
+
+            $(".pacnem-summary-close-trigger").off("click");
+            $(".pacnem-summary-close-trigger").on("click", function() {
+                window.location.reload();
+                //$("#pacnem-game-wrapper").hide();
+                //self.displayLounge();
+                //$(".pacnem-summary-modal").modal("hide");
+                return false;
             });
         });
     };

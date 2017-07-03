@@ -21,7 +21,8 @@
         "change_name": "Changer de nom",
         "language": "Langue",
         "buy_credits": "Acheter des Crédits",
-        "invoice_history": "Historiques des Achats"
+        "invoice_history": "Historiques des Achats",
+        "become_sponsor": "Devenez Sponsor!"
     },
     "guest": {
         "title_blue_box": "Jeu de Pacman Multiplayer",
@@ -34,12 +35,39 @@
         "enter_data_to_join": "<span>Veuillez entrer votre nom ainsi que l'adresse de votre Wallet XEM et cliquez sur 'Continuer' afin de joindre des sessions </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>.</span>",
         "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> ne vous demandera jamais de réveler des données sensibles tel votre Mot de Passe ou votre Clé Privé.</span>"
     },
+    "sponsor_engine": {
+        "logged_in_title": "Vos détails",
+        "title_blue_box": "Sponsorisé PacNEM!",
+        "explain_sponsor_engine": "<span>Si vous désirez devenir un Sponsor de PacNEM, veuillez remplir le formulaire ci-dessous avec vos coordonnées. Notre équipe fera de son mieux pour vous répondre dans les plus brefs délais. En tant que Sponsor, vous recevrez des <b>Paiement instantanés de Mosaics</b> lorsque des Joueurs visionnent vos Publicités en mode de Jeu Sponsorisé. Le système de Sponsor de PacNEM permet aux entreprises de l'industrie du Gaming de recevoir des Mosaics pour les vues de Publicités.</span>",
+        "label_realname": "Votre Nom",
+        "label_xem": "Votre adresse XEM",
+        "label_email": "Votre adresse E-Mail",
+        "label_sponsorname": "Nom Sponsor (Affiché)",
+        "label_url": "URL du Site Web Sponsor",
+        "label_description": "Description du Sponsor",
+        "label_type_advertising": "Type de publicité",
+        "type_images": "Publicités en Images",
+        "type_videos": "Publicités en Vidéos",
+        "type_both": "Publicités en Images et en Vidéos",
+        "button_register": "Soyez notre Sponsor!",
+        "fill_form_to_be_sponsor": "Remplissez ce formulaire afin de vous enregistrer.",
+        "error_missing_mandatory_field": "Données invalids. Veuillez vérifiez les données et réessayez.",
+        "legend_asterisk": "Champ obligatoire. Veuillez remplir tous les champs obligatoires.",
+        "error_email_unique": "Cette addresse E-Mail est déjà utilisée par un autre Sponsor de PacNEM.",
+        "registered_success": "Nous vous remercions! L'équipe de PacNEM prendra contact avec vous via E-Mail."
+    },
     "forms": {
         "username_placeholder": "Votre nom",
         "address_placeholder": "Adresse XEM",
         "button_save": "Continuer",
         "error_format_address": "Le format de l'adresse XEM est erroné, veuillez vérifier votre Saisie.",
-        "error_network_address": "Cette adresse XEM ne peut être utilisée sur cette Blockchain"
+        "error_network_address": "Cette adresse XEM ne peut être utilisée sur cette Blockchain",
+        "realname_placeholder": "Mandy Downey",
+        "email_placeholder": "mandy.downey@mailinator.com",
+        "sponsorname_placeholder": "Mandy Gaming Corp.",
+        "url_placeholder": "www.mandydowney.com",
+        "description_placeholder": "Entrez ici une description de votre Entreprise",
+        "xem_placeholder": "Entrez ici votre adresse XEM"
     },
     "player": {
         "select_room_message": "Sélectionnez ou ajoutez und Salle de Jeu Pacnem dans la liste à droite.",
@@ -105,6 +133,9 @@
         "buy_hearts_warning_game_autonomous": "Ce jeu est entièrement autonome, sois averti qu'il nous est impossible de renvoyer des XEMs envoyés à PacNEM sans le message ci-dessous.",
         "buy_hearts_warning_message": "<b>Pensez à inclure le message ci-dessous dans votre Transaction à PacNEM!</b>",
         "buy_hearts_manual_invoice_label": "Facture",
+        "label_payment_status": "Statut du Paiement",
+        "label_amount_paid": "Montant Payé:",
+        "label_amount_unconfirmed": "En attente de confirmation:",
         "button_already_have_credits": "Fermer cette fenêtre",
         "button_i_have_paid": "J'ai payé!",
         "flow_after_paid_explain": "PacNEM mettra automatiquement le Paiement à jour. Cela dit, étant donné que PacNEM utilise des Mosaics sur la blockchain NEM pour vous envoyer des Crédits de Jeu, il se peut que vous deviez attendre jusqu'a 1 minute <b>après</b> réception de votre paiement, pour recevoir vos Mosaics. Vous trouverez un résumé de vos Achats sous Historique d'Achats."

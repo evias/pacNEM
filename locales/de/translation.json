@@ -21,7 +21,8 @@
         "change_name": "Name ändern",
         "language": "Sprache",
         "buy_credits": "Credits kaufen",
-        "invoice_history": "Meine Bestellungen"
+        "invoice_history": "Meine Bestellungen",
+        "become_sponsor": "Sponsor werden!"
     },
     "guest": {
         "logged_in_title": "Ihre Details",
@@ -29,9 +30,9 @@
         "welcome_paragraph_1_1": "<span>Willkommen zum </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Spiel. Dies ist ein kostenloses &amp; Open Source Browser-Spiel, entwickelt unter anderem mit Node.js und die </span><span class='NEMifiedText'>nem</span><span> Blockchain.</span>",
         "welcome_paragraph_1_2": "<span>Dieses Projekt benutzt die </span><span class='NEMifiedText'>nem</span><span> Blockchain, sowohl um Spieler zu Identifizieren, als auch für das Sponsern der Spiele und zum Speichern der Rekorde auf die Blockchain. Durch dieses Spiel möchte ich die Einfachheit der Entwicklung basierend auf die </span><span class='NEMifiedText'>nem</span><span> Blockchain zum Vordergrund bringen und sollte ein einfaches Beispiel dafür sein, wie man in der Gaming Industrie potentiel das Sponsoring / Advertising verwalten kann dank der </span><span class='NEMifiedText'>nem</span><span> Blockchain und den minuten schnellen Zahlungen.</span>",
         "play_mode_explain": "Sie können PacNEM im Sponsored Play- oder Pay per Play- Modus spielen. Im Sponsored Play Modus müssen Sie nichts bezahlen, Sie müssen sich nur für 10 Sekunden die Werbung unseres Sponsors anschauen und können dann mit einem unserer Sponsor Accounts spielen! Im Pay per Play Modus können Sie <b>evias.pacnem:heart</b> Game Credits kaufen um mit Ihr eigenes XEM Wallet zu spielen! Die <span class='NEMifiedText'>nem</span> Blockchain kann sehr einfach in die Gaming Industrie integriert werden und das möchte ich hiermit teilen.",
-        "play_type_sponsored": "<b>Sponsored Play</b>: Sponsor Pay per view Werbung mit <span class='NEMifiedText'>nem</span>.",
-        "play_type_payperplay": "<b>Pay per Play</b>: Spiele mit deinem eigenen Wallet und <u>kaufe</u> <b>evias.pacnem:heart</b> Game Credits!",
-        "play_type_shareperplay": "<b>Share per Play</b>: Spiele mit deinem eigenen Wallet und <u>verdiene</u> <b>evias.pacnem:heart</b> Game Credits indem du Content teilst!",
+        "play_type_sponsored": "<b>Sponsored Play</b>",
+        "play_type_payperplay": "<b>Pay per Play</b>",
+        "play_type_shareperplay": "<b>Share per Play</b>",
         "enter_data_to_join": "<span>Geben Sie bitte Ihr Name ein und Ihre XEM Wallet Adresse und klicken Sie auf 'Speichern' um </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Räume beitreten zu können.</span>",
         "security_paragraph_1": "<span>Pac</span><span class='NEMifiedText'>nem</span><span> wird Ihnen nie nach Ihren privaten Daten fragen wie Ihr Wallet Passwort oder Ihr Wallet Private Key.</span>"
     },
@@ -40,6 +41,7 @@
         "title_blue_box": "Be a PacNEM Sponsor!",
         "explain_sponsor_engine": "<span>If you wish to become a PacNEM Sponsor, please fill the form below with your Contact Details and our Team will come back to you. As a Sponsor, you will receive <b>instant Mosaic Payouts</b> whenever your Advertizement is being watched by Players using the Sponsored Play PacNEM Game Mode.</span><span>The PacNEM Sponsor Engine lets Gaming Industry <b>Sponsors Earn Money</b> through Advertizing. Publishing Content on the PacNEM Sponsor Engine will go through a Compliance Process.</span>",
         "label_realname": "Your Real Name",
+        "label_xem": "Ihre XEM Adresse",
         "label_email": "Your E-Mail Address",
         "label_sponsorname": "Sponsor Name (Display)",
         "label_url": "Sponsor Website URL",
@@ -51,7 +53,9 @@
         "button_register": "Be our Sponsor!",
         "fill_form_to_be_sponsor": "Fill out this form and Register to be PacNEM Sponsor",
         "error_missing_mandatory_field": "Invalid Input. Please check and try again.",
-        "legend_asterisk": "Obligatory field. Input cannot be empty or invalid for those fields."
+        "legend_asterisk": "Obligatory field. Input cannot be empty or invalid for those fields.",
+        "error_email_unique": "Diese E-Mail Adresse wurde bereits als Sponsor registriert.",
+        "registered_success": "Wir danken Ihnen! Wir haben Ihre Registrierung zum Sponsoring von PacNEM erfolgreich gespeichert. Das Team von PacNEM wird per E-Mail mit Ihnen in Kontakt treten."
     },
     "forms": {
         "username_placeholder": "Name eingeben",
@@ -63,7 +67,8 @@
         "email_placeholder": "mandy.downey@mailinator.com",
         "sponsorname_placeholder": "Mandy Gaming Corp.",
         "url_placeholder": "www.mandydowney.com",
-        "description_placeholder": "My business runs advertizement in the Gaming Industry by publishing Videos every week, I would like these to be displayed"
+        "description_placeholder": "My business runs advertizement in the Gaming Industry by publishing Videos every week, I would like these to be displayed",
+        "xem_placeholder": "Geben Sie Ihre XEM Adresse ein"
     },
     "player": {
         "select_room_message": "Suchen Sie rechts in die Liste einen Raum aus oder erstellen Sie einen neuen Pacnem Raum.",
@@ -128,6 +133,9 @@
         "buy_hearts_warning_game_autonomous": "Dieses Spiel arbeitet autonom, Bitte verstehe dass wir XEMs, die ohne Nachricht an PacNEM versendet werden, nicht zurück transferieren können.",
         "buy_hearts_warning_message": "<b>Bitte, vergesse nicht die Nachricht in deine Transaktion an PacNEM!</b>",
         "buy_hearts_manual_invoice_label": "Rechnung",
+        "label_payment_status": "Zahlungs Status",
+        "label_amount_paid": "Gezahlter Betrag:",
+        "label_amount_unconfirmed": "Unbestätigter Betrag:",
         "button_already_have_credits": "Fenster schließen",
         "button_i_have_paid": "Ich habe bezahlt!",
         "flow_after_paid_explain": "PacNEM wird Ihre Zahlung automatisch identifizieren und verarbeiten. Jedoch, weil wir bei PacNEM die Game Credits als NEM Mosaics ausgeben, kann es bis zu 1 Minute dauern <b>nachdem</b> Ihre Zahlung eingegangen ist, bis Sie die genannte Mosaics erhalten. Eine aufführung Ihre Rechnungen, finden Sie unter Ihre Bestellungen."
