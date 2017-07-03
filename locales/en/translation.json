@@ -41,6 +41,7 @@
         "title_blue_box": "Be a PacNEM Sponsor!",
         "explain_sponsor_engine": "<span>If you wish to become a PacNEM Sponsor, please fill the form below with your Contact Details and our Team will come back to you. As a Sponsor, you will receive <b>instant Mosaic Payouts</b> whenever your Advertizement is being watched by Players using the Sponsored Play PacNEM Game Mode.</span><span>The PacNEM Sponsor Engine lets Gaming Industry <b>Sponsors Earn Money</b> through Advertizing. Publishing Content on the PacNEM Sponsor Engine will go through a Compliance Process.</span>",
         "label_realname": "Your Real Name",
+        "label_xem": "Your XEM Address",
         "label_email": "Your E-Mail Address",
         "label_sponsorname": "Sponsor Name (Display)",
         "label_url": "Sponsor Website URL",
@@ -66,7 +67,8 @@
         "email_placeholder": "mandy.downey@mailinator.com",
         "sponsorname_placeholder": "Mandy Gaming Corp.",
         "url_placeholder": "www.mandydowney.com",
-        "description_placeholder": "My business runs advertizement in the Gaming Industry by publishing Videos every week, I would like these to be displayed"
+        "description_placeholder": "My business runs advertizement in the Gaming Industry by publishing Videos every week, I would like these to be displayed",
+        "xem_placeholder": "Enter your XEM Address here"
     },
     "player": {
         "select_room_message": "Thank you, Now please select a Room to Join in the list.",

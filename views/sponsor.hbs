@@ -80,6 +80,21 @@
             {{/if}}
         </div>
         <div class="row form-group">
+            <label class="col-md-3 text-right">{{t "sponsor_engine.label_xem"}} ({{currentNetwork.label}}) (*)</label>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-addon" id="describe-xem"><span class="glyphicon glyphicon-user"></span></span>
+                    <input name="xem" type="text" class="form-control" placeholder="{{t "forms.xem_placeholder"}}" aria-describedby="describe-xem" maxlength="46" value="{{values.xem}}" />
+                </div>
+            </div>
+            {{#if errors.xem}}
+            <div class="col-md-3 error-block xem-error text-danger">
+                <span class="glyphicon glyphicon-remove-circle"></span>&nbsp;
+                <span class="error">{{errors.xem}}</span>
+            </div>
+            {{/if}}
+        </div>
+        <div class="row form-group">
             <label class="col-md-3 text-right">{{t "sponsor_engine.label_email"}} (*)</label>
             <div class="col-md-6">
                 <div class="input-group">

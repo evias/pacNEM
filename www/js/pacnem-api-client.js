@@ -124,10 +124,18 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
      * 
      * @param	{Function} 	callback
      */
-    this.getRandomSponsor = function(callback) {
+    this.getRandomSponsor = function(details, callback) {
         var self = this;
+        var addr = "";
+        if (details && details.address) {
+            // fetch sponsor by address - not random
+            addr = "address=" + encodeURIComponent(details.address);
+        }
+
+        var query = addr.length ? "?" + addr : "";
+
         self.jquery_.ajax({
-            url: "/api/v1/sponsors/random",
+            url: "/api/v1/sponsors/random" + query,
             type: "GET",
             dataType: "json",
             beforeSend: function(req) {

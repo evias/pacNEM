@@ -18,143 +18,152 @@
 
 (function() {
 
-var config  = require("config");
-var CronJob = require("cron").CronJob;
+    var config = require("config");
+    var CronJob = require("cron").CronJob;
 
-/**
- * class JobsScheduler provides with a mechanism for executing
- * daily/hourly cron jobs using node-cron.
- *
- * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
- */
-var JobsScheduler = function(logger, chainDataLayer, dataLayer)
-{
-    this.blockchain_ = chainDataLayer;
-    this.logger = logger;
-    this.db_    = dataLayer;
-    this.crons  = {"daily": {}, "hourly": {}};
+    /**
+     * class JobsScheduler provides with a mechanism for executing
+     * daily/hourly cron jobs using node-cron.
+     *
+     * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
+     */
+    var JobsScheduler = function(logger, chainDataLayer, dataLayer) {
+        this.blockchain_ = chainDataLayer;
+        this.logger = logger;
+        this.db_ = dataLayer;
+        this.crons = { "daily": {}, "hourly": {} };
 
-    this.daily = function()
-    {
-        var self = this;
-    };
+        this.daily = function() {
+            var self = this;
+        };
 
-    this.hourly = function()
-    {
-        var self = this;
+        this.hourly = function() {
+            var self = this;
 
-        self.logger.info("[JOBS]", "[SCHEDULE]", "Scheduling hourly PaymentExpiration Job execution");
+            self.logger.info("[JOBS]", "[SCHEDULE]", "Scheduling hourly PaymentExpiration Job execution");
 
-        var hourly_PaymentExpiration = new CronJob('00 00 * * * *',
-            function() {
-                self._processPaymentsExpiration(function(result, err)
-                    {
-                        if (! err)
-                            self.logger.info("[NEM] [PAYMENT]", "[EXPIRE]", "Expired " + result + "Payment Channels");
+            var hourly_PaymentExpiration = new CronJob('00 00 * * * *',
+                function() {
+                    self._processPaymentsExpiration(function(result, err) {
+                        if (!err)
+                            self.logger.info("[NEM] [PAYMENT]", "[EXPIRE]", "Expired " + result + " Payment Channels");
                         else
                             self.logger.error("[NEM] [PAYMENT]", "[EXPIRE]", "Error on Payments Expiration: " + err);
                     });
-            },
-            function () {
-                //XXX print results with logger.
-            },
-            false,
-            "Europe/Amsterdam"
-        );
+                },
+                function() {
+                    //XXX print results with logger.
+                },
+                false,
+                "Europe/Amsterdam"
+            );
 
-//        var tenMinutes_PaymentProcess = new CronJob('*/10 * * * * *',
-//            function() {
-//                self._processPaymentsStatusUpdates(function(result, err)
-//                    {
-//                        if (! err)
-//                            self.logger.info("[NEM] [PAYMENT]", "[UPDATE]", "Updated " + result + "Payment Channels");
-//                        else
-//                            self.logger.error("[NEM] [PAYMENT]", "[UPDATE]", "Error on Payments Status update: " + err);
-//                    });
-//            },
-//            function () {
-//                //XXX print results with logger.
-//            },
-//            false,
-//            "Europe/Amsterdam"
-//        );
+            //        var tenMinutes_PaymentProcess = new CronJob('*/10 * * * * *',
+            //            function() {
+            //                self._processPaymentsStatusUpdates(function(result, err)
+            //                    {
+            //                        if (! err)
+            //                            self.logger.info("[NEM] [PAYMENT]", "[UPDATE]", "Updated " + result + "Payment Channels");
+            //                        else
+            //                            self.logger.error("[NEM] [PAYMENT]", "[UPDATE]", "Error on Payments Status update: " + err);
+            //                    });
+            //            },
+            //            function () {
+            //                //XXX print results with logger.
+            //            },
+            //            false,
+            //            "Europe/Amsterdam"
+            //        );
 
-//        var tenMinutes_HallOfFame = new CronJob('*/10 * * * * *',
-//            function() {
-//                self._processHallOfFameUpdates(function(result, err)
-//                    {
-//                        if (! err)
-//                            self.logger.info("[NEM] [HALLOFFAME]", "[UPDATE]", "Updated " + result + "Payment Channels");
-//                        else
-//                            self.logger.error("[NEM] [HALLOFFAME]", "[UPDATE]", "Error on Payments Status update: " + err);
-//                    });
-//            },
-//            function () {
-//                //XXX print results with logger.
-//            },
-//            false,
-//            "Europe/Amsterdam"
-//        );
+            //        var tenMinutes_HallOfFame = new CronJob('*/10 * * * * *',
+            //            function() {
+            //                self._processHallOfFameUpdates(function(result, err)
+            //                    {
+            //                        if (! err)
+            //                            self.logger.info("[NEM] [HALLOFFAME]", "[UPDATE]", "Updated " + result + "Payment Channels");
+            //                        else
+            //                            self.logger.error("[NEM] [HALLOFFAME]", "[UPDATE]", "Error on Payments Status update: " + err);
+            //                    });
+            //            },
+            //            function () {
+            //                //XXX print results with logger.
+            //            },
+            //            false,
+            //            "Europe/Amsterdam"
+            //        );
 
-        this.crons["hourly"]["PaymentExpiration"] = hourly_PaymentExpiration;
-    };
+            var hourly_MosaicsSeen = new CronJob('00 00 * * * *',
+                function() {
+                    self.fetchHourlySeenMosaics(function(result, err) {
+                        if (!err)
+                            self.logger.info("[NEM] [LOUNGE]", "[FETCH]", "Seen Mosaics: " + JSON.stringify(result));
+                        else
+                            self.logger.error("[NEM] [LOUNGE]", "[FETCH]", "Error on Hourly Mosaic fetch: " + err);
+                    });
+                },
+                function() {
+                    //XXX print results with logger.
+                },
+                false,
+                "Europe/Amsterdam"
+            );
 
-    this._processPaymentsStatusUpdates = function(callback)
-    {
+            this.crons["hourly"]["PaymentExpiration"] = hourly_PaymentExpiration;
+            this.crons["hourly"]["MosaicsSeen"] = hourly_MosaicsSeen;
+        };
 
-    };
+        this._processPaymentsStatusUpdates = function(callback) {
 
-    this._processHallOfFameUpdates = function(callback)
-    {
+        };
 
-    };
+        this._processHallOfFameUpdates = function(callback) {
 
-    /**
-     * This cron is destined to expire invoices which are 2 days old
-     * and have received 0 XEM. Expiring such invoices will make sure
-     * that Players can't keep invoices standing for months while the
-     * Entry Price of the Game changes (Rate Security).
-     *
-     * @param  {Function} callback
-     * @return boolean
-     */
-    this._processPaymentsExpiration = function(callback)
-    {
-        var self = this;
+        };
 
-        // must only expire 0 amounts invoices!
-        self.db_.NEMPaymentChannel.find({"amountPaid": 0, "amountUnconfirmed": 0}, function(err, invoices)
-        {
-            if (err || ! invoices) {
-                // error mode
-                var errorMessage = "Error occured on NEMPaymentChannel READ: " + err;
+        /**
+         * This cron is destined to expire invoices which are 2 days old
+         * and have received 0 XEM. Expiring such invoices will make sure
+         * that Players can't keep invoices standing for months while the
+         * Entry Price of the Game changes (Rate Security).
+         *
+         * @param  {Function} callback
+         * @return boolean
+         */
+        this._processPaymentsExpiration = function(callback) {
+            var self = this;
 
-                serverLog(req, errorMessage, "ERROR");
-                return callback(0, errorMessage);
-            }
+            // must only expire 0 amounts invoices!
+            self.db_.NEMPaymentChannel.find({ "amountPaid": 0, "amountUnconfirmed": 0 }, function(err, invoices) {
+                if (err || !invoices) {
+                    // error mode
+                    var errorMessage = "Error occured on NEMPaymentChannel READ: " + err;
 
-            if (! invoices.length)
-                return callback(0);
-
-            var cntExpired = 0;
-            for (var i = 0; i < invoices.length; i++) {
-                var invoice = invoices[i];
-                var twoDaysAgo = new Date().valueOf() - (48 * 60 * 60 * 1000);
-
-                if (invoice.createdAt < oneHourAgo) {
-                    // invoice is more than 2 days old without paid amount - expiration here.
-                    invoice.status = "expired";
-                    invoice.save();
-                    cntExpired++;
+                    serverLog(req, errorMessage, "ERROR");
+                    return callback(0, errorMessage);
                 }
-            }
 
-            return callback(cntExpired);
-        });
+                if (!invoices.length)
+                    return callback(0);
 
-        return true;
+                var cntExpired = 0;
+                for (var i = 0; i < invoices.length; i++) {
+                    var invoice = invoices[i];
+                    var twoDaysAgo = new Date().valueOf() - (48 * 60 * 60 * 1000);
+
+                    if (invoice.createdAt < oneHourAgo) {
+                        // invoice is more than 2 days old without paid amount - expiration here.
+                        invoice.status = "expired";
+                        invoice.save();
+                        cntExpired++;
+                    }
+                }
+
+                return callback(cntExpired);
+            });
+
+            return true;
+        };
     };
-};
 
-module.exports.JobsScheduler = JobsScheduler;
+    module.exports.JobsScheduler = JobsScheduler;
 }());

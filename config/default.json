@@ -14,24 +14,25 @@
         },
         "isBeta": true,
         "secretKey": "PacNEMByGrégorySaive_NotSoSecretKey",
-        "isPublic": true
+        "isPublic": true,
+        "canResetData": true
     },
     "nem": {
         "isTestMode": true,
         "isMijin": false,
         "nodes": [
-            {"host": "http://alice6.nem.ninja", "port": 7890},
-            {"host": "http://alice7.nem.ninja", "port": 7890},
-            {"host": "http://san.nem.ninja", "port": 7890},
-            {"host": "http://62.75.171.41", "port": 7890},
-            {"host": "http://185.53.131.101", "port": 7890},
-            {"host": "http://104.251.212.131", "port": 7890}
+            { "host": "http://alice6.nem.ninja", "port": 7890 },
+            { "host": "http://alice7.nem.ninja", "port": 7890 },
+            { "host": "http://san.nem.ninja", "port": 7890 },
+            { "host": "http://62.75.171.41", "port": 7890 },
+            { "host": "http://185.53.131.101", "port": 7890 },
+            { "host": "http://104.251.212.131", "port": 7890 }
         ],
         "nodes_test": [
-            {"host": "http://bigalice2.nem.ninja", "port": 7890},
-            {"host": "http://bob.nem.ninja", "port": 7890},
-            {"host": "http://192.3.61.243", "port": 7890},
-            {"host": "http://23.228.67.85", "port": 7890}
+            { "host": "http://bigalice2.nem.ninja", "port": 7890 },
+            { "host": "http://bob.nem.ninja", "port": 7890 },
+            { "host": "http://192.3.61.243", "port": 7890 },
+            { "host": "http://23.228.67.85", "port": 7890 }
         ]
     },
     "prices": {
