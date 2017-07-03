@@ -1,14 +1,23 @@
 
-<div class="modal fade pacnem-sponsor-modal" style="display: none;" data-sponsor="{{slug}}">
+<div class="modal fade pacnem-sponsor-modal" style="display: none;" data-sponsor="{{sponsor.slug}}">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">{{name}}</h4>
+                <h4 class="modal-title">{{sponsor.sponsorName}}</h4>
             </div>
             <div class="modal-body">
-                <p class="text-center"><img src="{{imageUrl}}" alt="{{name}}" title="{{name}}" /></p>
-                <p class="text-left">{{description}}</p>
-                <p class="text-left"><a href="{{websiteUrl}}" target="_blank">{{t "sponsors.link_to_website"}}&nbsp;{{name}}</a></p>
+                <p class="text-center">
+                    {{#if content.isImage}}
+                        <img src="{{content.url}}" alt="{{sponsor.sponsorName}}" title="{{sponsor.sponsorName}}" />
+                    {{/if}}
+
+                    {{#if content.isVideo}}
+                        <video class="video-stream" x-webkit-airplay="allow"
+                            src="{{content.url}}"></video>
+                    {{/if}}
+                </p>
+                <p class="text-left">{{sponsor.description}}</p>
+                <p class="text-left"><a href="{{sponsor.websiteUrl}}" target="_blank">{{t "sponsors.link_to_website"}}&nbsp;{{sponsor.sponsorName}}</a></p>
             </div>
             <div class="modal-footer">
                 <div class="row text-center">

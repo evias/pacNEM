@@ -143,8 +143,8 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
                     req.overrideMimeType("application/json;charset=UTF-8");
             },
             success: function(response) {
-                var sponsor = response.item;
-                callback(sponsor);
+                var data = response.data;
+                callback(data);
             }
         });
     };
