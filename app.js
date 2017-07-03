@@ -887,7 +887,7 @@ app.get("/api/v1/lounge/get", function(req, res) {
 app.get("/api/v1/reset", function(req, res) {
     res.setHeader('Content-Type', 'application/json');
 
-    var canResetData = config.get("pacnem.canResetData", false);
+    var canResetData = process.env["ALLOW_DB_RESET"] == 1 || config.get("pacnem.canResetData", false);
     if (!canResetData || canResetData !== true)
         return res.send(JSON.stringify({ "status": "error", "error": "Feature disabled" }));
 
