@@ -401,7 +401,7 @@ app.get("/api/v1/sessions/get", function(req, res) {
     };
 
     // fetch an existing NEMGamer entry by XEM address, this
-    PacNEMDB.NEMGamer.findOne({ "xem": input.xem, "username": input.username }, function(err, player) {
+    PacNEMDB.NEMGamer.findOne({ "xem": input.xem }, function(err, player) {
         if (err || !player) {
             // error mode
             var errorMessage = "Error occured on NEMGamer READ: " + err;
@@ -431,23 +431,30 @@ app.post("/api/v1/sessions/store", function(req, res) {
     };
 
     // mongoDB model NEMGamer unique on xem address + username pair.
-    PacNEMDB.NEMGamer.findOne({ "xem": input.xem, "username": input.username }, function(err, player) {
+    PacNEMDB.NEMGamer.findOne({ "xem": input.xem }, function(err, player) {
         if (!err && player) {
             // update mode
             var highScore = input.score > player.highScore ? input.score : player.highScore;
 
-            player.username = input.username;
             player.xem = input.xem;
             player.lastScore = input.score;
             player.highScore = highScore;
             player.updatedAt = new Date().valueOf();
+
+            if (!player.usernames.hasOwnProperty(input.username)) {
+                // register new username
+                player.usernames[input.username] = {};
+                player.usernames[input.username][input.sid] = true;
+            } else if (!player.usernames[input.username].hasOwnProperty(input.sid)) {
+                // save new socket id for existing username
+                player.usernames[input.username][input.sid] = true;
+            }
 
             if (!player.socketIds || !player.socketIds.length)
                 player.socketIds = [input.sid];
             else {
                 var sockets = player.socketIds;
                 sockets.push(input.sid);
-
                 player.socketIds = sockets;
             }
 
@@ -461,8 +468,12 @@ app.post("/api/v1/sessions/store", function(req, res) {
             return res.send(JSON.stringify({ item: player }));
         } else if (!player) {
             // creation mode
+            var uname = {}
+            uname[input.username] = {};
+            uname[input.username][input.sid] = true;
+
             var player = new PacNEMDB.NEMGamer({
-                username: input.username,
+                usernames: uname,
                 xem: input.xem,
                 lastScore: input.score,
                 highScore: input.score,
@@ -837,6 +848,26 @@ app.get("/api/v1/lounge/get", function(req, res) {
     };
 
     res.send(JSON.stringify({ "status": "ok", "data": loungeData }));
+});
+
+app.get("/api/v1/reset", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
+
+    var canResetData = config.get("pacnem.canResetData", false);
+    if (!canResetData || canResetData !== true)
+        return res.send(JSON.stringify({ "status": "error", "error": "Feature disabled" }));
+
+    // remove all data..
+    PacNEMDB.NEMGameCredit.find({}).remove(function(err) {});
+    PacNEMDB.NEMGamer.find({}).remove(function(err) {});
+    PacNEMDB.NEMSponsor.find({}).remove(function(err) {});
+    PacNEMDB.NEMGame.find({}).remove(function(err) {});
+    PacNEMDB.NEMPaymentChannel.find({}).remove(function(err) {});
+    PacNEMDB.NEMAppsPayout.find({}).remove(function(err) {});
+    PacNEMDB.NEMBot.find({}).remove(function(err) {});
+    PacNEMDB.NEMReward.find({}).remove(function(err) {});
+
+    return res.send(JSON.stringify({ "status": "ok" }));
 });
 
 /**

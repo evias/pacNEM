@@ -87,7 +87,7 @@
 
         this.NEMGamer_ = new mongoose.Schema({
             xem: String,
-            username: String,
+            usernames: Object,
             socketIds: [String],
             lastScore: { type: Number, min: 0 },
             highScore: { type: Number, min: 0 },
