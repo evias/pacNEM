@@ -381,7 +381,7 @@
             // in diminishing the amount of money that the Players have to Pay for playing 
             // a NEM linked game.
 
-            //XXX implement Game Credits Sink Account
+            //XXX implement Game Credits Sink Account *reading*
         };
 
         /**
@@ -443,10 +443,12 @@
             }
 
             var creditsInChunk = totalHeartsIncome - totalHeartsOutgo;
-            //DEBUG logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + creditsInChunk + " " + heartsMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
+            //logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + creditsInChunk + " " + heartsMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
 
             gamerHistory.countHearts = gamerHistory.countHearts + creditsInChunk;
             gamerHistory.exchangedHearts = gamerHistory.exchangedHearts + totalHeartsOutgo;
+
+            //logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Credit Data for " + gamer.getAddress() + ": " + JSON.stringify(gamerHistory));
 
             gameCreditsHistory_[gamer.getAddress()] = gamerHistory;
             return lastTrxRead;

@@ -269,6 +269,7 @@ app.get("/sponsor", function(req, res) {
 
         var input = {
             "realname": req.body.realname,
+            "xem": req.body.xem,
             "email": req.body.email,
             "sponsorname": req.body.sponsorname,
             "url": req.body.url,
@@ -283,7 +284,7 @@ app.get("/sponsor", function(req, res) {
 
         var errors = {};
         var isFormValid = true;
-        var mandatories = ["realname", "email", "sponsorname", "type_advertizing", "description"];
+        var mandatories = ["realname", "xem", "email", "sponsorname", "type_advertizing", "description"];
         for (var i in mandatories) {
             var field = mandatories[i];
             if (!input[field] || !input[field].length) {
@@ -323,6 +324,7 @@ app.get("/sponsor", function(req, res) {
             sponsor = new PacNEMDB.NEMSponsor({
                 slug: sponsorSlug,
                 realName: input.realname,
+                xem: input.xem.replace(/-/g, ""),
                 sponsorName: input.sponsorname,
                 email: input.email,
                 description: input.description,
@@ -397,17 +399,38 @@ app.get("/api/v1/sessions/get", function(req, res) {
 
     var input = {
         "xem": req.query.address.replace(/-/g, ""),
-        "username": req.query.username
+        "username": req.query.username,
+        "sid": req.query.sid ? req.query.sid : ""
     };
 
+    var keyUsername = input.username.replace(/[\.]/g, "-");
+    var keySocketId = input.sid.replace(/[\.]/g, "-");
+
     // fetch an existing NEMGamer entry by XEM address, this
-    PacNEMDB.NEMGamer.findOne({ "xem": input.xem, "username": input.username }, function(err, player) {
-        if (err || !player) {
+    PacNEMDB.NEMGamer.findOne({ "xem": input.xem }, function(err, player) {
+        if (err) {
             // error mode
             var errorMessage = "Error occured on NEMGamer READ: " + err;
 
             serverLog(req, errorMessage, "ERROR");
             return res.send(JSON.stringify({ "status": "error", "message": errorMessage }));
+        }
+
+        if (!player) {
+            // NEMGamer entry not created yet, JiT creation.
+            var uname = {}
+            uname[keyUsername] = {};
+            uname[keyUsername][keySocketId] = true;
+
+            var player = new PacNEMDB.NEMGamer({
+                usernames: uname,
+                xem: input.xem,
+                lastScore: input.score,
+                highScore: input.score,
+                socketIds: [input.sid],
+                countGames: 0,
+                createdAt: new Date().valueOf()
+            });
         }
 
         // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
@@ -430,28 +453,42 @@ app.post("/api/v1/sessions/store", function(req, res) {
         "validateHearts": parseInt(req.body.validateHearts) === 1
     };
 
+    var keyUsername = input.username.replace(/[\.]/g, "-");
+    var keySocketId = input.sid.replace(/[\.]/g, "-");
+
     // mongoDB model NEMGamer unique on xem address + username pair.
-    PacNEMDB.NEMGamer.findOne({ "xem": input.xem, "username": input.username }, function(err, player) {
+    PacNEMDB.NEMGamer.findOne({ "xem": input.xem }, function(err, player) {
         if (!err && player) {
             // update mode
             var highScore = input.score > player.highScore ? input.score : player.highScore;
 
-            player.username = input.username;
             player.xem = input.xem;
             player.lastScore = input.score;
             player.highScore = highScore;
             player.updatedAt = new Date().valueOf();
+
+            if (!player.usernames.hasOwnProperty(keyUsername)) {
+                // register new username
+                player.usernames[keyUsername] = {};
+                player.usernames[keyUsername][keySocketId] = true;
+            } else if (!player.usernames[keyUsername].hasOwnProperty(keySocketId)) {
+                // save new socket id for existing username
+                player.usernames[keyUsername][keySocketId] = true;
+            }
 
             if (!player.socketIds || !player.socketIds.length)
                 player.socketIds = [input.sid];
             else {
                 var sockets = player.socketIds;
                 sockets.push(input.sid);
-
                 player.socketIds = sockets;
             }
 
-            player.save();
+            player.save(function(err) {
+                if (err) {
+                    serverLog(req, "Error ocurred when saving NEMGamer: " + err, "ERROR");
+                }
+            });
 
             if (input.validateHearts === true) {
                 // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
@@ -461,8 +498,12 @@ app.post("/api/v1/sessions/store", function(req, res) {
             return res.send(JSON.stringify({ item: player }));
         } else if (!player) {
             // creation mode
+            var uname = {}
+            uname[keyUsername] = {};
+            uname[keyUsername][keySocketId] = true;
+
             var player = new PacNEMDB.NEMGamer({
-                username: input.username,
+                usernames: uname,
                 xem: input.xem,
                 lastScore: input.score,
                 highScore: input.score,
@@ -470,7 +511,11 @@ app.post("/api/v1/sessions/store", function(req, res) {
                 countGames: 0,
                 createdAt: new Date().valueOf()
             });
-            player.save();
+            player.save(function(err) {
+                if (err) {
+                    serverLog(req, "Error ocurred when saving NEMGamer: " + err, "ERROR");
+                }
+            });
 
             if (input.validateHearts === true) {
                 // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
@@ -513,32 +558,32 @@ app.get("/api/v1/scores", function(req, res) {
     });
 });
 
-//XXX implement actual model
 app.get("/api/v1/sponsors/random", function(req, res) {
     res.setHeader('Content-Type', 'application/json');
 
-    //XXX implement PacNEMDB.NEMSponsor features
-    var sponsor = {};
-    var slugs = ["easport", "atari", "nem", "evias"];
-    var names = ["EA Sports", "Atari", "nem", "eVias"];
-    var addresses = [
-        "TD2WIZ-UPOHCE-65RJ72-ICJCAO-GGWX7S-NORJCD-2Y6J",
-        "TBY4WF-4LSRAI-7REVQP-P3MBD3-BN4IZE-EDMY7K-IYXV",
-        "TAS5KA-R4WWIB-7JX64U-DPGMCX-ZGQ77U-ZIRY3D-BJB6",
-        "TBWZKN-LDTIVE-GBQ5OG-BGY3NI-JWLAHB-I2RS5B-YV7M"
-    ];
+    var query = {};
+    var address = req.query.address ? req.query.address : null;
+    if (address && address.length)
+    //XXX also validate NEM address format
+        query["xem"] = address;
 
-    var rId = Math.floor(Math.random() * 99999);
-    var rAddr = Math.floor(Math.random() * 4);
+    PacNEMDB.NEMSponsor.find(query, function(err, sponsors) {
+        if (err) {
+            serverLog(req, "Error ocurred when reading NEMSponsor: " + err, "ERROR");
+            return res.send(500);
+        }
 
-    sponsor.slug = slugs[rAddr];
-    sponsor.name = names[rAddr];
-    sponsor.xem = addresses[rAddr];
-    sponsor.description = i18n.t("sponsors.example_description");
-    sponsor.imageUrl = "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300";
-    sponsor.websiteUrl = "https://github.com/evias";
+        var cntSponsors = sponsors.length;
+        var randomIdx = Math.floor(Math.random() * cntSponsors);
+        var randSponsor = sponsors[randomIdx];
+        randSponsor.name = randSponsor.sponsorName;
 
-    res.send(JSON.stringify({ item: sponsor }));
+        if (!randSponsor.imageUrl || !randSponsor.imageUrl.length) {
+            randSponsor.imageUrl = "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300";
+        }
+
+        res.send(JSON.stringify({ item: randSponsor }));
+    });
 });
 
 app.get("/api/v1/credits/buy", function(req, res) {
@@ -837,6 +882,26 @@ app.get("/api/v1/lounge/get", function(req, res) {
     };
 
     res.send(JSON.stringify({ "status": "ok", "data": loungeData }));
+});
+
+app.get("/api/v1/reset", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
+
+    var canResetData = config.get("pacnem.canResetData", false);
+    if (!canResetData || canResetData !== true)
+        return res.send(JSON.stringify({ "status": "error", "error": "Feature disabled" }));
+
+    // remove all data..
+    PacNEMDB.NEMGameCredit.find({}).remove(function(err) {});
+    PacNEMDB.NEMGamer.find({}).remove(function(err) {});
+    PacNEMDB.NEMSponsor.find({}).remove(function(err) {});
+    PacNEMDB.NEMGame.find({}).remove(function(err) {});
+    PacNEMDB.NEMPaymentChannel.find({}).remove(function(err) {});
+    PacNEMDB.NEMAppsPayout.find({}).remove(function(err) {});
+    PacNEMDB.NEMBot.find({}).remove(function(err) {});
+    PacNEMDB.NEMReward.find({}).remove(function(err) {});
+
+    return res.send(JSON.stringify({ "status": "ok" }));
 });
 
 /**

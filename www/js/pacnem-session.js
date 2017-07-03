@@ -35,6 +35,7 @@ var GameSession = function(API, userName, xemAddress, gameMode) {
 
     this.API_ = API;
     this.model = null;
+    this.isSaved_ = false;
 
     this.sync = function() {
         var self = this;
@@ -103,7 +104,18 @@ var GameSession = function(API, userName, xemAddress, gameMode) {
     };
 
     this.identified = function() {
-        return this.getPlayer().length > 0 && this.getAddress().length > 0;
+        var authd = this.getPlayer().length > 0 && this.getAddress().length > 0;
+
+        if (authd && !this.isSaved()) {
+            this.isSaved_ = true;
+            this.store(false);
+        }
+
+        return authd;
+    };
+
+    this.isSaved = function() {
+        return this.isSaved_;
     };
 
     this.getPlayer = function() {

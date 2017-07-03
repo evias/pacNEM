@@ -284,7 +284,7 @@ var GameController = function(config, socket, nem, chainId) {
         var rBytes = nem_.crypto.nacl.randomBytes(2);
         var rHex = nem_.utils.convert.ua2hex(rBytes);
         var uname = $("#username").val();
-        var sName = sponsor.slug + rHex + "." + uname;
+        var sName = sponsor.slug + rHex + "-" + uname;
 
         $("#username").val(sName);
     };

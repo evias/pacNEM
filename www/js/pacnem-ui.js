@@ -104,6 +104,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             // this update is not for this session
                 return false;
 
+            console.log("[DEBUG] " + "Synchronize Mosaics: " + rawdata);
+
             var credits = data.credits;
 
             // we will display the `data` (count of hearts available read from
@@ -158,6 +160,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @return GameUI
      */
     this.animateHeartsCounter = function($element, start, end, suffix) {
+        start = parseInt(start);
+        if (isNaN(start))
+            start = 0;
+
+        end = parseInt(end);
+        if (isNaN(end))
+            end = 0;
+
         jQuery({ Counter: start }).animate({ Counter: parseInt(end) }, {
             duration: 1000,
             easing: 'swing',
@@ -190,6 +200,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             var $row = $userRow.clone().removeClass("hidden").addClass("player-row");
             var color = PACMAN_COLORS[i % PACMAN_COLORS.length];
 
+            // hex to rgb
             var hex = color.replace(/#/, '');
             var rgb = [
                 parseInt(hex.substring(0, hex.length / 3), 16),
@@ -599,7 +610,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 });
             });
 
-            return this;
+            return false;
         }
 
         // we can safely emit the session creation, this user is
@@ -652,8 +663,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.setSponsoredUI = function(callback) {
         var self = this;
+        var details = self.getPlayerDetails();
 
-        API_.getRandomSponsor(function(sponsor) {
+        API_.getRandomSponsor(details, function(sponsor) {
             // got a sponsor, now we'll have a valid address input for sure.
             $(".error-input").removeClass("error-input");
             $(".error-block").hide();
@@ -1271,7 +1283,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                     ctrl_.sponsorizeName(ctrl_.getSponsor());
                     ctrl_.setAdvertised(true);
 
-                    self.displaySponsorAdvertisement(postPaymentCallback);
+                    self.displaySponsorAdvertisement(function() {
+                        postPaymentCallback(self);
+                    });
                 } else if (ctrl_.isPlayMode("pay-per-play")) {
 
                     var player = self.getPlayerDetails();
@@ -1533,14 +1547,18 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             if ("sponsored" == thisMode)
                 self.setSponsoredUI(function(ui) {});
-            else
+            else {
+                $("#currentHearts a").first().attr("data-toggle", "dropdown");
                 self.unsetSponsoredUI();
+            }
 
             if ("pay-per-play" == thisMode) {
                 $(".pacnem-credits-submenu").removeClass("hidden");
                 self.prepareInvoiceBox(function(ui) {});
-            } else
+            } else {
+                $("#currentHearts a").first().removeAttr("data-toggle");
                 $(".pacnem-credits-submenu").removeClass("hidden").addClass("hidden");
+            }
 
             // game mode choice has been done now, next is username and address.
             $("#pacnem-save-trigger").prop("disabled", false).removeClass("btn-disabled");
@@ -1566,6 +1584,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         this.initBackToPlayButtons();
 
         var session_ = new GameSession(API_);
+
+        //DEBUG console.log("[DEBUG] " + "Found session: ", session_);
+
         if (session_.identified()) {
             // post page-load reload from localStorage
             self.updateUserFormWithSession(session_);

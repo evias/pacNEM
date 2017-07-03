@@ -87,7 +87,7 @@
 
         this.NEMGamer_ = new mongoose.Schema({
             xem: String,
-            username: String,
+            usernames: Object,
             socketIds: [String],
             lastScore: { type: Number, min: 0 },
             highScore: { type: Number, min: 0 },
@@ -234,6 +234,7 @@
         this.pacNEMSponsor_ = new mongoose.Schema({
             slug: String,
             email: String,
+            xem: String,
             realName: String,
             sponsorName: String,
             description: String,
