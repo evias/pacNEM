@@ -578,14 +578,21 @@ app.get("/api/v1/sponsors/random", function(req, res) {
         var randSponsor = sponsors[randomIdx];
 
         // XXX content per sponsor..
-        randSponsor.content = {
+        var content = {
             "type": "image",
             "url": "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300",
             "isImage": true,
             "isVideo": false
         };
 
-        res.send(JSON.stringify({ item: randSponsor }));
+        var response = {
+            data: {
+                sponsor: randSponsor,
+                content: content
+            }
+        };
+
+        res.send(JSON.stringify(response));
     });
 });
 

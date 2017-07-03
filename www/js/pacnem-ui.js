@@ -314,6 +314,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         $button.on("click", function() {
             var player = self.getPlayerDetails();
             socket_.emit("create_room", JSON.stringify(player));
+            return false;
         });
 
         return this;
@@ -674,7 +675,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         var self = this;
         var details = self.getPlayerDetails();
 
-        API_.getRandomSponsor(details, function(sponsor) {
+        API_.getRandomSponsor(details, function(data) {
+            var sponsor = data.sponsor;
+            var content = data.content;
+
             // got a sponsor, now we'll have a valid address input for sure.
             $(".error-input").removeClass("error-input");
             $(".error-block").hide();
@@ -689,7 +693,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             $("#username").attr("data-sponsor", sponsor.slug);
 
             ctrl_.setSponsor(sponsor);
-            self.prepareSponsoredJoin(sponsor, function(ui) { callback(ui); });
+            self.prepareSponsoredJoin(data, function(ui) { callback(ui); });
         });
     };
 
@@ -722,8 +726,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @param  NEMSponsor sponsor
      * @return GameUI
      */
-    this.prepareSponsoredJoin = function(sponsor, callback) {
+    this.prepareSponsoredJoin = function(data, callback) {
         var self = this;
+        var sponsor = data.sponsor;
 
         if ($(".pacnem-sponsor-modal[data-sponsor='" + sponsor.slug + "']").length)
         // sponsor window already available
@@ -733,7 +738,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             // add server side generated sponsor HTML to a modal
             // boxes wrapper.
             var html = $("#pacnem-modal-wrapper").html();
-            $("#pacnem-modal-wrapper").html(html + compileWith(sponsor));
+            $("#pacnem-modal-wrapper").html(html + compileWith(data));
 
             if (callback)
                 callback(self);
@@ -936,7 +941,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
          * 
          * @param {GameUI} ui 
          */
-        var registerStatusHttpFallback = function(ui, seconds = 30) {
+        var registerStatusHttpFallback = function(ui, seconds = 120) {
             var fn_getState = function(subCallback) {
                 var player = self.getPlayerDetails();
                 var prefix = $("#pacnem-invoice-prefix").val();
@@ -971,7 +976,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 });
             };
 
-            // configure INTERVAL to run every X seconds..
+            // configure INTERVAL to run every X sNTERVAL to run every X seconds..
             interval_ = setInterval(fn_getState, seconds * 1000);
 
             // also run the interval right a way in case websocket subscription does not work
@@ -983,7 +988,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 clearInterval(interval_);
             });
 
-            // after 5 minutes without updates, check only every other minute
+            // after 5 minutes without updates, check only all 3 minutes minute
             setInterval(function() {
                 var prefix = $("#pacnem-invoice-prefix").val();
                 var status = $("#" + prefix + "-status").text().trim();
@@ -991,8 +996,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
                 clearInterval(interval_);
                 if (!done.hasOwnProperty(status)) {
-                    // now every minute we will check for an update of the invoice
-                    registerStatusHttpFallback(ui, 120);
+                    // now every 3 minutes we will check for an update of the invoice
+                    registerStatusHttpFallback(ui, 180);
                 }
             }, 5 * 60 * 1000);
 
@@ -1032,7 +1037,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             // AJAX fallback will trigger every 20 seconds to check for invoice
             // updates using the NEMBot API.
-            registerStatusHttpFallback(ui, 20);
+            registerStatusHttpFallback(ui, 90);
         };
 
         // pre-show event should trigger an ajax request to load the
@@ -1467,6 +1472,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 $("#pacnem-current-player-details").show();
                 self.displayLounge();
             }
+
+            return false;
         });
     };
 
@@ -1573,6 +1580,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             $("#pacnem-save-trigger").prop("disabled", false).removeClass("btn-disabled");
             $(".pacnem-game-mode-wrapper").first().removeClass("panel").removeClass("panel-danger");
             $("#username").focus();
+            return false;
         });
     };
 
@@ -1659,6 +1667,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             var sess = new GameSession(API_);
             if (sess.identified())
                 self.displayLounge();
+
+            return false;
         });
 
         return this;

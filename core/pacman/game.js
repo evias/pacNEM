@@ -300,13 +300,16 @@
                         } else {
                             // No cheese effect - pacman killed
                             pacman.kill();
-                            var pacman_x = PACMAN_STARTS[pacmans_.length - 1][j]['x'];
-                            var pacman_y = PACMAN_STARTS[pacmans_.length - 1][j]['y'];
-                            var pacman_direction = PACMAN_STARTS[pacmans_.length - 1][j]['direction'];
-                            pacmans_[j].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
-                            pacman.setKilledRecently(FPS);
-                            self.refresh();
-                            return;
+                            if (pacmans_.length == 1) {
+                                self.refresh();
+                                return;
+                            } else {
+                                var pacman_x = PACMAN_STARTS[pacmans_.length - 1][j]['x'];
+                                var pacman_y = PACMAN_STARTS[pacmans_.length - 1][j]['y'];
+                                var pacman_direction = PACMAN_STARTS[pacmans_.length - 1][j]['direction'];
+                                pacmans_[j].restart(pacman_x * FRAMES_PER_CELL, pacman_y * FRAMES_PER_CELL, pacman_direction);
+                                pacman.setKilledRecently(FPS);
+                            }
                         }
                     }
                 }
