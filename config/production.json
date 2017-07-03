@@ -8,6 +8,7 @@
         "namespace": "evias-tests.pacnem",
         "invoicePrefix": "PACNEM-X-",
         "sponsorPrefix": "PACNEM-SP-",
+        "scorePrefix": "PACNEM-HOF-",
         "bots": {
             "paymentBot": "ws://nem-nodejs-bot.herokuapp.com:29081"
         },

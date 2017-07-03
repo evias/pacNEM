@@ -50,21 +50,6 @@
                 console.log("PacNEM Database connection is now up with " + host);
         });
 
-        this.isApplicationWallet = function(xem) {
-            //XXX should fetch NEMSponsor entries too.
-
-            var applicationWallets = [
-                config.get("pacnem.business"),
-                config.get("pacnem.application"),
-            ];
-
-            for (var i = 0; i < applicationWallets.length; i++)
-                if (xem == applicationWallets[i])
-                    return true;
-
-            return false;
-        };
-
         // Schema definition
         this.NEMGameCredit_ = new mongoose.Schema({
             xem: String,
@@ -243,6 +228,7 @@
             advertType: String,
             contentUrl: String,
             isApproved: { type: Boolean, default: false },
+            countAdViews: { type: Number, min: 0, default: 0 },
             createdAt: { type: Number, min: 0 },
             updatedAt: { type: Number, min: 0 }
         });
@@ -270,10 +256,17 @@
             updatedAt: { type: Number, min: 0 }
         });
 
+        this.NEMSponsorAdView_ = new mongoose.Schema({
+            player: String,
+            sponsorRef: String,
+            createdAt: { type: Number, min: 0 }
+        });
+
         // bind our Models classes
         this.NEMGameCredit = mongoose.model("NEMGameCredit", this.NEMGameCredit_);
         this.NEMGamer = mongoose.model("NEMGamer", this.NEMGamer_);
         this.NEMSponsor = mongoose.model("NEMSponsor", this.pacNEMSponsor_);
+        this.NEMSponsorAdView = mongoose.model("NEMSponsorAdView", this.NEMSponsorAdView_);
         this.NEMPaymentChannel = mongoose.model("NEMPaymentChannel", this.NEMPaymentChannel_);
         this.NEMBot = mongoose.model("NEMBot", this.NEMBot_);
         this.NEMGame = mongoose.model("NEMGame", this.NEMGame_);
@@ -285,6 +278,7 @@
     module.exports.NEMGameCredit = pacnem.NEMGameCredit;
     module.exports.NEMGamer = pacnem.NEMGamer;
     module.exports.NEMSponsor = pacnem.NEMSponsor;
+    module.exports.NEMSponsorAdView = pacnem.NEMSponsorAdView;
     module.exports.NEMPaymentChannel = pacnem.NEMPaymentChannel;
     module.exports.NEMAppsPayout = pacnem.NEMAppsPayout;
     module.exports.NEMBot = pacnem.NEMBot;

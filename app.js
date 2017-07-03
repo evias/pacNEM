@@ -132,8 +132,11 @@ var HallOfFameCore = require("./core/blockchain/hall-of-fame.js").HallOfFame;
 var HallOfFame = new HallOfFameCore(io, logger, PacNEMBlockchain, PacNEMDB);
 HallOfFame.fetchBlockchainHallOfFame();
 
+var SponsorEngineCore = require("./core/blockchain/sponsor-engine.js").SponsorEngine;
+var SponsorEngine = new SponsorEngineCore(io, logger, PacNEMBlockchain, PacNEMDB);
+
 var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
-var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame);
+var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame, SponsorEngine);
 
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
 var PacNEM_Crons = new JobsScheduler(logger, PacNEMBlockchain, PacNEMDB);
@@ -467,6 +470,9 @@ app.post("/api/v1/sessions/store", function(req, res) {
             player.highScore = highScore;
             player.updatedAt = new Date().valueOf();
 
+            if (!player.usernames)
+                player.usernames = {};
+
             if (!player.usernames.hasOwnProperty(keyUsername)) {
                 // register new username
                 player.usernames[keyUsername] = {};
@@ -575,7 +581,7 @@ app.get("/api/v1/sponsors/random", function(req, res) {
 
         var cntSponsors = sponsors.length;
         var randomIdx = Math.floor(Math.random() * cntSponsors);
-        var randSponsor = sponsors[randomIdx];
+        var randSponsor = !sponsors[randomIdx] ? sponsors[0] : sponsors[randomIdx];
 
         // XXX content per sponsor..
         var content = {
@@ -596,6 +602,67 @@ app.get("/api/v1/sponsors/random", function(req, res) {
     });
 });
 
+app.post("/api/v1/sponsors/watch", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
+
+    var input = {
+        "slug": req.body.sponsor,
+        "username": req.body.player
+    };
+
+    // find sponsor then check if reward should be paid
+    var query = { "slug": input.slug };
+    PacNEMDB.NEMSponsor.findOne(query, function(err, sponsor) {
+        if (err) {
+            serverLog(req, "Error ocurred when reading NEMSponsor: " + err, "ERROR");
+            return res.send(500);
+        }
+
+        // maximum +1 every minute
+        var limitAge = new Date().valueOf() - (1 * 60 * 1000);
+        var adViewCounts = !sponsor.updatedAt || sponsor.updatedAt <= limitAge;
+
+        if (!sponsor.countAdViews)
+            sponsor.countAdViews = 0;
+
+        if (adViewCounts) {
+            sponsor.countAdViews = sponsor.countAdViews + 1;
+            sponsor.updatedAt = new Date().valueOf();
+        } else {
+            // Ad View came too early, not counted. (2 minutes interval)
+            serverLog(req, "Sponsor Ad View Skipped! With last save adView at: " + JSON.stringify(sponsor.updatedAt), "DEBUG");
+            return res.send(JSON.stringify({ "status": "ok" }));
+        }
+
+        sponsor.save(function(err) {
+            // now that the Ad View has been counted, we can save data and
+            // check whether it is needed to initiate a Payout or not.
+            PacNEMDB.NEMSponsorAdView.findOne({ "player": input.username }, null, { sort: { createdAt: -1 } }, function(err, adView) {
+                if (err) {
+                    serverLog(req, "Error ocurred when reading NEMSponsorAdView: " + err, "ERROR");
+                    return res.send(500);
+                }
+
+                serverLog(req, "Ad View counted in Sponsor Engine for Sponsor: " + JSON.stringify(sponsor), "DEBUG");
+
+                var nAdView = new PacNEMDB.NEMSponsorAdView({
+                    player: input.username,
+                    sponsorRef: sponsor.reference,
+                    createdAt: new Date().valueOf()
+                });
+                nAdView.save(function(err) {
+                    if (sponsor.countAdViews % 3 === 0) {
+                        // every 3 ad views we will send mosaics pacnem:daily-ad-view
+                        SponsorEngine.sendRewardForViews(sponsor);
+                    }
+
+                    return res.send(JSON.stringify({ "status": "ok" }));
+                });
+            });
+        });
+    });
+});
+
 app.get("/api/v1/credits/buy", function(req, res) {
     res.setHeader('Content-Type', 'application/json');
 
@@ -608,12 +675,12 @@ app.get("/api/v1/credits/buy", function(req, res) {
     var invoiceNumber = req.query.num ? req.query.num : null;
 
     var payer = req.query.payer ? req.query.payer : undefined;
-    if (!payer.length || PacNEMDB.isApplicationWallet(payer))
+    if (!payer.length || PacNEMBlockchain.isApplicationWallet(payer))
     // cannot be one of the application wallets
         return res.send(JSON.stringify({ "status": "error", "message": "Invalid value for field `payer`." }));
 
     var recipient = req.query.recipient ? req.query.recipient : config.get("pacnem.business"); // the App's MultiSig wallet
-    if (!recipient.length || !PacNEMDB.isApplicationWallet(recipient))
+    if (!recipient.length || !PacNEMBlockchain.isApplicationWallet(recipient))
     // must be one of the application wallets
         return res.send(JSON.stringify({ "status": "error", "message": "Invalid value for field `recipient`." }));
 
@@ -739,7 +806,7 @@ app.get("/api/v1/credits/history", function(req, res) {
     var payer = req.query.payer ? req.query.payer : undefined;
     var number = req.query.number ? req.query.number : undefined;
 
-    if (!payer || !payer.length || PacNEMDB.isApplicationWallet(payer))
+    if (!payer || !payer.length || PacNEMBlockchain.isApplicationWallet(payer))
     // cannot be one of the application wallets
         return res.send(JSON.stringify({ "status": "error", "message": "Invalid value for field `payer`." }));
 
@@ -824,7 +891,7 @@ app.get("/api/v1/credits/remaining", function(req, res) {
     res.setHeader('Content-Type', 'application/json');
 
     var payer = req.query.payer ? req.query.payer : undefined;
-    if (!payer.length || PacNEMDB.isApplicationWallet(payer))
+    if (!payer.length || PacNEMBlockchain.isApplicationWallet(payer))
     // cannot be one of the application wallets
         return res.send(JSON.stringify({ "status": "error", "message": "Invalid value for field `payer`." }));
 

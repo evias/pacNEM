@@ -123,7 +123,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             if (typeof session_ != 'undefined' && session_.details_.hearts != data) {
                 session_.details_.hearts = credits;
-                session_.store(false); // do not re-validate with blockchain, we just did that!
+                session_.storeLocal();
             }
 
             $(".pacnem-invoice-close-trigger").show();
@@ -613,7 +613,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             ctrl_.setAdvertised(true);
             self.setSponsoredUI(function(ui, sponsor) {
                 // now display the advertisement
-                ui.displaySponsorAdvertisement(function(ui) {
+                ui.displaySponsorAdvertisement(sponsor, function(ui) {
                     // and finally, emit the session creation
                     socket_.emit('change_username', JSON.stringify(details));
                     socket_.emit("notify");
@@ -693,7 +693,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             $("#username").attr("data-sponsor", sponsor.slug);
 
             ctrl_.setSponsor(sponsor);
-            self.prepareSponsoredJoin(data, function(ui) { callback(ui); });
+            self.prepareSponsoredJoin(data, function(ui) { callback(ui, data.sponsor); });
         });
     };
 
@@ -754,7 +754,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @param  Function callback
      * @return GameUI
      */
-    this.displaySponsorAdvertisement = function(callback) {
+    this.displaySponsorAdvertisement = function(sponsor, callback) {
         $(".pacnem-sponsor-modal").first().modal({
             backdrop: "static",
             keyboard: false,
@@ -763,6 +763,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
         var self = this;
         var start = new Date().getTime();
+        var engine = new SponsorEngine(API_);
+        var player = self.getPlayerDetails();
 
         var updateCounter = function() {
             var secs = parseInt($("#pacnem-sponsor-close-trigger .seconds").first().text());
@@ -779,7 +781,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             clearInterval(i);
             $(".pacnem-sponsor-modal").first().modal("hide");
             $("#pacnem-sponsor-close-trigger").removeAttr("data-remaining");
-
+            engine.watched(sponsor, player);
             callback(self);
         };
 

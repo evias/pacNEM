@@ -288,4 +288,42 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
             }
         });
     };
+
+    /**
+     * This method saves the sponsor data from the current browser. In the current
+     * Sponsor Engine, sponsoring is only *rewarded* every *3 ad views*. This
+     * limits the count of transactions that are initiated for pacnem:daily-ad-view
+     * Mosaics. 
+     * 
+     * Additionally, Ad views that are too close (by date) coming from one same Player
+     * will not be counted as they will fail at validation.
+     * 
+     * The Daily ad View Mosaic will only be sent by chunk of 3. (3 sponsor advertisement
+     * watches per Browser = 3 pacnem:daily-ad-view Mosaics)
+     * 
+     * @param 	{NEMSponsor} 	sponsor
+     * @param	{Object} 	    player  Should contain `username` key
+     */
+    this.storeSponsorAdView = function(sponsor, player) {
+
+        var params = {
+            "sponsor": sponsor.slug,
+            "player": player.username
+        };
+
+        this.jquery_.ajax({
+            url: "/api/v1/sponsors/watch",
+            type: "POST",
+            dataType: "json",
+            data: params,
+            beforeSend: function(req) {
+                if (req && req.overrideMimeType)
+                    req.overrideMimeType("application/json;charset=UTF-8");
+            },
+            success: function(response) {
+                // var player = response.item
+                callback(response);
+            }
+        });
+    };
 };
