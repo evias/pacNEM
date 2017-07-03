@@ -663,8 +663,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.setSponsoredUI = function(callback) {
         var self = this;
+        var details = self.getPlayerDetails();
 
-        API_.getRandomSponsor(function(sponsor) {
+        API_.getRandomSponsor(details, function(sponsor) {
             // got a sponsor, now we'll have a valid address input for sure.
             $(".error-input").removeClass("error-input");
             $(".error-block").hide();
@@ -1583,6 +1584,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         this.initBackToPlayButtons();
 
         var session_ = new GameSession(API_);
+
+        //DEBUG console.log("[DEBUG] " + "Found session: ", session_);
+
         if (session_.identified()) {
             // post page-load reload from localStorage
             self.updateUserFormWithSession(session_);

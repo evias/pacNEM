@@ -234,6 +234,7 @@
         this.pacNEMSponsor_ = new mongoose.Schema({
             slug: String,
             email: String,
+            xem: String,
             realName: String,
             sponsorName: String,
             description: String,
