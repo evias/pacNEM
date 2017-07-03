@@ -399,6 +399,6 @@ blockquote.bq-minimal-centered {
 }
 
 .summary-bg-wrapper {
-    background: url(/img/pacnem_placeholder_white-small.png) no-repeat 0;
-    height: 170px;
+    background: url(/img/loading_nem.gif) no-repeat center;
+    height: 180px;
 }

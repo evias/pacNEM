@@ -561,7 +561,7 @@ app.get("/api/v1/scores", function(req, res) {
 app.get("/api/v1/sponsors/random", function(req, res) {
     res.setHeader('Content-Type', 'application/json');
 
-    var query = {};
+    var query = { "isApproved": true };
     var address = req.query.address ? req.query.address : null;
     if (address && address.length)
     //XXX also validate NEM address format
@@ -576,13 +576,23 @@ app.get("/api/v1/sponsors/random", function(req, res) {
         var cntSponsors = sponsors.length;
         var randomIdx = Math.floor(Math.random() * cntSponsors);
         var randSponsor = sponsors[randomIdx];
-        randSponsor.name = randSponsor.sponsorName;
 
-        if (!randSponsor.imageUrl || !randSponsor.imageUrl.length) {
-            randSponsor.imageUrl = "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300";
-        }
+        // XXX content per sponsor..
+        var content = {
+            "type": "image",
+            "url": "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300",
+            "isImage": true,
+            "isVideo": false
+        };
 
-        res.send(JSON.stringify({ item: randSponsor }));
+        var response = {
+            data: {
+                sponsor: randSponsor,
+                content: content
+            }
+        };
+
+        res.send(JSON.stringify(response));
     });
 });
 

@@ -224,9 +224,23 @@ var GameController = function(config, socket, nem, chainId) {
         var data = JSON.parse(rawdata);
         ongoing_game_ = false;
 
-        // end_of_game event needs only Pacman objects states
-        delete data["map"];
-        socket_.emit("end_of_game", JSON.stringify(data));
+        // forward end_of_game to backend for scores processing
+        socket_.emit("end_of_game", JSON.stringify({ pacmans: data.pacmans }));
+
+        // refresh game board canvas for room's next game
+        var grid_ = data['map'];
+
+        var canvas = document.getElementById('myCanvas');
+        if (!canvas.getContext) {
+            return;
+        }
+        var ctx = canvas.getContext('2d');
+        var height = grid_.length;
+        var width = grid_[0].length;
+        canvas.width = width * SIZE + 10;
+        canvas.height = height * SIZE + 10;
+
+        drawEmptyGameBoard(canvas, ctx, grid_);
         return this;
     };
 

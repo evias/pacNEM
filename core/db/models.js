@@ -238,6 +238,7 @@
             realName: String,
             sponsorName: String,
             description: String,
+            content: Object,
             websiteUrl: String,
             advertType: String,
             contentUrl: String,
