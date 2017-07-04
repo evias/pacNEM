@@ -124,12 +124,12 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
      * 
      * @param	{Function} 	callback
      */
-    this.getRandomSponsor = function(details, callback) {
+    this.getRandomSponsor = function(params, callback) {
         var self = this;
         var addr = "";
-        if (details && details.address) {
+        if (params && params.address) {
             // fetch sponsor by address - not random
-            addr = "address=" + encodeURIComponent(details.address);
+            addr = "address=" + encodeURIComponent(params.address);
         }
 
         var query = addr.length ? "?" + addr : "";
@@ -285,6 +285,44 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
                     $("#pacnem-lounge-wrapper").html(compileWith(response.data));
                     return callback(loungeData);
                 });
+            }
+        });
+    };
+
+    /**
+     * This method saves the sponsor data from the current browser. In the current
+     * Sponsor Engine, sponsoring is only *rewarded* every *3 ad views*. This
+     * limits the count of transactions that are initiated for pacnem:daily-ad-view
+     * Mosaics. 
+     * 
+     * Additionally, Ad views that are too close (by date) coming from one same Player
+     * will not be counted as they will fail at validation.
+     * 
+     * The Daily ad View Mosaic will only be sent by chunk of 3. (3 sponsor advertisement
+     * watches per Browser = 3 pacnem:daily-ad-view Mosaics)
+     * 
+     * @param 	{NEMSponsor} 	sponsor
+     * @param	{Object} 	    player  Should contain `username` key
+     */
+    this.storeSponsorAdView = function(sponsor, player, callback = null) {
+
+        var params = {
+            "sponsor": sponsor.slug,
+            "player": player.username
+        };
+
+        this.jquery_.ajax({
+            url: "/api/v1/sponsors/watch",
+            type: "POST",
+            dataType: "json",
+            data: params,
+            beforeSend: function(req) {
+                if (req && req.overrideMimeType)
+                    req.overrideMimeType("application/json;charset=UTF-8");
+            },
+            success: function(response) {
+                // var player = response.item
+                if (callback) callback(response);
             }
         });
     };

@@ -52,6 +52,9 @@
             "combo_x5": { "rampage": { "minCombo": 5, "icon": "glyphicon glyphicon-fire", "label": "label label-info", "slug": [pacNEM_NS_, "rampage"].join(":"), "title": "mosaics.label_mosaic_rampage" } },
             "combo_x7": { "ghostbuster": { "minCombo": 7, "icon": "glyphicon glyphicon-fire", "label": "label label-primary", "slug": [pacNEM_NS_, "ghostbuster"].join(":"), "title": "mosaics.label_mosaic_ghostbuster" } },
             "combo_x10": { "godlike-101010": { "minCombo": 10, "icon": "glyphicon glyphicon-plane", "label": "label label-success", "slug": [pacNEM_NS_, "godlike-101010"].join(":"), "title": "mosaics.label_mosaic_godlike_101010" } }
+        },
+        "sponsors": {
+            "daily-ad-view": { "icon": "glyphicon glyphicon-eye-open", "label": "label label-info", "slug": [pacNEM_NS_, "daily-ad-view"].join(":"), "title": "mosaics.label_mosaic_daily_ad_view" }
         }
     };
 
@@ -243,6 +246,30 @@
                 "isTest": isTest,
                 "isMijin": isMijin
             };
+        };
+
+        /**
+         * This method checks whether the passed `xem` XEM address
+         * is one of the PacNEM game's application wallet.
+         * 
+         * Application wallets include:
+         * - `pacnem.business` config
+         * - `pacnem.application` config
+         * 
+         * @param   {String}    xem
+         * @return  {Boolean}
+         */
+        this.isApplicationWallet = function(xem) {
+            var applicationWallets = [
+                config.get("pacnem.business"),
+                config.get("pacnem.application")
+            ];
+
+            for (var i = 0; i < applicationWallets.length; i++)
+                if (xem == applicationWallets[i])
+                    return true;
+
+            return false;
         };
 
         var network_ = this.getNetwork();

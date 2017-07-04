@@ -203,5 +203,12 @@
         "label_mosaic_rampage": "Rampage",
         "label_mosaic_ghostbuster": "Ghostbuster",
         "label_mosaic_godlike_101010": "Godlike (101010)"
+    },
+    "security": {
+        "title_session_expire": "Your session is about to expire",
+        "explain_session_expire": "The PacNEM Sponsor Engine allows you to stay online only for a limited amount of Time.",
+        "explain_session_expire_redirect": "You will now be redirected back to the PacNEM Welcome Screen. You can also select Sponsored Play Mode again.",
+        "button_closing_in": "Redirecting in",
+        "seconds_suffix": "seconds"
     }
 }
