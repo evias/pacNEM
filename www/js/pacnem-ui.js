@@ -749,7 +749,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 if (!spData[sponsor.slug] || !spData[sponsor.slug].counter) {
                     // invalid localStorage data
                     return self.resetSession();
-                } else if (spData[sponsor.slug].counter % 2 === 0) {
+                } else if (spData[sponsor.slug].counter % 6 === 0) {
                     // reset the session every 6 ad views
                     return self.resetSession();
                 }
