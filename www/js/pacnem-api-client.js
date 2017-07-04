@@ -124,12 +124,12 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
      * 
      * @param	{Function} 	callback
      */
-    this.getRandomSponsor = function(details, callback) {
+    this.getRandomSponsor = function(params, callback) {
         var self = this;
         var addr = "";
-        if (details && details.address) {
+        if (params && params.address) {
             // fetch sponsor by address - not random
-            addr = "address=" + encodeURIComponent(details.address);
+            addr = "address=" + encodeURIComponent(params.address);
         }
 
         var query = addr.length ? "?" + addr : "";
@@ -304,7 +304,7 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
      * @param 	{NEMSponsor} 	sponsor
      * @param	{Object} 	    player  Should contain `username` key
      */
-    this.storeSponsorAdView = function(sponsor, player) {
+    this.storeSponsorAdView = function(sponsor, player, callback = null) {
 
         var params = {
             "sponsor": sponsor.slug,
@@ -322,7 +322,7 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
             },
             success: function(response) {
                 // var player = response.item
-                callback(response);
+                if (callback) callback(response);
             }
         });
     };

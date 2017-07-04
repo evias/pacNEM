@@ -656,7 +656,7 @@ app.post("/api/v1/sponsors/watch", function(req, res) {
                         SponsorEngine.sendRewardForViews(sponsor);
                     }
 
-                    return res.send(JSON.stringify({ "status": "ok" }));
+                    return res.send(JSON.stringify({ "status": "ok", "item": { "total": sponsor.countAdViews } }));
                 });
             });
         });

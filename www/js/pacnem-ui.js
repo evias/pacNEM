@@ -611,7 +611,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             // advertising has not been done for this socket id!
 
             ctrl_.setAdvertised(true);
-            self.setSponsoredUI(function(ui, sponsor) {
+
+            // set sponsored UI with "autoSwitch" enabled
+            self.setSponsoredUI(true, function(ui, sponsor) {
                 // now display the advertisement
                 ui.displaySponsorAdvertisement(sponsor, function(ui) {
                     // and finally, emit the session creation
@@ -665,19 +667,93 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     };
 
     /**
+     * This method will reset the current session in the browser
+     * and bring back the user to the welcome screen.
+     * 
+     * @return {GameUI}
+     */
+    this.resetSession = function() {
+        //console.log("[DEBUG] [UI] " + "Now loading session-expire modal");
+
+        // display modal box informing about Session Expire
+        // the modal box contains a seconds counter on the close 
+        // trigger button.
+        template_.render("session-expire", function(compileWith) {
+
+            // add modal box HTML
+            var html = $("#pacnem-modal-wrapper").html();
+            $("#pacnem-modal-wrapper").html(html + compileWith({}));
+
+            //console.log("[DEBUG] [UI] " + "Now displaying session-expire modal");
+
+            // we don't want the sponsor modal now and will expire the session.
+            $(".pacnem-sponsor-modal").first().remove();
+            $(".pacnem-session-expire-modal").first().modal({
+                backdrop: "static",
+                keyboard: false,
+                show: true
+            });
+
+            // Counter is displayed for 10 seconds. 
+            // This function is run at an interval of 1 seconds.
+            var updateCounter = function() {
+                var secs = parseInt($("#pacnem-session-expire-close-trigger .seconds").first().text());
+                var n = secs - 1;
+                if (n < 0) n = 0;
+
+                $("#pacnem-session-expire-close-trigger .seconds").first().text("" + n);
+                $("#pacnem-session-expire-close-trigger").attr("data-remaining", n);
+            };
+
+            var closeModalAndRedirect = function(i) {
+                session_.clear();
+                window.location.href = "/";
+            };
+
+            // start counting 
+            updateCounter();
+            var i = setInterval(updateCounter, 1000);
+
+            // close modal box
+            setTimeout(function() { closeModalAndRedirect(i); }, 10000);
+        });
+
+        return self;
+    };
+
+    /**
      * Use the API to get a [not-so-] random Sponsor Wallet
      * and lock the XEM Address input field to that Sponsor's
      * Sub-Wallet.
      *
-     * @return {[type]} [description]
+     * @return {GameUI}
      */
-    this.setSponsoredUI = function(callback) {
+    this.setSponsoredUI = function(autoSwitch, callback) {
         var self = this;
+
+        // details may contain Sponsor Address
         var details = self.getPlayerDetails();
 
+        // when the current session has a total of 6 ad views
+        // for a given sponsor - it will be reset to the home screen
         API_.getRandomSponsor(details, function(data) {
             var sponsor = data.sponsor;
             var content = data.content;
+
+            //console.log("[DEBUG] " + "getRandomSponsor: " + JSON.stringify(data));
+
+            if (autoSwitch === true) {
+                var engine = new SponsorEngine(API_);
+                var spData = engine.read();
+
+                if (!spData[sponsor.slug] || !spData[sponsor.slug].counter) {
+                    // invalid localStorage data
+                    return self.resetSession();
+                } else if (spData[sponsor.slug].counter % 2 === 0) {
+                    // reset the session every 6 ad views
+                    return self.resetSession();
+                }
+            }
 
             // got a sponsor, now we'll have a valid address input for sure.
             $(".error-input").removeClass("error-input");
@@ -695,6 +771,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             ctrl_.setSponsor(sponsor);
             self.prepareSponsoredJoin(data, function(ui) { callback(ui, data.sponsor); });
         });
+
+        return self;
     };
 
     /**
@@ -1299,7 +1377,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                     ctrl_.sponsorizeName(ctrl_.getSponsor());
                     ctrl_.setAdvertised(true);
 
-                    self.displaySponsorAdvertisement(function() {
+                    self.displaySponsorAdvertisement(ctrl_.getSponsor(), function() {
                         postPaymentCallback(self);
                     });
                 } else if (ctrl_.isPlayMode("pay-per-play")) {
@@ -1564,7 +1642,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             ctrl_.setPlayMode(thisMode);
 
             if ("sponsored" == thisMode)
-                self.setSponsoredUI(function(ui) {});
+                self.setSponsoredUI(false, function(ui) {});
             else {
                 $("#currentHearts a").first().attr("data-toggle", "dropdown");
                 self.unsetSponsoredUI();

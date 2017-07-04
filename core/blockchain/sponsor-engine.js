@@ -55,7 +55,7 @@
 
             // build message with total count ad views and avoid sending message
             // more than once on the nem blockchain.
-            var message = "PacNEM Pay per View Advertizing Reward (" + sponsor.countAdViews + " ad views)";
+            var message = "PacNEM Pay per View: " + sponsor.countAdViews + " ad views";
             self.logger_.info("[DEBUG]", "[PACNEM SPONSOR]", "Sending Daily Ad View with Message Plain JSON: '" + message + "' to Sponsor '" + sponsor.reference + "' with address: " + sponsor.xem);
 
             // find already paid out Rewards
