@@ -60,6 +60,22 @@ var GameSession = function(API, userName, xemAddress, gameMode) {
         return this;
     };
 
+    this.storeLocal = function() {
+        var self = this;
+        var storage = window.localStorage;
+
+        self.details_.sid = $("#pacNEM-sessionId").val();
+
+        if (!storage)
+        //XXX display error message
+            return self;
+        else
+        // save to localStorage
+            storage.setItem("evias.pacnem:player", JSON.stringify(self.details_));
+
+        return self;
+    };
+
     this.store = function(validateHeartsPerBlockchain = true) {
         var self = this;
         var storage = window.localStorage;

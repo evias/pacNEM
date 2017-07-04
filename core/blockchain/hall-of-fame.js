@@ -369,12 +369,11 @@
         };
 
         /**
-         * Used as a callback to `prepareRewardsPayout`. This method creates a NEM blockchain
+         * Used as a callback to `sendCheeseForHighscore`. This method creates a NEM blockchain
          * Mosaic Transfer Transaction with evias.pacnem:cheese, possible evias.pacnem:hall-of-famer
          * and evias.pacnem:all-time-best-player and announces it on the network.
          * 
-         * The Wallet used in this payout is the PUBLIC WALLET because those payouts may happen
-         * more often and we need to lower the price for sustainability.
+         * The Wallet used in this payout is the MULTISIG WALLET.
          * 
          * @param   {NEMReward} nemReward
          * @param   {Pacman}    pacman
