@@ -218,6 +218,9 @@
         "check_account_address": "Please check following Account for Incoming Transactions with a Mosaic <b>pacnem:personal-token</b>:",
         "button_authenticate": "Login",
         "button_cancel": "Cancel",
-        "token_placeholder": "Your Token"
+        "token_placeholder": "Your Token",
+        "title_session_blocked": "Your session has been blocked",
+        "explain_session_blocked": "Dear NEMber, we have observed too many <b>Invalid Login Attempts</b> and you have been blocked for 1 Hour.",
+        "explain_session_blocked_redirect": "You will now be redirected back to the PacNEM Welcome Screen. You can still play in Sponsored Play Mode."
     }
 }

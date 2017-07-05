@@ -39,6 +39,8 @@
     var __Errors = function() {
         this.E_ADDRESS_UNKNOWN = 2;
         this.E_INVALID_CREDENTIALS = 3;
+        this.E_CLIENT_BLOCKED = 4;
+        this.E_SERVER_ERROR = 5;
     };
 
     /**
@@ -74,27 +76,56 @@
                 return onFailure();
 
             var self = this;
-            var token = base64_decode(bundle.creds);
 
-            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Raw Token: '" + bundle.creds + "' - base64_decoded: '" + token + "'");
-
-            self.db_.NEMPersonalToken.findOne({ "address": bundle.address, "plainToken": token }, function(err, entry) {
-                if (err || !entry) {
-                    // error code will be different according to *Wrong Provided Token*
-                    // and *Never Created Token*.
-                    self.db_.NEMPersonalToken.findOne({ address: bundle.address }, function(err, entry) {
-                        if (err || !entry) {
-                            // No Personal Token ever sent for this Address
-                            return onFailure({ code: self.errors.E_ADDRESS_UNKNOWN });
-                        }
-
-                        return onFailure({ code: self.errors.E_INVALID_CREDENTIALS });
-                    });
-                } else {
-                    // authentication success
-
-                    return onSuccess(entry);
+            // first check if client is blocked.
+            var query = { address: bundle.address, ipAddress: bundle.from };
+            var sorting = { sort: { createdAt: -1 } };
+            self.db_.NEMFailedLogins.find(query, null, sorting, function(err, entries) {
+                if (err) {
+                    self.logger_.error("[DEBUG]", "[PACNEM AUTH]", "Error reading NEMFailedLogins: " + err);
+                    return onFailure({ code: self.errors.E_SERVER_ERROR, error: "E_SERVER_ERROR" });
                 }
+
+                //DEBUG self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Entries: " + entries.length + ": " + JSON.stringify(entries));
+
+                if (entries && entries.length && entries.length >= 5) {
+                    // user should be blocked for 1 hour
+                    var startTime = (new Date().valueOf()) - (60 * 60 * 1000);
+                    var cntCounting = 0;
+                    for (var i = 0; i < entries.length; i++) {
+                        if (entries[i].createdAt >= startTime)
+                            cntCounting++;
+                    }
+
+                    if (cntCounting >= 5) {
+                        // User should not be able to login or TRY login for 1 hour!
+                        return onFailure({ code: self.errors.E_CLIENT_BLOCKED, error: "E_CLIENT_BLOCKED" });
+                    }
+                }
+
+                // we can safely process this authentication trial
+
+                var token = base64_decode(bundle.creds);
+                //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Verifying Token: '" + token + "' for: " + bundle.address + " from: " + bundle.from);
+
+                self.db_.NEMPersonalToken.findOne({ "address": bundle.address, "plainToken": token }, function(err, entry) {
+                    if (err || !entry) {
+                        // error code will be different according to *Wrong Provided Token*
+                        // and *Never Created Token*.
+                        self.db_.NEMPersonalToken.findOne({ address: bundle.address }, function(err, entry) {
+                            if (err || !entry) {
+                                // No Personal Token ever sent for this Address
+                                return onFailure({ code: self.errors.E_ADDRESS_UNKNOWN, error: "E_ADDRESS_UNKNOWN" });
+                            }
+
+                            return onFailure({ code: self.errors.E_INVALID_CREDENTIALS, error: "E_INVALID_CREDENTIALS" });
+                        });
+                    } else {
+                        // authentication success
+
+                        return onSuccess(entry);
+                    }
+                });
             });
         }
 

@@ -648,8 +648,20 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 // either a pay-per-play or share-per-play (not yet implemented)
                 socket_.emit('change_username', JSON.stringify(details));
                 socket_.emit("notify");
-            }, function() {
-                console.log("Authentication Failed");
+            }, function(response) {
+
+                if (response.code === 4) {
+                    self.resetSession(false, true);
+                    return false;
+                }
+
+                var $token = $("#player-authenticate-token");
+                var $addon = $token.siblings(".input-group-addon").first();
+
+                $token.addClass("form-error");
+                $addon.addClass("form-error");
+
+                console.log("Authentication Failed - Response Code: " + response.code);
             });
         }
 
@@ -685,10 +697,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             $("#pacnem-player-authenticate-trigger").off("click");
             $("#pacnem-player-authenticate-trigger").on("click", function() {
 
+                var $token = $("#player-authenticate-token");
+                var $addon = $token.siblings(".input-group-addon").first();
+
+                $token.removeClass("form-error");
+                $addon.removeClass("form-error");
+
                 var credentials = $("#player-authenticate-token").val();
                 API_.verifyPlayerIdentity(ui.getPlayerDetails(), credentials, function(response) {
                     if (!response.code || response.code >= 2) {
-                        return fail();
+                        return fail(response);
                     }
 
                     return success();
@@ -772,7 +790,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * 
      * @return {GameUI}
      */
-    this.resetSession = function(forceNow = false) {
+    this.resetSession = function(forceNow = false, isBlocked = false) {
         //console.log("[DEBUG] [UI] " + "Now loading session-expire modal");
 
         if (forceNow === true) {
@@ -781,10 +799,12 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             return self;
         }
 
+        var tpl = isBlocked === true ? "session-blocked" : "session-expire";
+
         // display modal box informing about Session Expire
         // the modal box contains a seconds counter on the close 
         // trigger button.
-        template_.render("session-expire", function(compileWith) {
+        template_.render(tpl, function(compileWith) {
 
             // add modal box HTML
             var html = $("#pacnem-modal-wrapper").html();

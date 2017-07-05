@@ -135,8 +135,9 @@ HallOfFame.fetchBlockchainHallOfFame();
 var SponsorEngineCore = require("./core/blockchain/sponsor-engine.js").SponsorEngine;
 var SponsorEngine = new SponsorEngineCore(io, logger, PacNEMBlockchain, PacNEMDB);
 
-var AuthenticatorCore = require("./core/blockchain/authenticator.js").Authenticator;
-var Authenticator = new AuthenticatorCore(io, logger, PacNEMBlockchain, PacNEMDB);
+var AuthenticatorCore = require("./core/blockchain/authenticator.js");
+var Authenticator = new AuthenticatorCore.Authenticator(io, logger, PacNEMBlockchain, PacNEMDB);
+var AuthErrors = new AuthenticatorCore.AuthenticatorErrors();
 Authenticator.fetchPersonalTokens();
 
 var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
@@ -547,7 +548,13 @@ app.post("/api/v1/sessions/store", function(req, res) {
 app.post("/api/v1/sessions/verify", function(req, res) {
     res.setHeader('Content-Type', 'application/json');
 
+    var ip = req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
+
     var bundle = {
+        "from": ip,
         "address": req.body.address,
         "creds": req.body.creds
     };
@@ -555,7 +562,22 @@ app.post("/api/v1/sessions/verify", function(req, res) {
     Authenticator.authenticateAddress(bundle, function(token) {
         res.send(JSON.stringify({ "status": "ok", "item": token.transactionHash }));
     }, function(response) {
-        res.send(JSON.stringify({ "status": "error", "code": response.code }));
+
+        if (response.code == AuthErrors.E_SERVER_ERROR || response.code == AuthErrors.E_CLIENT_BLOCKED) {
+            // server error or client blocked already
+            res.send(JSON.stringify({ "status": "error", "code": response.code, "error": response.error }));
+        } else {
+            // save a failed logins entry in case its not a server error..
+            var failed = new PacNEMDB.NEMFailedLogins({
+                ipAddress: bundle.from,
+                address: bundle.address,
+                browserData: JSON.stringify(req.headers),
+                createdAt: new Date().valueOf()
+            });
+            failed.save(function(err) {
+                res.send(JSON.stringify({ "status": "error", "code": response.code, "error": response.error }));
+            });
+        }
     });
 });
 

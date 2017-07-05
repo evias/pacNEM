@@ -1,0 +1,23 @@
+
+<div class="modal fade pacnem-session-expire-modal" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title text-danger"><i class="glyphicon glyphicon-exclamation-sign"></i>&nbsp;{{t "security.title_session_blocked"}}</h4>
+            </div>
+            <div class="modal-body">
+                <p class="text-justify">{{t "security.explain_session_blocked"}}</p>
+                <p class="text-justify">{{t "security.explain_session_blocked_redirect"}}</p>
+            </div>
+            <div class="modal-footer">
+                <div class="row text-center">
+                    <button id="pacnem-session-expire-close-trigger" class="btn btn-default" data-remaining="11" role="button">
+                        <span>{{t "security.button_closing_in"}}</span>&nbsp;
+                        <span class="seconds">11</span>&nbsp;
+                        <span>{{t "security.seconds_suffix"}}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
