@@ -107,7 +107,7 @@
          */
         this.fetchPersonalTokens = function(lastTrxRead = null, callback = null) {
             var self = this;
-            var cheesePayer = self.blockchain_.getVendorWallet();
+            var tokensPayer = self.blockchain_.getVendorWallet();
 
             if (lastTrxRead === null) {
                 // reset Authenticator - rebuilding from blockchain
@@ -118,7 +118,7 @@
             // blockchain-trust mosaic history.
 
             self.blockchain_.getSDK().com.requests.account.transactions
-                .outgoing(self.blockchain_.getEndpoint(), cheesePayer, null, lastTrxRead)
+                .outgoing(self.blockchain_.getEndpoint(), tokensPayer, null, lastTrxRead)
                 .then(function(res) {
                     //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Result from NIS API account.transactions.outgoing: " + JSON.stringify(res));
 
@@ -140,7 +140,7 @@
 
                     if (lastTrxRead === false || transactions.length < 25) {
                         // done.
-                        self.savePersonalTokensInDatabase(self.personalTokenTrxes_);
+                        self.savePersonalTokensInDatabase(self.personalTokensTrxes_);
                         if (callback)
                             callback(self.personalTokensTrxes_);
                     }
@@ -234,9 +234,18 @@
         /**
          * This method will interpret the tokens read from the blockchain
          * and decide which need to be saved to the database.
+         * 
+         * @param   {Object}    tokensData
+         * @return  void|false
          */
         this.savePersonalTokensInDatabase = function(tokensData) {
             var self = this;
+
+            if (!tokensData || !tokensData.tokens.length) {
+                // No Personal Tokens available
+                self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "No Personal Tokens have been Sent yet!");
+                return false;
+            }
 
             for (var address in tokensData.tokens) {
                 var currentToken = tokensData.tokens[address];
