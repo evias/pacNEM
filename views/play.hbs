@@ -1,6 +1,6 @@
 
 <script type="text/javascript">
-    var config    = {"business": "{{PacNEM_Frontend_Config.business}}", "application": "{{PacNEM_Frontend_Config.application}}", "namespace": "{{PacNEM_Frontend_Config.namespace}}"};
+    var config    = {"business": "{{PacNEM_Frontend_Config.business}}", "application": "{{PacNEM_Frontend_Config.application}}", "namespace": "{{PacNEM_Frontend_Config.namespace}}", "dataSalt": "{{PacNEM_Frontend_Config.dataSalt}}"};
     var socket    = io.connect(window.location.protocol + '//' + window.location.host);
     var nem       = require("nem-sdk").default;
     var game_ctrl = new GameController(config, socket, nem, {{currentNetwork.config.id}});

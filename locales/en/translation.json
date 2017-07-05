@@ -202,13 +202,21 @@
         "label_mosaic_multikill": "Multi-Kill",
         "label_mosaic_rampage": "Rampage",
         "label_mosaic_ghostbuster": "Ghostbuster",
-        "label_mosaic_godlike_101010": "Godlike (101010)"
+        "label_mosaic_godlike_101010": "Godlike (101010)",
+        "label_mosaic_personal_token": "Login Token",
     },
     "security": {
         "title_session_expire": "Your session is about to expire",
         "explain_session_expire": "The PacNEM Sponsor Engine allows you to stay online only for a limited amount of Time.",
         "explain_session_expire_redirect": "You will now be redirected back to the PacNEM Welcome Screen. You can also select Sponsored Play Mode again.",
         "button_closing_in": "Redirecting in",
-        "seconds_suffix": "seconds"
+        "seconds_suffix": "seconds",
+        "title_player_authenticate": "Enter your PacNEM Personal Token",
+        "explain_player_authenticate": "Welcome back! The first time you have Paid for Credits on PacNEM, we have sent you a Transaction in your XEM Wallet containing a Personal Token. Please use this Personal Token (the Message in the said Transaction) whenever you come back to PacNEM!",
+        "explain_player_authenticate_first": "If this is the first time you paid for PacNEM credits, please check your Wallet as you should have received a Transaction containing a pacnem:personal-token Mosaic along with a Message (which is your Personal Token).",
+        "info_player_authenticate": "If you don't remember your Personal Token anymore, check your Wallet and look for the Transaction containing a <b>pacnem:personal-token</b> Mosaic. The <i>message</i> of this transaction is your <b>Personal Token</b>.",
+        "check_account_address": "Please check following Account for Incoming Transactions with a Mosaic <b>pacnem:personal-token</b>:",
+        "button_authenticate": "Login",
+        "button_cancel": "Cancel"
     }
 }

@@ -1,0 +1,41 @@
+
+<div class="modal fade pacnem-player-authenticate-modal" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title"><i class="glyphicon glyphicon-warning-sign"></i>&nbsp;{{t "security.title_player_authenticate"}}</h4>
+            </div>
+            <div class="modal-body">
+                <p class="text-justify">{{t "security.explain_player_authenticate"}}</p>
+                <p class="text-justify">{{t "security.explain_player_authenticate_first"}}</p>
+
+                <pre>
+                    <i class="glyphicon glyphicon-question-sign"></i> {{t "security.info_player_authenticate"}}
+                </pre>
+
+                <p class="text-justify">{{t "security.check_account_address"}}</p>
+
+                <pre>
+                    <img src="/img/NEM_100x100.png" style="height: 20px;"/> {{playerAddr}}
+                </pre>
+            </div>
+            <div class="modal-footer">
+                <div class="row text-center">
+                    <button id="pacnem-player-authenticate-trigger" 
+                            class="btn btn-success" 
+                            role="button">
+                        <i class="glyphicon glyphicon-globe"></i>&nbsp;
+                        <span>{{t "security.button_authenticate"}}</span>
+                    </button>
+                    
+                    <button id="pacnem-player-authenticate-cancel-trigger" 
+                            class="btn btn-success" 
+                            role="button">
+                        <i class="glyphicon glyphicon-remove"></i>&nbsp;
+                        <span>{{t "security.button_cancel"}}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -326,4 +326,40 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
             }
         });
     };
+
+    this.encryptData_ = function(plain) {
+        var CryptoJS = this.ctrl_.getSDK().crypto.js;
+
+        var salt = this.config_.dataSalt;
+        var encSalt = CryptoJS.enc.Hex.parse(salt);
+        var encrypted = CryptoJS.AES.encrypt(secretMessage, encSalt, {
+            mode: CryptoJS.mode.ECB,
+            padding: CryptoJS.pad.NoPadding
+        });
+        return encrypted.ciphertext;
+    };
+
+    this.verifyPlayerIdentity = function(session, credential, callback) {
+
+        // now encrypt
+        var creds = this.encryptData_(credential);
+        var params = {
+            "address": session.address,
+            "creds": creds.toString()
+        };
+
+        this.jquery_.ajax({
+            url: "/api/v1/sessions/verify",
+            type: "POST",
+            dataType: "json",
+            data: params,
+            beforeSend: function(req) {
+                if (req && req.overrideMimeType)
+                    req.overrideMimeType("application/json;charset=UTF-8");
+            },
+            success: function(response) {
+                if (callback) callback(response);
+            }
+        });
+    };
 };

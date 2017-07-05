@@ -114,6 +114,10 @@ var GameController = function(config, socket, nem, chainId) {
     var needsPayment_ = false;
     var player_session_ = null;
 
+    this.getSDK = function() {
+        return nem_;
+    };
+
     this.start = function() {
         if (!ongoing_game_) {
             // Ask the server to start a new game session

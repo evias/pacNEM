@@ -30,7 +30,8 @@
     var pacNEM_mosaics = {
         "credits": {
             "heart": { "icon": "glyphicon glyphicon-heart", "label": "label label-success", "slug": [pacNEM_NS_, "heart"].join(":"), "title": "mosaics.label_mosaic_heart" },
-            "hearts--": { "icon": "glyphicon glyphicon-heart-empty", "label": "label label-danger", "slug": [pacNEM_NS_, "hearts--"].join(":"), "title": "mosaics.label_mosaic_heart_redeem" }
+            "hearts--": { "icon": "glyphicon glyphicon-heart-empty", "label": "label label-danger", "slug": [pacNEM_NS_, "hearts--"].join(":"), "title": "mosaics.label_mosaic_heart_redeem" },
+            "personal-token": { "icon": "glyphicon glyphicon-lock", "label": "label label-success", "slug": [pacNEM_NS_, "personal-token"].join(":"), "title": "mosaics.label_mosaic_personal_token" }
         },
         "scores": { "cheese": { "icon": "glyphicon glyphicon-globe", "label": "label label-primary", "slug": [pacNEM_NS_, "cheese"].join(":"), "title": "mosaics.label_mosaic_cheese" } },
         "rewards": {
@@ -479,11 +480,6 @@
 
             gameCreditsHistory_[gamer.getAddress()] = gamerHistory;
             return lastTrxRead;
-        };
-
-        //XXX
-        this.sendAuthCode = function() {
-
         };
 
         /**

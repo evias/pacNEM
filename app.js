@@ -135,8 +135,12 @@ HallOfFame.fetchBlockchainHallOfFame();
 var SponsorEngineCore = require("./core/blockchain/sponsor-engine.js").SponsorEngine;
 var SponsorEngine = new SponsorEngineCore(io, logger, PacNEMBlockchain, PacNEMDB);
 
+var AuthenticatorCore = require("./core/blockchain/authenticator.js").Authenticator;
+var Authenticator = new AuthenticatorCore(io, logger, PacNEMBlockchain, PacNEMDB);
+Authenticator.fetchPersonalTokens();
+
 var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
-var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame, SponsorEngine);
+var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame, SponsorEngine, Authenticator);
 
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
 var PacNEM_Crons = new JobsScheduler(logger, PacNEMBlockchain, PacNEMDB);
@@ -145,7 +149,8 @@ PacNEM_Crons.hourly();
 var PacNEM_Frontend_Config = {
     "business": PacNEMBlockchain.getVendorWallet(),
     "application": PacNEMBlockchain.getPublicWallet(),
-    "namespace": PacNEMBlockchain.getNamespace()
+    "namespace": PacNEMBlockchain.getNamespace(),
+    "dataSalt": config.get("pacnem.secretKey")
 };
 
 /**
@@ -536,6 +541,21 @@ app.post("/api/v1/sessions/store", function(req, res) {
             serverLog(req, errorMessage, "ERROR");
             return res.send(JSON.stringify({ "status": "error", "message": errorMessage }));
         }
+    });
+});
+
+app.post("/api/v1/sessions/verify", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
+
+    var input = {
+        "address": req.body.address,
+        "creds": req.body.creds
+    };
+
+    Authenticator.authenticateAddress(input, function(token) {
+        res.send(JSON.stringify({ "status": "ok", "item": token.transactionHash }));
+    }, function(error) {
+        res.send(JSON.stringify({ "status": "error" }));
     });
 });
 
