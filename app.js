@@ -140,6 +140,10 @@ var Authenticator = new AuthenticatorCore.Authenticator(io, logger, PacNEMBlockc
 var AuthErrors = new AuthenticatorCore.AuthenticatorErrors();
 Authenticator.fetchPersonalTokens();
 
+var CreditsCore = require("./core/blockchain/game-credits.js");
+var GameCredits = new CreditsCore.GameCredits(io, logger, PacNEMBlockchain, PacNEMDB);
+var GameCreditsErrors = new CreditsCore.GameCreditErrors();
+
 var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
 var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame, SponsorEngine, Authenticator);
 
@@ -443,7 +447,7 @@ app.get("/api/v1/sessions/get", function(req, res) {
         }
 
         // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-        PacNEMBlockchain.fetchHeartsByGamer(player);
+        GameCredits.fetchHeartsByGamer(player);
 
         // session retrieved.
         return res.send(JSON.stringify({ item: player }));
@@ -504,7 +508,7 @@ app.post("/api/v1/sessions/store", function(req, res) {
 
             if (input.validateHearts === true) {
                 // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-                PacNEMBlockchain.fetchHeartsByGamer(player);
+                GameCredits.fetchHeartsByGamer(player);
             }
 
             return res.send(JSON.stringify({ item: player }));
@@ -531,7 +535,7 @@ app.post("/api/v1/sessions/store", function(req, res) {
 
             if (input.validateHearts === true) {
                 // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-                PacNEMBlockchain.fetchHeartsByGamer(player);
+                GameCredits.fetchHeartsByGamer(player);
             }
 
             return res.send(JSON.stringify({ item: player }));
@@ -560,6 +564,8 @@ app.post("/api/v1/sessions/verify", function(req, res) {
     };
 
     Authenticator.authenticateAddress(bundle, function(token) {
+        // Authentication was successful, Player can now play PacNEM
+
         res.send(JSON.stringify({ "status": "ok", "item": token.transactionHash }));
     }, function(response) {
 
@@ -1019,6 +1025,8 @@ app.get("/api/v1/reset", function(req, res) {
     PacNEMDB.NEMAppsPayout.find({}).remove(function(err) {});
     PacNEMDB.NEMBot.find({}).remove(function(err) {});
     PacNEMDB.NEMReward.find({}).remove(function(err) {});
+    PacNEMDB.NEMPersonalToken.find({}).remove(function(err) {});
+    PacNEMDB.NEMFailedLogins.find({}).remove(function(err) {});
 
     return res.send(JSON.stringify({ "status": "ok" }));
 });
