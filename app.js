@@ -547,15 +547,15 @@ app.post("/api/v1/sessions/store", function(req, res) {
 app.post("/api/v1/sessions/verify", function(req, res) {
     res.setHeader('Content-Type', 'application/json');
 
-    var input = {
+    var bundle = {
         "address": req.body.address,
         "creds": req.body.creds
     };
 
-    Authenticator.authenticateAddress(input, function(token) {
+    Authenticator.authenticateAddress(bundle, function(token) {
         res.send(JSON.stringify({ "status": "ok", "item": token.transactionHash }));
-    }, function(error) {
-        res.send(JSON.stringify({ "status": "error" }));
+    }, function(response) {
+        res.send(JSON.stringify({ "status": "error", "code": response.code }));
     });
 });
 

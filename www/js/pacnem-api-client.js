@@ -327,25 +327,23 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
         });
     };
 
-    this.encryptData_ = function(plain) {
+    this.enc_b64 = function(plain) {
         var CryptoJS = this.ctrl_.getSDK().crypto.js;
 
-        var salt = this.config_.dataSalt;
-        var encSalt = CryptoJS.enc.Hex.parse(salt);
-        var encrypted = CryptoJS.AES.encrypt(secretMessage, encSalt, {
-            mode: CryptoJS.mode.ECB,
-            padding: CryptoJS.pad.NoPadding
-        });
-        return encrypted.ciphertext;
+        var words = CryptoJS.enc.Utf8.parse(plain);
+        var encoded = CryptoJS.enc.Base64.stringify(words);
+
+        return encoded;
     };
+
 
     this.verifyPlayerIdentity = function(session, credential, callback) {
 
         // now encrypt
-        var creds = this.encryptData_(credential);
+        var creds = this.enc_b64(credential);
         var params = {
             "address": session.address,
-            "creds": creds.toString()
+            "creds": creds
         };
 
         this.jquery_.ajax({

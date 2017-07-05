@@ -24,31 +24,21 @@
 
     var __smartfilename = path.basename(__filename);
 
-    var encryptData_ = function(plain) {
-        var salt = config.get("pacnem.dataSalt");
-        var encSalt = CryptoJS.enc.Hex.parse(salt);
-        var encrypted = CryptoJS.AES.encrypt(secretMessage, encSalt, {
-            mode: CryptoJS.mode.ECB,
-            padding: CryptoJS.pad.NoPadding
-        });
-        return encrypted.ciphertext;
+    var base64_encode = function(plain) {
+        var words = CryptoJS.enc.Utf8.parse(plain);
+        var encoded = CryptoJS.enc.Base64.stringify(words);
+
+        return encoded;
     };
 
-    var decryptData_ = function(cipher) {
-        var salt = config.get("pacnem.dataSalt");
-        var hexSalt = CryptoJS.enc.Hex.parse(salt);
+    var base64_decode = function(text) {
+        var words = CryptoJS.enc.Base64.parse(text);
+        return words.toString(CryptoJS.enc.Utf8);
+    };
 
-        var hexCipher = CryptoJS.enc.Hex.parse(cipher);
-        var params = CryptoJS.lib.CipherParams.create({
-            ciphertext: hexCipher
-        });
-
-        var bytes = CryptoJS.AES.decrypt(params, hexSalt, {
-            mode: CryptoJS.mode.ECB,
-            padding: CryptoJS.pad.NoPadding
-        });
-
-        return bytes.toString(CryptoJS.enc.Utf8);
+    var __Errors = function() {
+        this.E_ADDRESS_UNKNOWN = 2;
+        this.E_INVALID_CREDENTIALS = 3;
     };
 
     /**
@@ -62,6 +52,7 @@
         this.logger_ = logger;
         this.blockchain_ = chainDataLayer;
         this.db_ = dataLayer;
+        this.errors = new __Errors();
 
         this.personalTokensTrxes_ = { "trxIdList": {}, "tokens": {} };
 
@@ -82,13 +73,28 @@
             if (!bundle || !bundle.creds || !bundle.address)
                 return onFailure();
 
-            var token = decryptData_(bundle.creds);
-            this.db_.NEMPersonalToken.find({ "address": bundle.address, "plainToken": token }, function(err, entry) {
-                if (err || !entry) {
-                    return onFailure();
-                }
+            var self = this;
+            var token = base64_decode(bundle.creds);
 
-                return onSuccess(entry);
+            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Raw Token: '" + bundle.creds + "' - base64_decoded: '" + token + "'");
+
+            self.db_.NEMPersonalToken.findOne({ "address": bundle.address, "plainToken": token }, function(err, entry) {
+                if (err || !entry) {
+                    // error code will be different according to *Wrong Provided Token*
+                    // and *Never Created Token*.
+                    self.db_.NEMPersonalToken.findOne({ address: bundle.address }, function(err, entry) {
+                        if (err || !entry) {
+                            // No Personal Token ever sent for this Address
+                            return onFailure({ code: self.errors.E_ADDRESS_UNKNOWN });
+                        }
+
+                        return onFailure({ code: self.errors.E_INVALID_CREDENTIALS });
+                    });
+                } else {
+                    // authentication success
+
+                    return onSuccess(entry);
+                }
             });
         }
 
@@ -416,4 +422,5 @@
     };
 
     module.exports.Authenticator = Authenticator;
+    module.exports.AuthenticatorErrors = __Errors;
 }());

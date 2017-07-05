@@ -203,7 +203,7 @@
         "label_mosaic_rampage": "Rampage",
         "label_mosaic_ghostbuster": "Ghostbuster",
         "label_mosaic_godlike_101010": "Godlike (101010)",
-        "label_mosaic_personal_token": "Login Token",
+        "label_mosaic_personal_token": "Login Token"
     },
     "security": {
         "title_session_expire": "Your session is about to expire",
@@ -217,6 +217,7 @@
         "info_player_authenticate": "If you don't remember your Personal Token anymore, check your Wallet and look for the Transaction containing a <b>pacnem:personal-token</b> Mosaic. The <i>message</i> of this transaction is your <b>Personal Token</b>.",
         "check_account_address": "Please check following Account for Incoming Transactions with a Mosaic <b>pacnem:personal-token</b>:",
         "button_authenticate": "Login",
-        "button_cancel": "Cancel"
+        "button_cancel": "Cancel",
+        "token_placeholder": "Your Token"
     }
 }

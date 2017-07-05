@@ -203,7 +203,7 @@
         "label_mosaic_rampage": "Rampage",
         "label_mosaic_ghostbuster": "Ghostbuster",
         "label_mosaic_godlike_101010": "Godlike (101010)",
-        "label_mosaic_personal_token": "Login Token",
+        "label_mosaic_personal_token": "Login Token"
     },
     "security": {
         "title_session_expire": "Your session is about to expire",

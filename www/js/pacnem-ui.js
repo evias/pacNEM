@@ -639,7 +639,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             });
 
             return false;
-        } else {
+        } else if (ctrl_.isPlayMode("pay-per-play")) {
             // User needs Auth Code to authenticate
             self.authenticatePlayer(session_, function() {
                 console.log("Player authenticated");
@@ -685,8 +685,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             $("#pacnem-player-authenticate-trigger").off("click");
             $("#pacnem-player-authenticate-trigger").on("click", function() {
 
-                var credentials = $("#pacnem-player-verify").val();
-                API_.verifyPlayerIdentity(session, credentials, function(response) {
+                var credentials = $("#player-authenticate-token").val();
+                API_.verifyPlayerIdentity(ui.getPlayerDetails(), credentials, function(response) {
                     if (!response.code || response.code >= 2) {
                         return fail();
                     }
@@ -699,7 +699,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             $("#pacnem-player-authenticate-cancel-trigger").off("click");
             $("#pacnem-player-authenticate-cancel-trigger").on("click", function() {
-                ui.resetSession();
+                ui.resetSession(true);
                 return false;
             });
         };
@@ -711,7 +711,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         // trigger button.
         template_.render("player-authenticate", function(compileWith) {
 
-            var authFormData = { playerAddr: session.details_.xem };
+            var authFormData = {
+                playerAddr: session.details_.xem,
+                currentNetwork: { label: $("#currentBlockchain-network").text() }
+            };
 
             // add modal box HTML
             var html = $("#pacnem-modal-wrapper").html();
@@ -769,8 +772,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * 
      * @return {GameUI}
      */
-    this.resetSession = function() {
+    this.resetSession = function(forceNow = false) {
         //console.log("[DEBUG] [UI] " + "Now loading session-expire modal");
+
+        if (forceNow === true) {
+            session_.clear();
+            window.location.href = "/";
+            return self;
+        }
 
         // display modal box informing about Session Expire
         // the modal box contains a seconds counter on the close 
@@ -785,6 +794,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             // we don't want the sponsor modal now and will expire the session.
             $(".pacnem-sponsor-modal").first().remove();
+            $(".pacnem-player-authenticate-modal").first().remove();
             $(".pacnem-session-expire-modal").first().modal({
                 backdrop: "static",
                 keyboard: false,
