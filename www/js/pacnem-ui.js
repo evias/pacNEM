@@ -56,10 +56,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
         socket_.on('ready', function(rawdata) {
             self.hideLounge();
-            $("#game").show();
             self.displayUserDetails(rawdata);
             ctrl_.serverReady(rawdata);
             self.registerKeyListeners();
+            self.displayBoard(rawdata);
         });
 
         socket_.on('end_of_game', function(rawdata) {
@@ -142,6 +142,22 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             // to update the credits.
             API_.getSession(sess, function(response) {});
         });
+
+        return this;
+    };
+
+    /**
+     * This method displays the game board and scrolls the window
+     * to center the board.
+     * 
+     * @param   {Object}    rawdata
+     * @return GameUI
+     */
+    this.displayBoard = function(rawdata) {
+        $("#game").show();
+        $('html, body').animate({
+            scrollTop: $("#game").offset().top
+        }, 10);
 
         return this;
     };
@@ -623,15 +639,117 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             });
 
             return false;
-        }
+        } else if (ctrl_.isPlayMode("pay-per-play")) {
+            // User needs Auth Code to authenticate
+            self.authenticatePlayer(session_, function() {
+                console.log("Player authenticated");
 
-        // we can safely emit the session creation, this user is
-        // either a pay-per-play or share-per-play (not yet implemented)
-        socket_.emit('change_username', JSON.stringify(details));
-        socket_.emit("notify");
+                // we can safely emit the session creation, this user is
+                // either a pay-per-play or share-per-play (not yet implemented)
+                socket_.emit('change_username', JSON.stringify(details));
+                socket_.emit("notify");
+            }, function(response) {
+
+                if (response.code === 4) {
+                    self.resetSession(false, true);
+                    return false;
+                }
+
+                var $token = $("#player-authenticate-token");
+                var $addon = $token.siblings(".input-group-addon").first();
+
+                $token.addClass("form-error");
+                $addon.addClass("form-error");
+
+                console.log("Authentication Failed - Response Code: " + response.code);
+            });
+        }
 
         // return whether an invoice is needed or not
         return !session_.details_.hearts;
+    };
+
+    /**
+     * This function will open a modal box for the Player to authenticate.
+     * 
+     * The authentication code has been sent on the blockchain *the first time
+     * the user has paid for credits*. He should have received a Transaction
+     * with *pacnem:personal-token* Mosaic containing a Message which is the 
+     * said *Personal Token*.
+     * 
+     * @param   {GameSession}   session
+     * @param   {Function}      onSuccess   Executed on authentication success
+     * @param   {Function}      onFailure   Executed on authentication failure
+     * @return  {GameUI}
+     */
+    this.authenticatePlayer = function(session, onSuccess, onFailure) {
+
+        /**
+         * Function used to initialize DOM button event listeners when
+         * the modal box is displayed.
+         * 
+         * @param   {GameUI}    ui
+         * @param   {Function}  success
+         * @param   {Function}  fail
+         * @return  void
+         */
+        var registerAuthFormListeners = function(ui, success, fail) {
+            $("#pacnem-player-authenticate-trigger").off("click");
+            $("#pacnem-player-authenticate-trigger").on("click", function() {
+
+                var $token = $("#player-authenticate-token");
+                var $addon = $token.siblings(".input-group-addon").first();
+
+                $token.removeClass("form-error");
+                $addon.removeClass("form-error");
+
+                var credentials = $("#player-authenticate-token").val();
+                API_.verifyPlayerIdentity(ui.getPlayerDetails(), credentials, function(response) {
+                    if (!response.code || response.code >= 2) {
+                        return fail(response);
+                    }
+
+                    return success();
+                });
+
+                return false;
+            });
+
+            $("#pacnem-player-authenticate-cancel-trigger").off("click");
+            $("#pacnem-player-authenticate-cancel-trigger").on("click", function() {
+                ui.resetSession(true);
+                return false;
+            });
+        };
+
+        var self = this;
+
+        // display modal box informing about Session Expire
+        // the modal box contains a seconds counter on the close 
+        // trigger button.
+        template_.render("player-authenticate", function(compileWith) {
+
+            var authFormData = {
+                playerAddr: session.details_.xem,
+                currentNetwork: { label: $("#currentBlockchain-network").text() }
+            };
+
+            // add modal box HTML
+            var html = $("#pacnem-modal-wrapper").html();
+            $("#pacnem-modal-wrapper").html(html + compileWith(authFormData));
+
+            //console.log("[DEBUG] [UI] " + "Now displaying player-authenticate modal");
+
+            $(".pacnem-player-authenticate-modal").first().modal({
+                backdrop: "static",
+                keyboard: false,
+                show: true
+            });
+
+            registerAuthFormListeners(self, onSuccess, onFailure);
+        });
+
+        return self;
     };
 
     /**
@@ -672,13 +790,21 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * 
      * @return {GameUI}
      */
-    this.resetSession = function() {
+    this.resetSession = function(forceNow = false, isBlocked = false) {
         //console.log("[DEBUG] [UI] " + "Now loading session-expire modal");
+
+        if (forceNow === true) {
+            session_.clear();
+            window.location.href = "/";
+            return self;
+        }
+
+        var tpl = isBlocked === true ? "session-blocked" : "session-expire";
 
         // display modal box informing about Session Expire
         // the modal box contains a seconds counter on the close 
         // trigger button.
-        template_.render("session-expire", function(compileWith) {
+        template_.render(tpl, function(compileWith) {
 
             // add modal box HTML
             var html = $("#pacnem-modal-wrapper").html();
@@ -688,6 +814,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             // we don't want the sponsor modal now and will expire the session.
             $(".pacnem-sponsor-modal").first().remove();
+            $(".pacnem-player-authenticate-modal").first().remove();
             $(".pacnem-session-expire-modal").first().modal({
                 backdrop: "static",
                 keyboard: false,
@@ -999,6 +1126,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             }
         };
 
+        /**
+         * This function will be used when the modal box for the Invoice
+         * can be closed. (Payment has been identified and confirmed)
+         */
         var closeableInvoiceModalBox = function(ui, callback) {
             $(".pacnem-invoice-close-trigger").show();
             $(".pacnem-invoice-close-trigger").off("click");
@@ -1155,7 +1286,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         return this;
     };
 
+    /**
+     * The fillInvoiceModal process data after Invoice Creation
+     * 
+     * @param   {Object}    data    Should contain `invoice` key
+     * @param   {Boolean}   closeable   Whether the Invoice window can be closed
+     * @return  {GameUI}
+     */
     this.fillInvoiceModal = function(data, closeable = false) {
+        var self = this;
+
+        // read DOM for invoice
         var prefix = $("#pacnem-invoice-prefix").val();
         var $number = $("#" + prefix + "-id");
         var $recipient = $("#" + prefix + "-recipient");
@@ -1171,6 +1312,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         var rcvPlayerHtml = '<div><div class="label label-default label-mosaic"><b>1&nbsp;<i class="glyphicon glyphicon-user"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:player</a></div>';
         var rcvBetaHtml = '<div><div class="label label-primary label-mosaic"><b>1&nbsp;<i class="glyphicon glyphicon-star-empty"></i></div>&nbsp;<a href="http://nem.io" target="_blank">evias.pacnem:beta-player</a></div>';
 
+        // update and interepret invoice data
         $number.html(data.invoice.number);
         $recipient.html(data.invoice.recipientXEM);
         $amount.html(fmtAmount);
@@ -1239,8 +1381,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             $(".pacnem-invoice-modal").modal("hide");
             return false;
         });
+
+        return self;
     };
 
+    /**
+     * Helper function to display a given Invoice by its 
+     * number `invoiceNumber`.
+     * 
+     * @param   {String}    invoiceNumber
+     * @return GameUI
+     */
     this.displayInvoice = function(invoiceNumber) {
         var self = this;
         var player = self.getPlayerDetails();
@@ -1252,6 +1403,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 self.unsetLoadingUI();
             });
         });
+
+        return self;
     };
 
     /**

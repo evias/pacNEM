@@ -402,3 +402,7 @@ blockquote.bq-minimal-centered {
     background: url(/img/loading_nem.gif) no-repeat center;
     height: 180px;
 }
+
+.form-error {
+    border-color: #f00;
+}

@@ -262,6 +262,22 @@
             createdAt: { type: Number, min: 0 }
         });
 
+        this.NEMPersonalToken_ = new mongoose.Schema({
+            address: String,
+            plainToken: String,
+            transactionHash: String,
+            mosaics: Object,
+            createdAt: { type: Number, min: 0 },
+            updatedAt: { type: Number, min: 0 }
+        });
+
+        this.NEMFailedLogins_ = new mongoose.Schema({
+            ipAddress: String,
+            address: String,
+            browserData: String,
+            createdAt: { type: Number, min: 0 }
+        });
+
         // bind our Models classes
         this.NEMGameCredit = mongoose.model("NEMGameCredit", this.NEMGameCredit_);
         this.NEMGamer = mongoose.model("NEMGamer", this.NEMGamer_);
@@ -272,6 +288,8 @@
         this.NEMGame = mongoose.model("NEMGame", this.NEMGame_);
         this.NEMAppsPayout = mongoose.model("NEMAppsPayout", this.pacNEMPayout_);
         this.NEMReward = mongoose.model("NEMReward", this.NEMReward_);
+        this.NEMPersonalToken = mongoose.model("NEMPersonalToken", this.NEMPersonalToken_);
+        this.NEMFailedLogins = mongoose.model("NEMFailedLogins", this.NEMFailedLogins_);
     };
 
     module.exports.pacnem = pacnem;
@@ -284,4 +302,6 @@
     module.exports.NEMBot = pacnem.NEMBot;
     module.exports.NEMGame = pacnem.NEMGame;
     module.exports.NEMReward = pacnem.NEMReward;
+    module.exports.NEMPersonalToken = pacnem.NEMPersonalToken;
+    module.exports.NEMFailedLogins = pacnem.NEMFailedLogins;
 }());

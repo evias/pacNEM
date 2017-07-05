@@ -55,13 +55,14 @@
      *
      * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
      */
-    var PacNEMProtocol = function(io, logger, chainDataLayer, dataLayer, hallOfFame, sponsorEngine) {
+    var PacNEMProtocol = function(io, logger, chainDataLayer, dataLayer, hallOfFame, sponsorEngine, authenticator) {
         this.socketIO_ = io;
         this.logger_ = logger;
         this.blockchain_ = chainDataLayer;
         this.db_ = dataLayer;
         this.hallOfFame_ = hallOfFame;
         this.sponsorEngine_ = sponsorEngine;
+        this.authenticator_ = authenticator;
         this.roomManager_ = new RoomManager(io);
 
         /**

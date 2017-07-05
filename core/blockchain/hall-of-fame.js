@@ -373,7 +373,7 @@
          * Mosaic Transfer Transaction with evias.pacnem:cheese, possible evias.pacnem:hall-of-famer
          * and evias.pacnem:all-time-best-player and announces it on the network.
          * 
-         * The Wallet used in this payout is the MULTISIG WALLET.
+         * The Wallet used in this payout is the MULTISIG WALLET (vendor wallet).
          * 
          * @param   {NEMReward} nemReward
          * @param   {Pacman}    pacman
