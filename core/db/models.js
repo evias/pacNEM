@@ -275,6 +275,15 @@
             ipAddress: String,
             address: String,
             browserData: String,
+            checksum: String,
+            createdAt: { type: Number, min: 0 }
+        });
+
+        this.PacNEMClientSession_ = new mongoose.Schema({
+            ipAddress: String,
+            address: String,
+            browserData: String,
+            checksum: String,
             createdAt: { type: Number, min: 0 }
         });
 
@@ -290,6 +299,7 @@
         this.NEMReward = mongoose.model("NEMReward", this.NEMReward_);
         this.NEMPersonalToken = mongoose.model("NEMPersonalToken", this.NEMPersonalToken_);
         this.NEMFailedLogins = mongoose.model("NEMFailedLogins", this.NEMFailedLogins_);
+        this.PacNEMClientSession = mongoose.model("PacNEMClientSession", this.PacNEMClientSession_);
     };
 
     module.exports.pacnem = pacnem;
@@ -304,4 +314,5 @@
     module.exports.NEMReward = pacnem.NEMReward;
     module.exports.NEMPersonalToken = pacnem.NEMPersonalToken;
     module.exports.NEMFailedLogins = pacnem.NEMFailedLogins;
+    module.exports.PacNEMClientSession = pacnem.PacNEMClientSession;
 }());
