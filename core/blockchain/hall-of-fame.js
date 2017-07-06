@@ -342,7 +342,7 @@
             // used to avoid sending rewards more than 1 time.
             var message = JSON.stringify(pacman);
 
-            self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Sending Cheese with Pacman Object Plain JSON: '" + message);
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Sending Cheese with Pacman Object Plain JSON: '" + message);
 
             // find already paid out Rewards
             self.db_.NEMReward.findOne({ "address": pacman.address, "encryptedMessage": message },
@@ -402,7 +402,7 @@
             // only send mosaics to hall of famers
                 return false;
 
-            self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending " + pacman.score + " cheeses to player " + pacman.address + " with username '" + pacman.username + "' paid by " + self.blockchain_.getVendorWallet());
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending " + pacman.score + " cheeses to player " + pacman.address + " with username '" + pacman.username + "' paid by " + self.blockchain_.getVendorWallet());
 
             // Create an un-prepared multisig mosaic transfer transaction object 
             // Must be Multisig because mosaic evias.pacnem:cheese is non-transferable

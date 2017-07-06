@@ -110,11 +110,40 @@ app.configure(function() {
 
     app.use(flash());
     app.use(validator());
+
+    app.use(function(req, res, next) {
+        req.i18n = i18n;
+
+        if (req.session.locale) // check if user has changed i18n settings
+            req.i18n.changeLanguage(req.session.locale);
+
+        next();
+    });
 });
 /**
  * End Application Middlewares
  */
 
+/**
+ * Configure the PacNEM Backend Modules. This includes following:
+ * 
+ * - PacNEMBlockchain : defines general blockchain config (hosts, wallets)
+ * - PacNEMDB : MongoDB (mongoose) wrapper for the PacNEM backend
+ * - PaymentsProtocol : PacNEM's Payment Protocol defines how to handle Invoices
+ * - HallOfFame : Blockchain Hall of Fame business layer
+ * - SponsorEngine : Blockchain Advertizing Pay per View
+ * - Authenticator : Authentication on the Blockchain
+ * - GameCredits : Game Credits as Mosaics on the Blockchain
+ * - PacNEMSockets : Websockets for the PacNEM Game.
+ * - PacNEM_Crons : Define workers for the PacNEM Backend
+ * 
+ * I know that some of those business layer classes would have probably
+ * been easier to work with if they worked only with a Database, but the 
+ * fun of the project was to link as many Blockchain Features to it as 
+ * possible.
+ * 
+ * Enjoy :)
+ */
 // configure blockchain layer
 var blockchain = require('./core/blockchain/service.js');
 var PacNEMBlockchain = new blockchain.service(io, nem, logger);
@@ -140,8 +169,12 @@ var Authenticator = new AuthenticatorCore.Authenticator(io, logger, PacNEMBlockc
 var AuthErrors = new AuthenticatorCore.AuthenticatorErrors();
 Authenticator.fetchPersonalTokens();
 
+var CreditsCore = require("./core/blockchain/game-credits.js");
+var GameCredits = new CreditsCore.GameCredits(io, logger, PacNEMBlockchain, PacNEMDB);
+var GameCreditsErrors = new CreditsCore.GameCreditErrors();
+
 var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
-var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame, SponsorEngine, Authenticator);
+var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame, SponsorEngine, Authenticator, GameCredits);
 
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
 var PacNEM_Crons = new JobsScheduler(logger, PacNEMBlockchain, PacNEMDB);
@@ -153,19 +186,6 @@ var PacNEM_Frontend_Config = {
     "namespace": PacNEMBlockchain.getNamespace(),
     "dataSalt": config.get("pacnem.secretKey")
 };
-
-/**
- * View Engine Customization
- *
- * - handlebars t() helper for template translations handling with i18next
- **/
-handlebars.registerHelper('t', function(key, sub) {
-    if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
-    // dynamic subnamespace
-        var key = key + "." + sub;
-
-    return new handlebars.SafeString(i18n.t(key));
-});
 
 /**
  * Serving static Assets (images, CSS, JS files)
@@ -186,6 +206,19 @@ var serveStaticFile = function(req, res, path) {
 
     return res.sendfile(path);
 };
+
+/**
+ * View Engine Customization
+ *
+ * - handlebars t() helper for template translations handling with i18next
+ **/
+handlebars.registerHelper('t', function(key, sub) {
+    if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
+    // dynamic subnamespace
+        var key = key + "." + sub;
+
+    return new handlebars.SafeString(i18n.t(key));
+});
 
 /**
  * Third Party static asset serving
@@ -218,174 +251,204 @@ app.get('/favicon.ico', function(req, res) {
 });
 
 /**
+ * - Asynchronous `player-authenticate` login screen
+ *      * This screen will also check for available sessions
+ *        to keep the Player logged in.
  * - Asynchronous Template Serving
  * - XHR Translations loading
  *
  * The templates present in views/partials can be rendered
  * using the jQFileTemplate frontend implementation.
  */
-app.get('/resources/templates/:name', function(req, res) {
-        res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
-    })
-    .get('/locales/:lang', function(req, res) {
-        var json = fs.readFileSync(__dirname + '/locales/' + req.params.lang + '/translation.json');
+app.get('/resources/templates/player-authenticate', function(req, res) {
 
-        res.setHeader("Content-Type", "application/json; charset=utf-8");
-        res.send(json);
+    var ip = req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
+
+    var bundle = {
+        ip: ip,
+        client: req.headers['user-agent']
+    };
+
+    Authenticator.getActiveSession(bundle, function(session) {
+        // Player has an active Session, no need to authenticate
+        var tpl = fs.readFileSync(__dirname + '/views/partials/player-back.hbs');
+        tpl = tpl.toString().replace(/%TOKEN%/g, session.checksum)
+
+        return res.send(tpl);
+    }, function(response) {
+        // Player must now enter a Token to authenticate.
+
+        return res.sendfile(__dirname + '/views/partials/player-authenticate.hbs');
     });
+});
+app.get('/resources/templates/:name', function(req, res) {
+    res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
+});
+app.get('/locales/:lang', function(req, res) {
+    //XXX fileExistsSync
+
+    var json = fs.readFileSync(__dirname + '/locales/' + req.params.lang + '/translation.json');
+
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.send(json);
+});
 
 /**
  * Frontend Web Application Serving
  *
- * This part of the game is where the end-user is active.
+ * This part of the game is where the end-user is active. Served
+ * frontend URLs include:
+ * 
+ * - GET /sponsor  : Page with Form for Sponsor Registration
+ * - POST /sponsor : Sponsor Registration Process
+ * - GET /:lang?   : Frontend home page 
  */
 app.get("/sponsor", function(req, res) {
-        var currentLanguage = i18n.language;
-        var currentNetwork = PacNEMBlockchain.getNetwork();
+    var currentLanguage = i18n.language;
+    var currentNetwork = PacNEMBlockchain.getNetwork();
 
-        var viewData = {
-            currentNetwork: currentNetwork,
-            currentLanguage: currentLanguage,
-            PacNEM_Frontend_Config: PacNEM_Frontend_Config,
-            errors: {},
-            values: {}
-        };
+    var viewData = {
+        currentNetwork: currentNetwork,
+        currentLanguage: currentLanguage,
+        PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+        errors: {},
+        values: {}
+    };
 
-        res.render("sponsor", viewData);
-    })
-    .post("/sponsor", function(req, res) {
-        var currentLanguage = i18n.language;
-        var currentNetwork = PacNEMBlockchain.getNetwork();
+    res.render("sponsor", viewData);
+});
 
-        var viewData = {
-            currentNetwork: currentNetwork,
-            currentLanguage: currentLanguage,
-            PacNEM_Frontend_Config: PacNEM_Frontend_Config,
-            errors: {},
-            values: {}
-        };
+app.post("/sponsor", function(req, res) {
+    var currentLanguage = i18n.language;
+    var currentNetwork = PacNEMBlockchain.getNetwork();
 
-        var mandatoryFieldError = i18n.t("sponsor_engine.error_missing_mandatory_field");
+    var viewData = {
+        currentNetwork: currentNetwork,
+        currentLanguage: currentLanguage,
+        PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+        errors: {},
+        values: {}
+    };
 
-        //XXX SANITIZE
+    var mandatoryFieldError = i18n.t("sponsor_engine.error_missing_mandatory_field");
 
-        //req.check("realname", mandatoryFieldError).notEmpty();
-        //req.check("email", mandatoryFieldError).notEmpty();
-        //req.check("email", mandatoryFieldError).isEmail();
-        //req.check("sponsorname", mandatoryFieldError).notEmpty();
-        //req.check("type_advertizing", mandatoryFieldError).notEmpty();
-        //req.check("description", mandatoryFieldError).notEmpty();
+    //XXX SANITIZE
 
-        var input = {
-            "realname": req.body.realname,
-            "xem": req.body.xem,
-            "email": req.body.email,
-            "sponsorname": req.body.sponsorname,
-            "url": req.body.url,
-            "type_advertizing": req.body.type_advertizing,
-            "description": req.body.description
-        };
+    //req.check("realname", mandatoryFieldError).notEmpty();
+    //req.check("email", mandatoryFieldError).notEmpty();
+    //req.check("email", mandatoryFieldError).isEmail();
+    //req.check("sponsorname", mandatoryFieldError).notEmpty();
+    //req.check("type_advertizing", mandatoryFieldError).notEmpty();
+    //req.check("description", mandatoryFieldError).notEmpty();
 
-        //var errors = req.validationErrors();
+    var input = {
+        "realname": req.body.realname,
+        "xem": req.body.xem,
+        "email": req.body.email,
+        "sponsorname": req.body.sponsorname,
+        "url": req.body.url,
+        "type_advertizing": req.body.type_advertizing,
+        "description": req.body.description
+    };
 
-        //if (errors) {
-        //XXX errors will be indexed by field name
+    //var errors = req.validationErrors();
 
-        var errors = {};
-        var isFormValid = true;
-        var mandatories = ["realname", "xem", "email", "sponsorname", "type_advertizing", "description"];
-        for (var i in mandatories) {
-            var field = mandatories[i];
-            if (!input[field] || !input[field].length) {
-                errors[field] = i18n.t("sponsor_engine.error_missing_mandatory_field");
-                isFormValid = false;
-            }
+    //if (errors) {
+    //XXX errors will be indexed by field name
+
+    var errors = {};
+    var isFormValid = true;
+    var mandatories = ["realname", "xem", "email", "sponsorname", "type_advertizing", "description"];
+    for (var i in mandatories) {
+        var field = mandatories[i];
+        if (!input[field] || !input[field].length) {
+            errors[field] = i18n.t("sponsor_engine.error_missing_mandatory_field");
+            isFormValid = false;
         }
+    }
 
-        if (!isFormValid) {
-            viewData["errors"] = errors;
-            viewData["values"] = input;
+    if (!isFormValid) {
+        viewData["errors"] = errors;
+        viewData["values"] = input;
+        return res.render("sponsor", viewData);
+    }
+    //}
+
+    //serverLog(req, JSON.stringify(input), "[DEBUG]");
+    //serverLog(req, JSON.stringify(errors), "[DEBUG]");
+    //serverLog(req, JSON.stringify(isFormValid), "[DEBUG]");
+
+    // Form input is valid!
+
+    PacNEMDB.NEMSponsor.findOne({ email: input.email }, function(err, sponsor) {
+        if (err) {
+            // error reading sponsor
+            viewData.errors = { general: err };
             return res.render("sponsor", viewData);
         }
-        //}
 
-        //serverLog(req, JSON.stringify(input), "[DEBUG]");
-        //serverLog(req, JSON.stringify(errors), "[DEBUG]");
-        //serverLog(req, JSON.stringify(isFormValid), "[DEBUG]");
+        if (sponsor) {
+            // sponsor by email already exists!
+            viewData.errors = { general: i18n.t("sponsor_engine.error_email_unique") };
+            return res.render("sponsor", viewData);
+        }
 
-        // Form input is valid!
+        var sponsorSlug = input.sponsorname.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
 
-        PacNEMDB.NEMSponsor.findOne({ email: input.email }, function(err, sponsor) {
+        sponsor = new PacNEMDB.NEMSponsor({
+            slug: sponsorSlug,
+            realName: input.realname,
+            xem: input.xem.replace(/-/g, ""),
+            sponsorName: input.sponsorname,
+            email: input.email,
+            description: input.description,
+            websiteUrl: input.url,
+            advertType: input.type_advertizing,
+            createdAt: new Date().valueOf()
+        });
+
+        sponsor.save(function(err) {
             if (err) {
-                // error reading sponsor
+                // error saving sponsor
                 viewData.errors = { general: err };
                 return res.render("sponsor", viewData);
             }
 
-            if (sponsor) {
-                // sponsor by email already exists!
-                viewData.errors = { general: i18n.t("sponsor_engine.error_email_unique") };
-                return res.render("sponsor", viewData);
-            }
-
-            var sponsorSlug = input.sponsorname.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
-
-            sponsor = new PacNEMDB.NEMSponsor({
-                slug: sponsorSlug,
-                realName: input.realname,
-                xem: input.xem.replace(/-/g, ""),
-                sponsorName: input.sponsorname,
-                email: input.email,
-                description: input.description,
-                websiteUrl: input.url,
-                advertType: input.type_advertizing,
-                createdAt: new Date().valueOf()
-            });
-
-            sponsor.save(function(err) {
-                if (err) {
-                    // error saving sponsor
-                    viewData.errors = { general: err };
-                    return res.render("sponsor", viewData);
-                }
-
-                req.flash("info", i18n.t("sponsor_engine.registered_success"));
-                return res.redirect("/");
-            })
-        });
-    })
-    .get("/:lang", function(req, res) {
-        var currentLanguage = req.params.lang;
-        var currentNetwork = PacNEMBlockchain.getNetwork();
-
-        i18n.changeLanguage(currentLanguage);
-
-        var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
-
-        var viewData = {
-            currentNetwork: currentNetwork,
-            currentLanguage: currentLanguage,
-            PacNEM_Frontend_Config: PacNEM_Frontend_Config,
-            notificationMessage: notificationMessage
-        };
-
-        res.render("play", viewData);
-    })
-    .get("/", function(req, res) {
-        var currentLanguage = i18n.language;
-        var currentNetwork = PacNEMBlockchain.getNetwork();
-
-        var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
-
-        var viewData = {
-            currentNetwork: currentNetwork,
-            currentLanguage: currentLanguage,
-            PacNEM_Frontend_Config: PacNEM_Frontend_Config,
-            notificationMessage: notificationMessage
-        };
-
-        res.render("play", viewData);
+            req.flash("info", i18n.t("sponsor_engine.registered_success"));
+            return res.redirect("/");
+        })
     });
+});
+
+app.get("/:lang", function(req, res) {
+    var currentLanguage = req.params.lang;
+    var currentNetwork = PacNEMBlockchain.getNetwork();
+
+    req.session.locale = currentLanguage;
+    if (req.headers.referer)
+        return res.redirect(req.headers.referer);
+
+    return res.redirect("/");
+});
+
+app.get("/", function(req, res) {
+    var currentLanguage = req.i18n.language;
+    var currentNetwork = PacNEMBlockchain.getNetwork();
+
+    var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
+
+    var viewData = {
+        currentNetwork: currentNetwork,
+        currentLanguage: currentLanguage,
+        PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+        notificationMessage: notificationMessage
+    };
+
+    res.render("play", viewData);
+});
 
 /**
  * API Routes
@@ -393,12 +456,20 @@ app.get("/sponsor", function(req, res) {
  * Following routes are used for handling the business/data
  * layer.
  *
- * localStorage does not need any API requests to be
- * executed, only the database synchronization needs
- * these API endpoints.
- *
- * The sponsoring feature will also be built using API
- * routes.
+ * All API routes are prefixed by `/api/v1` currently. Following
+ * API routes are defined by PacNEM:
+ * 
+ * - GET /sessions/get : Read Player Data from Database and issue pacnem_heart_sync
+ * - GET /scores : Read PacNEM Hall Of Fame
+ * - GET /sponsors/random : Fetch random sponsor from the Sponsor Database
+ * - GET /credits/buy : Create Invoice for Frontend for buying Game Credits
+ * - GET /credits/history : View Invoice History (or Single Invoice)
+ * - GET /credits/remaining : Read latest synchronized Game Credits for a Player
+ * - GET /lounge/get : Read Lounge Informations
+ * 
+ * - POST /sessions/store : Store Player Data to the Database  and issue pacnem_heart_sync
+ * - POST /sessions/verify : Player authentication (Personal Token - Pay-per-play only)
+ * - POST /sponsors/watch : Save an *ad view* for the given Sponsor
  */
 app.get("/api/v1/sessions/get", function(req, res) {
     res.setHeader('Content-Type', 'application/json');
@@ -443,7 +514,7 @@ app.get("/api/v1/sessions/get", function(req, res) {
         }
 
         // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-        PacNEMBlockchain.fetchHeartsByGamer(player);
+        GameCredits.fetchHeartsByGamer(player);
 
         // session retrieved.
         return res.send(JSON.stringify({ item: player }));
@@ -504,7 +575,7 @@ app.post("/api/v1/sessions/store", function(req, res) {
 
             if (input.validateHearts === true) {
                 // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-                PacNEMBlockchain.fetchHeartsByGamer(player);
+                GameCredits.fetchHeartsByGamer(player);
             }
 
             return res.send(JSON.stringify({ item: player }));
@@ -531,7 +602,7 @@ app.post("/api/v1/sessions/store", function(req, res) {
 
             if (input.validateHearts === true) {
                 // read blockchain for evias.pacnem:heart mosaic on the given NEMGamer model.
-                PacNEMBlockchain.fetchHeartsByGamer(player);
+                GameCredits.fetchHeartsByGamer(player);
             }
 
             return res.send(JSON.stringify({ item: player }));
@@ -556,12 +627,30 @@ app.post("/api/v1/sessions/verify", function(req, res) {
     var bundle = {
         "from": ip,
         "address": req.body.address,
-        "creds": req.body.creds
+        "creds": req.body.creds,
+        "headers": req.headers
     };
 
+    var CryptoJS = PacNEMBlockchain.getSDK().crypto.js;
+    var payload = JSON.stringify({ ip: bundle.from, client: bundle.headers["user-agent"] });
+    var uaSession = CryptoJS.lib.WordArray.create(payload);
+    var checksum = CryptoJS.MD5(uaSession).toString();
+
     Authenticator.authenticateAddress(bundle, function(token) {
-        res.send(JSON.stringify({ "status": "ok", "item": token.transactionHash }));
+        // Authentication was successful, Player can now play PacNEM
+        var session = new PacNEMDB.PacNEMClientSession({
+            ipAddress: bundle.from,
+            address: bundle.address,
+            browserData: JSON.stringify(req.headers),
+            checksum: checksum,
+            createdAt: new Date().valueOf()
+        });
+        session.save(function(err) {
+            res.send(JSON.stringify({ "status": "ok", "code": 1, "item": session.checksum }));
+        });
+
     }, function(response) {
+        // Authentication ERROR !
 
         if (response.code == AuthErrors.E_SERVER_ERROR || response.code == AuthErrors.E_CLIENT_BLOCKED) {
             // server error or client blocked already
@@ -572,6 +661,7 @@ app.post("/api/v1/sessions/verify", function(req, res) {
                 ipAddress: bundle.from,
                 address: bundle.address,
                 browserData: JSON.stringify(req.headers),
+                checksum: checksum,
                 createdAt: new Date().valueOf()
             });
             failed.save(function(err) {
@@ -1019,6 +1109,8 @@ app.get("/api/v1/reset", function(req, res) {
     PacNEMDB.NEMAppsPayout.find({}).remove(function(err) {});
     PacNEMDB.NEMBot.find({}).remove(function(err) {});
     PacNEMDB.NEMReward.find({}).remove(function(err) {});
+    PacNEMDB.NEMPersonalToken.find({}).remove(function(err) {});
+    PacNEMDB.NEMFailedLogins.find({}).remove(function(err) {});
 
     return res.send(JSON.stringify({ "status": "ok" }));
 });

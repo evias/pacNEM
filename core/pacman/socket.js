@@ -55,7 +55,7 @@
      *
      * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
      */
-    var PacNEMProtocol = function(io, logger, chainDataLayer, dataLayer, hallOfFame, sponsorEngine, authenticator) {
+    var PacNEMProtocol = function(io, logger, chainDataLayer, dataLayer, hallOfFame, sponsorEngine, authenticator, credits) {
         this.socketIO_ = io;
         this.logger_ = logger;
         this.blockchain_ = chainDataLayer;
@@ -63,6 +63,8 @@
         this.hallOfFame_ = hallOfFame;
         this.sponsorEngine_ = sponsorEngine;
         this.authenticator_ = authenticator;
+        this.gameCredits_ = credits;
+
         this.roomManager_ = new RoomManager(io);
 
         /**
@@ -174,7 +176,7 @@
                                 return false;
                             }
 
-                            self.blockchain_.processGameCreditsBurning(gamers);
+                            self.gameCredits_.processGameCreditsBurning(gamers);
                             self.hallOfFame_.processGameScores(details.pacmans);
                         });
                     });

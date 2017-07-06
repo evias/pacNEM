@@ -56,7 +56,8 @@
             // build message with total count ad views and avoid sending message
             // more than once on the nem blockchain.
             var message = "PacNEM Pay per View: " + sponsor.countAdViews + " ad views";
-            self.logger_.info("[DEBUG]", "[PACNEM SPONSOR]", "Sending Daily Ad View with Message Plain JSON: '" + message + "' to Sponsor '" + sponsor.reference + "' with address: " + sponsor.xem);
+
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM SPONSOR]", "Sending Daily Ad View with Message Plain JSON: '" + message + "' to Sponsor '" + sponsor.reference + "' with address: " + sponsor.xem);
 
             // find already paid out Rewards
             self.db_.NEMReward.findOne({ "address": sponsor.xem, "encryptedMessage": message },
@@ -103,7 +104,7 @@
             var adViewsMosaicName = Object.getOwnPropertyNames(appsMosaic.sponsors)[0];
             var adViewsMosaicSlug = self.blockchain_.getNamespace() + ":" + adViewsMosaicName;
 
-            self.logger_.info("[DEBUG]", "[PACNEM SPONSOR]", "Now sending " + countAdViews + " daily-ad-view to Sponsor " + sponsor.xem + " with message '" + nemReward.encryptedMessage + "' paid by " + self.blockchain_.getVendorWallet());
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM SPONSOR]", "Now sending " + countAdViews + " daily-ad-view to Sponsor " + sponsor.xem + " with message '" + nemReward.encryptedMessage + "' paid by " + self.blockchain_.getVendorWallet());
 
             // Create an un-prepared multisig mosaic transfer transaction object
             // Amount 1 is "one time x Mosaic Attachments"

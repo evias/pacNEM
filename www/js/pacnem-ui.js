@@ -641,16 +641,21 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             return false;
         } else if (ctrl_.isPlayMode("pay-per-play")) {
             // User needs Auth Code to authenticate
-            self.authenticatePlayer(session_, function() {
-                console.log("Player authenticated");
+            self.authenticatePlayer(session_, function(response) {
+                console.log("[DEBUG] " + "Player authenticated with checksum: " + response.item);
 
                 // we can safely emit the session creation, this user is
                 // either a pay-per-play or share-per-play (not yet implemented)
                 socket_.emit('change_username', JSON.stringify(details));
                 socket_.emit("notify");
+
+                if ($(".pacnem-player-authenticate-modal").length) {
+                    $(".pacnem-player-authenticate-modal").first().modal("hide");
+                }
             }, function(response) {
 
                 if (response.code === 4) {
+                    // E_CLIENT_BLOCKED
                     self.resetSession(false, true);
                     return false;
                 }
@@ -709,7 +714,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                         return fail(response);
                     }
 
-                    return success();
+                    return success(response);
                 });
 
                 return false;
@@ -740,6 +745,13 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             //console.log("[DEBUG] [UI] " + "Now displaying player-authenticate modal");
 
+            var isAuth = !$(".pacnem-player-authenticate-modal").length;
+            if (isAuth) {
+                var checksum = $("#pacnem-session-checksum").text();
+                return onSuccess({ item: checksum });
+            }
+
+            // display authenticate form modal box
             $(".pacnem-player-authenticate-modal").first().modal({
                 backdrop: "static",
                 keyboard: false,

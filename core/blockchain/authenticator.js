@@ -41,6 +41,7 @@
         this.E_INVALID_CREDENTIALS = 3;
         this.E_CLIENT_BLOCKED = 4;
         this.E_SERVER_ERROR = 5;
+        this.E_SESSION_EXPIRED = 6;
     };
 
     /**
@@ -59,6 +60,60 @@
         this.personalTokensTrxes_ = { "trxIdList": {}, "tokens": {} };
 
         /**
+         * The getActiveSession method checks whether the user has an active
+         * Client Session for the given Browser and IP. (Sessions are kept active
+         * for one Hour).
+         * 
+         * This method will be used whenever the `player-authenticate` Template 
+         * is displayed on the frontend and will trigger displayed the `player-back`
+         * Template instead in case the user has an active session.
+         * 
+         * @param   {Object}    bundle  Should contain key `ip` and key `client`
+         * @param   {Function}  onSuccess
+         * @param   {Function}  onFailure
+         * @return  void
+         */
+        this.getActiveSession = function(bundle, onSuccess, onFailure) {
+
+            var self = this;
+
+            if (!bundle || !bundle.ip || !bundle.client)
+                return onFailure({ code: self.errors.E_SERVER_ERROR, error: "E_SERVER_ERROR" });
+
+            // build MD5 checksum of client data
+            var payload = JSON.stringify(bundle);
+            var uaSession = CryptoJS.lib.WordArray.create(payload);
+            var checksum = CryptoJS.MD5(uaSession).toString();
+
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Authenticating Player with checksum: " + checksum);
+
+            // load session by checksum - if none is available OR if the session
+            // is too old, the user will need to authenticate. If the session is
+            // still valid, the user will only see a loading screen for a few 
+            // seconds before the modal box gets closed. 
+            var query = {
+                ipAddress: bundle.ip,
+                checksum: checksum
+            };
+            var sorting = { sort: { createdAt: -1 } };
+            self.db_.PacNEMClientSession.findOne(query, null, sorting, function(err, session) {
+
+                if (err || !session) {
+                    return onFailure({ code: self.errors.E_SESSION_EXPIRED, error: "E_SESSION_EXPIRED" });
+                }
+
+                // check user session validity by date
+                var oneHourAgo = (new Date().valueOf()) - (60 * 60 * 1000);
+                if (session.createdAt > oneHourAgo) {
+                    // session valid
+                    return onSuccess(session);
+                }
+
+                return onFailure({ code: self.errors.E_SESSION_EXPIRED, error: "E_SESSION_EXPIRED" });
+            });
+        };
+
+        /**
          * The authenticateAddress method uses *only the database* to determine
          * whether authentication is valid or not. This is to avoid reading long
          * transaction lists just for *performing login*. 
@@ -68,12 +123,12 @@
          * is added to the Personal Token database - where *valid data* is data present
          * on the NEM Blockchain.
          * 
-         * @param   {Object}    bundle  Should contain key `address` and key `c
+         * @param   {Object}    bundle  Should contain key `address`, key `creds` and key `headers`
          */
         this.authenticateAddress = function(bundle, onSuccess, onFailure) {
 
-            if (!bundle || !bundle.creds || !bundle.address)
-                return onFailure();
+            if (!bundle || !bundle.creds || !bundle.address || !bundle.headers)
+                return onFailure({ code: self.errors.E_SERVER_ERROR, error: "E_SERVER_ERROR" });
 
             var self = this;
 
@@ -177,6 +232,9 @@
 
                     if (lastTrxRead === false || transactions.length < 25) {
                         // done.
+
+                        self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Total of " + Object.getOwnPropertyNames(self.personalTokensTrxes_.tokens).length + " Tokens Found.");
+
                         self.savePersonalTokensInDatabase(self.personalTokensTrxes_);
                         if (callback)
                             callback(self.personalTokensTrxes_);
@@ -200,7 +258,7 @@
         this.processPersonalTokenTransactions = function(transactions) {
             var self = this;
 
-            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Processing chunk of " + transactions.length + " Transactions for Authenticator.");
+            //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Processing chunk of " + transactions.length + " Transactions for Authenticator.");
 
             var personalTokenSlug = self.blockchain_.getNamespace() + ":" + Object.getOwnPropertyNames(self.blockchain_.getGameMosaicsConfiguration().credits)[2];
 
@@ -247,12 +305,12 @@
 
                 // the message in the transaction represents the address's Personal Token
                 try {
-                    self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Now interpreting: '" + lastMsgRead + "' as JSON for mosaicStake: " + JSON.stringify(mosaicStake));
+                    //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Now interpreting: '" + lastMsgRead + "' as JSON for mosaicStake: " + JSON.stringify(mosaicStake));
 
                     var token = lastMsgRead;
                     var normalized = recipient.replace(/-/g, "");
 
-                    self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Token Found: " + token + " for Address: " + recipient);
+                    //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Token Found: " + token + " for Address: " + recipient);
                     self.personalTokensTrxes_.tokens[normalized] = {
                         "trxHash": lastTrxHash,
                         "token": token
@@ -278,25 +336,31 @@
         this.savePersonalTokensInDatabase = function(tokensData) {
             var self = this;
 
-            if (!tokensData || !tokensData.tokens.length) {
+            if (!tokensData || !Object.getOwnPropertyNames(tokensData.tokens).length) {
                 // No Personal Tokens available
                 self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "No Personal Tokens have been Sent yet!");
                 return false;
             }
 
             for (var address in tokensData.tokens) {
-                var currentToken = tokensData.tokens[address];
-                self.db_.NEMPersonalToken.findOne({ "address": address }, function(err, entry) {
-                    if (err || entry)
+                var normalized = address.replace(/-/g, '');
+                var currentToken = tokensData.tokens[normalized];
+                self.db_.NEMPersonalToken.findOne({ "address": normalized }, function(err, entry) {
+                    if (err)
                         return;
 
-                    // Token read from blockchain but not present in database.
-                    entry = new self.db_.NEMPersonalToken({
-                        "address": normalized,
-                        "plainToken": currentToken.token,
-                        "transactionHash": currentToken.trxHash,
-                        "createdAt": new Date().valueOf()
-                    });
+                    if (entry) {
+                        entry.plainToken = currentToken.token;
+                        entry.transactionHash = currentToken.trxHash;
+                    } else {
+                        // Token read from blockchain but not present in database.
+                        entry = new self.db_.NEMPersonalToken({
+                            "address": normalized,
+                            "plainToken": currentToken.token,
+                            "transactionHash": currentToken.trxHash,
+                            "createdAt": new Date().valueOf()
+                        });
+                    }
                     entry.save();
                 });
             }

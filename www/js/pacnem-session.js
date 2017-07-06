@@ -97,7 +97,7 @@ var GameSession = function(API, userName, xemAddress, gameMode) {
             }, validateHeartsPerBlockchain);
         } else {
             // issue db save in 3 seconds because rooms_update event
-            // was not emitted yet.
+            // was not emitted yet. (we don't have a socket id yet)
             setTimeout(function() {
                 self.details_.sid = $("#pacNEM-sessionId").val();
                 self.API_.storeSession(self.details_, function(response) {
