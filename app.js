@@ -110,11 +110,40 @@ app.configure(function() {
 
     app.use(flash());
     app.use(validator());
+
+    app.use(function(req, res, next) {
+        req.i18n = i18n;
+
+        if (req.session.locale) // check if user has changed i18n settings
+            req.i18n.changeLanguage(req.session.locale);
+
+        next();
+    });
 });
 /**
  * End Application Middlewares
  */
 
+/**
+ * Configure the PacNEM Backend Modules. This includes following:
+ * 
+ * - PacNEMBlockchain : defines general blockchain config (hosts, wallets)
+ * - PacNEMDB : MongoDB (mongoose) wrapper for the PacNEM backend
+ * - PaymentsProtocol : PacNEM's Payment Protocol defines how to handle Invoices
+ * - HallOfFame : Blockchain Hall of Fame business layer
+ * - SponsorEngine : Blockchain Advertizing Pay per View
+ * - Authenticator : Authentication on the Blockchain
+ * - GameCredits : Game Credits as Mosaics on the Blockchain
+ * - PacNEMSockets : Websockets for the PacNEM Game.
+ * - PacNEM_Crons : Define workers for the PacNEM Backend
+ * 
+ * I know that some of those business layer classes would have probably
+ * been easier to work with if they worked only with a Database, but the 
+ * fun of the project was to link as many Blockchain Features to it as 
+ * possible.
+ * 
+ * Enjoy :)
+ */
 // configure blockchain layer
 var blockchain = require('./core/blockchain/service.js');
 var PacNEMBlockchain = new blockchain.service(io, nem, logger);
@@ -159,19 +188,6 @@ var PacNEM_Frontend_Config = {
 };
 
 /**
- * View Engine Customization
- *
- * - handlebars t() helper for template translations handling with i18next
- **/
-handlebars.registerHelper('t', function(key, sub) {
-    if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
-    // dynamic subnamespace
-        var key = key + "." + sub;
-
-    return new handlebars.SafeString(i18n.t(key));
-});
-
-/**
  * Serving static Assets (images, CSS, JS files)
  * @param {*} req 
  * @param {*} res 
@@ -190,6 +206,19 @@ var serveStaticFile = function(req, res, path) {
 
     return res.sendfile(path);
 };
+
+/**
+ * View Engine Customization
+ *
+ * - handlebars t() helper for template translations handling with i18next
+ **/
+handlebars.registerHelper('t', function(key, sub) {
+    if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
+    // dynamic subnamespace
+        var key = key + "." + sub;
+
+    return new handlebars.SafeString(i18n.t(key));
+});
 
 /**
  * Third Party static asset serving
@@ -398,22 +427,15 @@ app.get("/:lang", function(req, res) {
     var currentLanguage = req.params.lang;
     var currentNetwork = PacNEMBlockchain.getNetwork();
 
-    i18n.changeLanguage(currentLanguage);
+    req.session.locale = currentLanguage;
+    if (req.headers.referer)
+        return res.redirect(req.headers.referer);
 
-    var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
-
-    var viewData = {
-        currentNetwork: currentNetwork,
-        currentLanguage: currentLanguage,
-        PacNEM_Frontend_Config: PacNEM_Frontend_Config,
-        notificationMessage: notificationMessage
-    };
-
-    res.render("play", viewData);
+    return res.redirect("/");
 });
 
 app.get("/", function(req, res) {
-    var currentLanguage = i18n.language;
+    var currentLanguage = req.i18n.language;
     var currentNetwork = PacNEMBlockchain.getNetwork();
 
     var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");

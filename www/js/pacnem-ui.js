@@ -642,7 +642,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         } else if (ctrl_.isPlayMode("pay-per-play")) {
             // User needs Auth Code to authenticate
             self.authenticatePlayer(session_, function(response) {
-                console.log("Player authenticated with checksum: " + response.item);
+                console.log("[DEBUG] " + "Player authenticated with checksum: " + response.item);
 
                 // we can safely emit the session creation, this user is
                 // either a pay-per-play or share-per-play (not yet implemented)
