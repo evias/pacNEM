@@ -85,7 +85,7 @@
             var uaSession = CryptoJS.lib.WordArray.create(payload);
             var checksum = CryptoJS.MD5(uaSession).toString();
 
-            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Authenticating with checksum: " + checksum);
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Authenticating Player with checksum: " + checksum);
 
             // load session by checksum - if none is available OR if the session
             // is too old, the user will need to authenticate. If the session is
@@ -232,6 +232,9 @@
 
                     if (lastTrxRead === false || transactions.length < 25) {
                         // done.
+
+                        self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Total of " + Object.getOwnPropertyNames(self.personalTokensTrxes_.tokens).length + " Tokens Found.");
+
                         self.savePersonalTokensInDatabase(self.personalTokensTrxes_);
                         if (callback)
                             callback(self.personalTokensTrxes_);
@@ -255,7 +258,7 @@
         this.processPersonalTokenTransactions = function(transactions) {
             var self = this;
 
-            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Processing chunk of " + transactions.length + " Transactions for Authenticator.");
+            //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Processing chunk of " + transactions.length + " Transactions for Authenticator.");
 
             var personalTokenSlug = self.blockchain_.getNamespace() + ":" + Object.getOwnPropertyNames(self.blockchain_.getGameMosaicsConfiguration().credits)[2];
 
@@ -302,12 +305,12 @@
 
                 // the message in the transaction represents the address's Personal Token
                 try {
-                    self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Now interpreting: '" + lastMsgRead + "' as JSON for mosaicStake: " + JSON.stringify(mosaicStake));
+                    //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Now interpreting: '" + lastMsgRead + "' as JSON for mosaicStake: " + JSON.stringify(mosaicStake));
 
                     var token = lastMsgRead;
                     var normalized = recipient.replace(/-/g, "");
 
-                    self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Token Found: " + token + " for Address: " + recipient);
+                    //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Token Found: " + token + " for Address: " + recipient);
                     self.personalTokensTrxes_.tokens[normalized] = {
                         "trxHash": lastTrxHash,
                         "token": token
@@ -333,25 +336,31 @@
         this.savePersonalTokensInDatabase = function(tokensData) {
             var self = this;
 
-            if (!tokensData || !tokensData.tokens.length) {
+            if (!tokensData || !Object.getOwnPropertyNames(tokensData.tokens).length) {
                 // No Personal Tokens available
                 self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "No Personal Tokens have been Sent yet!");
                 return false;
             }
 
             for (var address in tokensData.tokens) {
-                var currentToken = tokensData.tokens[address];
-                self.db_.NEMPersonalToken.findOne({ "address": address }, function(err, entry) {
-                    if (err || entry)
+                var normalized = address.replace(/-/g, '');
+                var currentToken = tokensData.tokens[normalized];
+                self.db_.NEMPersonalToken.findOne({ "address": normalized }, function(err, entry) {
+                    if (err)
                         return;
 
-                    // Token read from blockchain but not present in database.
-                    entry = new self.db_.NEMPersonalToken({
-                        "address": normalized,
-                        "plainToken": currentToken.token,
-                        "transactionHash": currentToken.trxHash,
-                        "createdAt": new Date().valueOf()
-                    });
+                    if (entry) {
+                        entry.plainToken = currentToken.token;
+                        entry.transactionHash = currentToken.trxHash;
+                    } else {
+                        // Token read from blockchain but not present in database.
+                        entry = new self.db_.NEMPersonalToken({
+                            "address": normalized,
+                            "plainToken": currentToken.token,
+                            "transactionHash": currentToken.trxHash,
+                            "createdAt": new Date().valueOf()
+                        });
+                    }
                     entry.save();
                 });
             }

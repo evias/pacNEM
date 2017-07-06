@@ -174,7 +174,7 @@ var GameCredits = new CreditsCore.GameCredits(io, logger, PacNEMBlockchain, PacN
 var GameCreditsErrors = new CreditsCore.GameCreditErrors();
 
 var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
-var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame, SponsorEngine, Authenticator);
+var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame, SponsorEngine, Authenticator, GameCredits);
 
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
 var PacNEM_Crons = new JobsScheduler(logger, PacNEMBlockchain, PacNEMDB);
@@ -275,7 +275,7 @@ app.get('/resources/templates/player-authenticate', function(req, res) {
     Authenticator.getActiveSession(bundle, function(session) {
         // Player has an active Session, no need to authenticate
         var tpl = fs.readFileSync(__dirname + '/views/partials/player-back.hbs');
-        tpl.replace(/%TOKEN%/g, session.checksum)
+        tpl = tpl.toString().replace(/%TOKEN%/g, session.checksum)
 
         return res.send(tpl);
     }, function(response) {

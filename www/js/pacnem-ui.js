@@ -648,9 +648,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 // either a pay-per-play or share-per-play (not yet implemented)
                 socket_.emit('change_username', JSON.stringify(details));
                 socket_.emit("notify");
+
+                if ($(".pacnem-player-authenticate-modal").length) {
+                    $(".pacnem-player-authenticate-modal").first().modal("hide");
+                }
             }, function(response) {
 
                 if (response.code === 4) {
+                    // E_CLIENT_BLOCKED
                     self.resetSession(false, true);
                     return false;
                 }
@@ -742,7 +747,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             var isAuth = !$(".pacnem-player-authenticate-modal").length;
             if (isAuth) {
-                var checksum = $("#pacnem-session-checksum").val();
+                var checksum = $("#pacnem-session-checksum").text();
                 return onSuccess({ item: checksum });
             }
 
