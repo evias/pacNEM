@@ -16,7 +16,8 @@
         "secretKey": "PacNEMByGrégorySaive_NotSoSecretKey",
         "dataSalt": "PacNEMSaltForEncryption#*+´-:29.08.1988_:§$%",
         "isPublic": true,
-        "canResetData": true
+        "canResetData": true,
+        "useMultisig": true
     },
     "nem": {
         "isTestMode": true,

@@ -137,10 +137,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             //var $invoiceBox = $(".pacnem-invoice-modal").first();
             //$invoiceBox.modal("hide");
             $(".pacnem-invoice-close-trigger").show();
-
-            // get session call will also trigger a "pacnem_heart_sync" event
-            // to update the credits.
-            API_.getSession(sess, function(response) {});
         });
 
         return this;
@@ -654,6 +650,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 }
             }, function(response) {
 
+                //DEBUG console.log("[DEBUG] " + "Authentication Failed - Response Code: " + response.code);
+
                 if (response.code === 4) {
                     // E_CLIENT_BLOCKED
                     self.resetSession(false, true);
@@ -666,7 +664,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 $token.addClass("form-error");
                 $addon.addClass("form-error");
 
-                console.log("Authentication Failed - Response Code: " + response.code);
+                $token.off("focus");
+                $token.on("focus", function() {
+                    $token.removeClass("form-error");
+                    $addon.removeClass("form-error");
+                });
             });
         }
 
@@ -732,7 +734,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         // display modal box informing about Session Expire
         // the modal box contains a seconds counter on the close 
         // trigger button.
-        template_.render("player-authenticate", function(compileWith) {
+        var fmtAddress = session.getAddress();
+        template_.render(fmtAddress + "/player-authenticate", function(compileWith) {
 
             var authFormData = {
                 playerAddr: session.details_.xem,
@@ -752,6 +755,12 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             }
 
             // display authenticate form modal box
+            if ($(".pacnem-invoice-modal").length) {
+                $(".pacnem-invoice-modal").first().modal("hide");
+                $(".modal-backdrop").first().remove();
+                $(".pacnem-invoice-modal").first().remove();
+            }
+
             $(".pacnem-player-authenticate-modal").first().modal({
                 backdrop: "static",
                 keyboard: false,
@@ -1165,6 +1174,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
          * @param {GameUI} ui 
          */
         var registerStatusHttpFallback = function(ui, seconds = 120) {
+
+            // the `fn_getState` function will issue an API request 
+            // to retrieve the current invoice status and will process 
+            // the data using the previously implemented `processPaymentData_` 
+            // helper. This function is also used in intervals.
             var fn_getState = function(subCallback) {
                 var player = self.getPlayerDetails();
                 var prefix = $("#pacnem-invoice-prefix").val();
@@ -1176,11 +1190,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                     // and stop http fallback requests
                     clearInterval(interval_);
                     closeableInvoiceModalBox(self, callback);
+
+                    if (subCallback)
+                        return subCallback();
                     return false;
                 }
 
                 API_.checkInvoiceStatus(player, socket_.id, number, function(paymentUpdateData) {
-                    console.log("[DEBUG] " + "Invoice State API JSON: '" + JSON.stringify(paymentUpdateData) + "' untouched: ", paymentUpdateData);
+                    //DEBUG console.log("[DEBUG] " + "Invoice State API JSON: '" + JSON.stringify(paymentUpdateData) + "' untouched: ", paymentUpdateData);
 
                     if (paymentUpdateData) {
                         var done = { "paid": true, "overpaid": true };
@@ -1192,17 +1209,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                         }
 
                         processPaymentData_(self, paymentUpdateData);
-
-                        if (subCallback)
-                            return subCallback();
                     }
+
+                    if (subCallback)
+                        return subCallback();
                 });
             };
 
-            // configure INTERVAL to run every X sNTERVAL to run every X seconds..
+            // configure INTERVAL to run every X seconds..
             interval_ = setInterval(fn_getState, seconds * 1000);
 
-            // also run the interval right a way in case websocket subscription does not work
+            // also run the interval *now* in case websocket subscription does not work
             fn_getState();
 
             // when the invoice is closed, the ajax fallback should
@@ -1827,6 +1844,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             $("#username").focus();
             return false;
         });
+
+        // by default "Pay per Play" should be initialized
+        self.prepareInvoiceBox(function(ui) {});
     };
 
     /**

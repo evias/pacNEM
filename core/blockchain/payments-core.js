@@ -19,7 +19,8 @@
 (function() {
 
     var config = require("config"),
-        path = require('path');
+        path = require('path'),
+        CryptoJS = require("crypto-js");
 
     var __smartfilename = path.basename(__filename);
     var NEMBot_for_pacNEM = {
@@ -34,14 +35,17 @@
      *
      * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
      */
-    var PaymentsCore = function(io, logger, chainDataLayer, dataLayer) {
+    var PaymentsCore = function(io, logger, chainDataLayer, dataLayer, credits, auth) {
         this.socketIO_ = io;
         this.blockchain_ = chainDataLayer;
         this.db_ = dataLayer;
+        this.credits_ = credits;
+        this.auth_ = auth;
 
         this.logger_ = logger;
 
         var paymentTransactionHistory_ = { byInvoice: {}, byHash: {} };
+        var incomingStatusUpdates_ = { byChecksum: {} };
 
         /**
          * The startPaymentChannel function is used to open the communication
@@ -67,7 +71,7 @@
             // First we emit a `nembot_open_payment_channel` with the given invoice NUMBER and payer XEM address.
             // Then we register a listener on `nembot_payment_status_update` which will be triggered when a
             // Transaction with MESSAGE being the invoiceNumber OR SENDER PUBLIC KEY being the payerXEM, is received
-            // (/unconfirmed &  /transactions). When the transaction is included in a block, another event will be
+            // (/unconfirmed &  /transactions). When the transaction is included in a block, another event
             // will be triggered (`nembot_payment_status_update` again) with status `completed`, this time.
             // Only the second call with completed status should be trusted as a paid amount for the invoice.
 
@@ -84,14 +88,29 @@
                 maxDuration: 5 * 60 * 1000
             };
 
-            self.logger_.info(__smartfilename, __line, '[BOT] open_channel(' + JSON.stringify(channelParams) + ') with NEMBot host: ' + NEMBot_for_pacNEM.paymentBot.host);
+            self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", '[BOT] open_channel(' + JSON.stringify(channelParams) + ') with NEMBot host: ' + NEMBot_for_pacNEM.paymentBot.host);
             channelSocket.emit("nembot_open_payment_channel", JSON.stringify(channelParams));
 
             // configure payment status update event FORWARDING (comes from NEMBot and forwards to Frontend)
             channelSocket.on("nembot_payment_status_update", function(rawdata) {
-                self.logger_.info(__smartfilename, __line, '[' + channelSocket.id + '] [BOT] nembot_payment_status_update(' + rawdata + ')');
 
+                // build status update checksum to be sure we process websockets
+                // status updates only once.
+                var payload = rawdata;
+                var uaStatus = CryptoJS.lib.WordArray.create(payload);
+                var checksum = CryptoJS.MD5(uaStatus).toString();
+
+                if (incomingStatusUpdates_.byChecksum.hasOwnProperty(checksum))
+                // already forwarded
+                    return false;
+
+                // status update must be forwarded
+
+                self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", '[BOT] [' + channelSocket.id + '] nembot_payment_status_update(' + rawdata + ')');
+
+                // parse websocket data and store
                 var data = JSON.parse(rawdata);
+                incomingStatusUpdates_.byChecksum[checksum] = data;
 
                 // forward to client..
                 var clientData = {
@@ -149,12 +168,12 @@
                 invoiceQuery["payerXEM"] = data.sender;
             }
 
-            //DEBUG self.logger_.info("[PACNEM] [INVOICE]", "[DEBUG]", 'Fetching invoice with query: ' + JSON.stringify(invoiceQuery));
+            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", 'Fetching invoice with query: ' + JSON.stringify(invoiceQuery));
 
             // find invoice and update status and amounts
             self.db_.NEMPaymentChannel.findOne(invoiceQuery, function(err, invoice) {
                 if (err || !invoice) {
-                    //DEBUG self.logger_.info("[PACNEM] [INVOICE]", "[DEBUG]", 'No Invoice found: ' + JSON.stringify(invoiceQuery));
+                    //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", 'No Invoice found: ' + JSON.stringify(invoiceQuery));
                     return false;
                 }
 
@@ -189,11 +208,11 @@
 
                     self.db_.NEMAppsPayout.findOne({ xem: data.sender, reference: invoice.number }, function(err, payout) {
                         if (err) {
-                            //DEBUG self.logger_.info("[PACNEM] [INVOICE]", "[DEBUG]", 'No Invoice found: ' + err);
+                            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", 'No Invoice found: ' + err);
                             return false;
                         }
                         if (payout) {
-                            //DEBUG self.logger_.info("[PACNEM] [INVOICE]", "[DEBUG]", 'Payout already done: ' + JSON.stringify(payout));
+                            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", 'Payout already done: ' + JSON.stringify(payout));
                             return false;
                         }
 
@@ -209,7 +228,7 @@
 
                             // only send hearts in case it was not done before.
 
-                            self.closePaymentChannel(invoice);
+                            self.processPaymentChannelSuccess(invoice);
                         });
                     });
 
@@ -226,12 +245,17 @@
          * This method will also broadcast a Socket.IO event for the Frontend
          * such that the Payment Status Update can be processed on the Invoice
          * View.
+         * 
+         * Additionally, the Personal Token for the Player will be sent
+         * on the NEM Blockchain with the Authenticator class.
          *
          * @param   {NEMPaymentChannel}     paymentChannel
          */
-        this.closePaymentChannel = function(paymentChannel) {
+        this.processPaymentChannelSuccess = function(paymentChannel) {
             var self = this;
-            self.blockchain_.sendHeartsForPayment(paymentChannel, function(paymentChannel) {
+
+            // send Game Credits now that Invoice is paid
+            self.credits_.sendHeartsForPayment(paymentChannel, function(paymentChannel) {
                 // forward "DONE PAYMENT" to client..
                 var clientData = {
                     status: paymentChannel.status,
@@ -246,6 +270,21 @@
                         self.socketIO_.sockets.to(socketsForPayment[i].clientId)
                         .emit("pacnem_payment_success", JSON.stringify(clientData));
                 }
+            });
+
+            // and send the Personal Token to the Player in case none 
+            // is found on the blockchain yet.
+            self.auth_.fetchPersonalTokens(null, function(tokensData) {
+                // check whether we already have a token for this user, then
+                // we should not send one again! Blockchain Validition done.
+
+                var player = paymentChannel.payerXEM.replace(/-/g, '');
+                if (tokensData.tokens.hasOwnProperty(player)) {
+                    return false;
+                }
+
+                // safely send authentication code, none ever sent to user.
+                self.auth_.sendPersonalToken(player);
             });
         };
 

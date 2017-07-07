@@ -247,6 +247,119 @@
         };
 
         /**
+         * This method is used when an invoice is PAID (confirmed). It will
+         * send evias.pacnem:heart Mosaics as described in `paymentChannel.countHearts`
+         * and save the blockchain transaction hash to `paymentChannel.heartsTransactionHash`.
+         *
+         * @param  {NEMPaymentChannel} paymentChannel
+         * @param  {Function} callbackSuccess
+         * @return {void}
+         */
+        this.sendHeartsForPayment = function(paymentChannel, callbackSuccess) {
+            var self = this;
+            var sdk = self.blockchain_.getSDK();
+
+            var gamerXEM = paymentChannel.getPayer();
+            var countHearts = paymentChannel.countHearts;
+            var privStore = sdk.model.objects.create("common")("", self.blockchain_.getPublicWalletSecretKey());
+            var mosaicDefPair = sdk.model.objects.get("mosaicDefinitionMetaDataPair");
+            var hasBetaMosaic = config.get("pacnem.isBeta");
+
+            var gameMosaics = self.blockchain_.getGameMosaicsConfiguration();
+            var heartsMosaicName = Object.getOwnPropertyNames(gameMosaics.credits)[0];
+            var bPlayerMosaicName = Object.getOwnPropertyNames(gameMosaics.rewards.purchases)[0];
+            var playerMosaicName = Object.getOwnPropertyNames(gameMosaics.rewards.purchases)[1];
+
+            //DEBUG self.logger_.info("[NEM] [PACNEM CREDITS]", "[DEBUG]", "Now sending " + paymentChannel.countHearts + " hearts for invoice " + paymentChannel.number + " sent to " + paymentChannel.getPayer() + " paid by " + vendor_ + " signed with " + pacNEM_);
+
+            // Create an un-prepared mosaic transfer transaction object (use same object as transfer tansaction)
+            var message = paymentChannel.number + " - Thank you! Greg.";
+            var transferTransaction = sdk.model.objects.create("transferTransaction")(gamerXEM, 1, message); // Amount 1 is "one time x Mosaic Attachments"
+
+            if (self.blockchain_.useMultisig()) {
+                transferTransaction.isMultisig = true;
+                transferTransaction.multisigAccount = { publicKey: config.get("pacnem.businessPublic") };
+            }
+
+            var mosaicAttachHearts = sdk.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), heartsMosaicName, countHearts);
+            var mosaicAttachPlayer = sdk.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), playerMosaicName, 1);
+            var mosaicAttachBPlayer = sdk.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), bPlayerMosaicName, 1);
+
+            var heartsSlug = self.blockchain_.getNamespace() + ":" + heartsMosaicName;
+            var playerSlug = self.blockchain_.getNamespace() + ":" + playerMosaicName;
+            var bPlayerSlug = self.blockchain_.getNamespace() + ":" + bPlayerMosaicName;
+
+            //DEBUG self.logger_.info("[NEM] [PACNEM CREDITS]", "[DEBUG]", "Using Mosaics: " + heartsSlug + ", " + playerSlug + ", " + bPlayerSlug);
+
+            // always receive evias.pacnem:heart and evias.pacnem:player
+            transferTransaction.mosaics.push(mosaicAttachHearts);
+            transferTransaction.mosaics.push(mosaicAttachPlayer);
+
+            if (hasBetaMosaic)
+            // in beta mode, give evias.pacnem:beta-player too
+                transferTransaction.mosaics.push(mosaicAttachBPlayer);
+
+            //DEBUG self.logger_.info("[NEM] [PACNEM CREDITS]", "[DEBUG]", "Reading Mosaic Definitions for namespace: " + self.blockchain_.getNamespace());
+
+            // Need mosaic definition of evias.pacnem:heart to calculate adequate fees, so we get it from network.
+            sdk.com.requests.namespace
+                .mosaicDefinitions(self.blockchain_.getEndpoint(), self.blockchain_.getNamespace())
+                .then(function(res) {
+                    res = res.data;
+
+                    var heartsDef = sdk.utils.helpers.searchMosaicDefinitionArray(res, [heartsMosaicName]);
+                    var playerDef = sdk.utils.helpers.searchMosaicDefinitionArray(res, [playerMosaicName]);
+                    var bPlayerDef = sdk.utils.helpers.searchMosaicDefinitionArray(res, [bPlayerMosaicName]);
+
+                    if (undefined === heartsDef[heartsSlug] || undefined === playerDef[playerSlug] || undefined === bPlayerDef[bPlayerSlug])
+                        return self.logger_.error("[NEM] [ERROR]", "[PACNEM CREDITS]", "Missing Mosaic Definition for " + heartsSlug + " - Obligatory for the game, Please fix!");
+
+                    mosaicDefPair[heartsSlug] = { mosaicDefinition: heartsDef[heartsSlug] };
+                    mosaicDefPair[playerSlug] = { mosaicDefinition: playerDef[playerSlug] };
+
+                    if (hasBetaMosaic) {
+                        mosaicDefPair[bPlayerSlug] = { mosaicDefinition: bPlayerDef[bPlayerSlug] };
+                    }
+
+                    // Prepare the multisig mosaic transfer transaction object and broadcast
+                    var transactionEntity = sdk.model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
+
+                    //DEBUG self.logger_.info("[NEM] [PACNEM CREDITS]", "[DEBUG]", "Now sending Multisig Transaction to " + gamerXEM + " for invoice " + paymentChannel.number + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
+
+                    sdk.model.transactions
+                        .send(privStore, transactionEntity, self.blockchain_.getEndpoint())
+                        .then(function(res) {
+                            delete privStore;
+
+                            // If code >= 2, it's an error
+                            if (res.code >= 2) {
+                                self.logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + gamerXEM + ": " + JSON.stringify(res));
+                                return false;
+                            }
+
+                            var trxHash = res.transactionHash.data;
+                            self.logger_.info("[NEM] [PACNEM CREDITS]", "[CREATED]", "Created a multi-signature Mosaic transfer transaction for " + countHearts + " " + heartsSlug + " sent to " + gamerXEM + " for invoice " + paymentChannel.number);
+
+                            // update `paymentChannel` to contain the transaction hash too and make sure history is kept.
+                            paymentChannel.heartsTransactionHash = trxHash;
+                            paymentChannel.save(function(err) {
+                                if (!err) {
+                                    callbackSuccess(paymentChannel);
+                                }
+                            });
+
+                        }, function(err) {
+                            logger_.error("[NEM] [ERROR]", "[PACNEM CREDITS]", "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + gamerXEM + " in channel " + paymentChannel + " with error: " + err);
+                        });
+
+                    delete privStore;
+
+                }, function(err) {
+                    logger_.error("[NEM] [ERROR]", "[PACNEM CREDITS]", "Could not read mosaics definition for namespace: " + self.blockchain_.getNamespace() + ": " + err);
+                });
+        };
+
+        /**
          * This method is used to REDEEM the evias.pacnem:heart
          * Mosaic when *player have finished playing* the Game 
          * Session.
@@ -338,8 +451,11 @@
             var transferTransaction = self.blockchain_.getSDK().model.objects.create("transferTransaction")(sinkXEM, 1, sinkMessage); // Amount 1 is "one time x Mosaic Attachments"
 
             // must be multisig because non-transferable hearts-- mosaic owned by multisig
-            transferTransaction.isMultisig = true;
-            transferTransaction.multisigAccount = { publicKey: config.get("pacnem.businessPublic") };
+
+            if (self.blockchain_.useMultisig()) {
+                transferTransaction.isMultisig = true;
+                transferTransaction.multisigAccount = { publicKey: config.get("pacnem.businessPublic") };
+            }
 
             var mosaicAttachRedeem = self.blockchain_.getSDK().model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), redeemingMosaicName, countRedeem);
             var redeemSlug = self.blockchain_.getNamespace() + ":" + redeemingMosaicName;

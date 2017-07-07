@@ -152,10 +152,19 @@ var PacNEMBlockchain = new blockchain.service(io, nem, logger);
 var models = require('./core/db/models.js');
 var PacNEMDB = new models.pacnem(io, PacNEMBlockchain);
 
+var CreditsCore = require("./core/blockchain/game-credits.js");
+var GameCredits = new CreditsCore.GameCredits(io, logger, PacNEMBlockchain, PacNEMDB);
+var GameCreditsErrors = new CreditsCore.GameCreditErrors();
+
+var AuthenticatorCore = require("./core/blockchain/authenticator.js");
+var Authenticator = new AuthenticatorCore.Authenticator(io, logger, PacNEMBlockchain, PacNEMDB);
+var AuthErrors = new AuthenticatorCore.AuthenticatorErrors();
+Authenticator.fetchPersonalTokens();
+
 // configure our PaymentsCore implementation, handling payment
 // processor NEMBot communication
 var PaymentsCore = require("./core/blockchain/payments-core.js").PaymentsCore;
-var PaymentsProtocol = new PaymentsCore(io, logger, PacNEMBlockchain, PacNEMDB);
+var PaymentsProtocol = new PaymentsCore(io, logger, PacNEMBlockchain, PacNEMDB, GameCredits, Authenticator);
 
 var HallOfFameCore = require("./core/blockchain/hall-of-fame.js").HallOfFame;
 var HallOfFame = new HallOfFameCore(io, logger, PacNEMBlockchain, PacNEMDB);
@@ -163,15 +172,6 @@ HallOfFame.fetchBlockchainHallOfFame();
 
 var SponsorEngineCore = require("./core/blockchain/sponsor-engine.js").SponsorEngine;
 var SponsorEngine = new SponsorEngineCore(io, logger, PacNEMBlockchain, PacNEMDB);
-
-var AuthenticatorCore = require("./core/blockchain/authenticator.js");
-var Authenticator = new AuthenticatorCore.Authenticator(io, logger, PacNEMBlockchain, PacNEMDB);
-var AuthErrors = new AuthenticatorCore.AuthenticatorErrors();
-Authenticator.fetchPersonalTokens();
-
-var CreditsCore = require("./core/blockchain/game-credits.js");
-var GameCredits = new CreditsCore.GameCredits(io, logger, PacNEMBlockchain, PacNEMDB);
-var GameCreditsErrors = new CreditsCore.GameCreditErrors();
 
 var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
 var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame, SponsorEngine, Authenticator, GameCredits);
@@ -260,7 +260,7 @@ app.get('/favicon.ico', function(req, res) {
  * The templates present in views/partials can be rendered
  * using the jQFileTemplate frontend implementation.
  */
-app.get('/resources/templates/player-authenticate', function(req, res) {
+app.get('/resources/templates/:address/player-authenticate', function(req, res) {
 
     var ip = req.headers['x-forwarded-for'] ||
         req.connection.remoteAddress ||
@@ -269,7 +269,8 @@ app.get('/resources/templates/player-authenticate', function(req, res) {
 
     var bundle = {
         ip: ip,
-        client: req.headers['user-agent']
+        client: req.headers['user-agent'],
+        address: req.params.address.replace(/-/g, '')
     };
 
     Authenticator.getActiveSession(bundle, function(session) {
@@ -279,8 +280,8 @@ app.get('/resources/templates/player-authenticate', function(req, res) {
 
         return res.send(tpl);
     }, function(response) {
-        // Player must now enter a Token to authenticate.
 
+        // Player must now enter a Token to authenticate.
         return res.sendfile(__dirname + '/views/partials/player-authenticate.hbs');
     });
 });
@@ -632,7 +633,11 @@ app.post("/api/v1/sessions/verify", function(req, res) {
     };
 
     var CryptoJS = PacNEMBlockchain.getSDK().crypto.js;
-    var payload = JSON.stringify({ ip: bundle.from, client: bundle.headers["user-agent"] });
+    var payload = JSON.stringify({
+        ip: bundle.from,
+        client: bundle.headers["user-agent"],
+        address: bundle.address
+    });
     var uaSession = CryptoJS.lib.WordArray.create(payload);
     var checksum = CryptoJS.MD5(uaSession).toString();
 
@@ -853,7 +858,7 @@ app.get("/api/v1/credits/buy", function(req, res) {
                 createdAt: new Date().valueOf()
             });
             invoice.save(function(err) {
-                PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice) {
+                return PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice) {
                     // payment channel created, end create-invoice response.
 
                     var statusLabelClass = "label-default";
@@ -903,7 +908,7 @@ app.get("/api/v1/credits/buy", function(req, res) {
         }
 
         if (disableChannel === true) {
-            res.send(JSON.stringify({
+            return res.send(JSON.stringify({
                 status: "ok",
                 item: {
                     network: currentNetwork,
@@ -914,7 +919,7 @@ app.get("/api/v1/credits/buy", function(req, res) {
                 }
             }));
         } else {
-            PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice) {
+            return PaymentsProtocol.startPaymentChannel(invoice, clientSocketId, function(invoice) {
                 // payment channel created, end create-invoice response.
 
                 res.send(JSON.stringify({

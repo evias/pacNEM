@@ -110,8 +110,11 @@
             // Amount 1 is "one time x Mosaic Attachments"
             // (use same object as transfer tansaction)
             var transferTransaction = nemSDK.model.objects.create("transferTransaction")(sponsor.xem, 1, nemReward.encryptedMessage);
-            transferTransaction.isMultisig = true;
-            transferTransaction.multisigAccount = { publicKey: config.get("pacnem.businessPublic") };
+
+            if (self.blockchain_.useMultisig()) {
+                transferTransaction.isMultisig = true;
+                transferTransaction.multisigAccount = { publicKey: config.get("pacnem.businessPublic") };
+            }
 
             var mosaicAttachAdViews = nemSDK.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), adViewsMosaicName, countAdViews);
             var adViewSlug = self.blockchain_.getNamespace() + ":" + adViewsMosaicName;

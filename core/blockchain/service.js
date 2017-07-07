@@ -113,6 +113,7 @@
         // - pacNEM_ : The Cosignatory Wallet is one of the 2 cosignatories of vendor_ (the public one, not the sign-bot..).
         var vendor_ = (process.env["APP_VENDOR"] || config.get("pacnem.business")).replace(/-/g, "");
         var pacNEM_ = (process.env["APP_PUBLIC"] || config.get("pacnem.application") || config.get("pacnem.business")).replace(/-/g, "");
+        var useMultisig_ = config.get("pacnem.useMultisig");
 
         /**
          * Get the NEM Namespace used for this application.
@@ -131,7 +132,7 @@
          * @return string
          */
         this.getVendorWallet = function() {
-            return vendor_;
+            return vendor_.replace(/-/g, '');
         };
 
         /**
@@ -144,7 +145,7 @@
          * @return {string}
          */
         this.getPublicWallet = function() {
-            return pacNEM_;
+            return pacNEM_.replace(/-/g, '');
         };
 
         /**
@@ -167,8 +168,20 @@
          * @return {string}
          */
         this.getCreditsSinkWallet = function() {
-            return this.getCreditsSinkData().address;
+            return this.getCreditsSinkData().address.replace(/-/g, '');
         };
+
+        /**
+         * This method uses the configuration key `pacnem.useMultisig` and
+         * should be used whenever the PacNEM Game initiates transactions
+         * to determine whether the transaction must be a Multisignature
+         * transaction or not.
+         * 
+         * @return  {Boolean}
+         */
+        this.useMultisig = function() {
+            return useMultisig_;
+        }
 
         /**
          * Get the NEM-sdk object initialized before.
@@ -260,12 +273,13 @@
          */
         this.isApplicationWallet = function(xem) {
             var applicationWallets = [
-                config.get("pacnem.business"),
-                config.get("pacnem.application")
+                this.getVendorWallet(),
+                this.getPublicWallet()
             ];
 
+            var find = xem.replace(/-/g, '');
             for (var i = 0; i < applicationWallets.length; i++)
-                if (xem == applicationWallets[i])
+                if (find == applicationWallets[i])
                     return true;
 
             return false;

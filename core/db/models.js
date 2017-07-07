@@ -264,7 +264,7 @@
 
         this.NEMPersonalToken_ = new mongoose.Schema({
             address: String,
-            plainToken: String,
+            tokenChecksum: String,
             transactionHash: String,
             mosaics: Object,
             createdAt: { type: Number, min: 0 },

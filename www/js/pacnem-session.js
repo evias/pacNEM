@@ -145,7 +145,7 @@ var GameSession = function(API, userName, xemAddress, gameMode) {
         if (typeof this.details_.xem == 'undefined' || !this.details_.xem)
             return "";
 
-        return this.details_.xem;
+        return this.details_.xem.replace(/-/g, '');
     };
 
     this.getSocketId = function() {

@@ -36,6 +36,20 @@
         return words.toString(CryptoJS.enc.Utf8);
     };
 
+    /**
+     * Randomize array element order in-place.
+     * Using Durstenfeld shuffle algorithm.
+     */
+    var array_shuffle = function(array) {
+        for (var i = array.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+        return array;
+    };
+
     var __Errors = function() {
         this.E_ADDRESS_UNKNOWN = 2;
         this.E_INVALID_CREDENTIALS = 3;
@@ -77,7 +91,7 @@
 
             var self = this;
 
-            if (!bundle || !bundle.ip || !bundle.client)
+            if (!bundle || !bundle.ip || !bundle.client || !bundle.address)
                 return onFailure({ code: self.errors.E_SERVER_ERROR, error: "E_SERVER_ERROR" });
 
             // build MD5 checksum of client data
@@ -98,8 +112,10 @@
             var sorting = { sort: { createdAt: -1 } };
             self.db_.PacNEMClientSession.findOne(query, null, sorting, function(err, session) {
 
+                var errors = new __Errors();
+
                 if (err || !session) {
-                    return onFailure({ code: self.errors.E_SESSION_EXPIRED, error: "E_SESSION_EXPIRED" });
+                    return onFailure({ code: errors.E_SESSION_EXPIRED, error: "E_SESSION_EXPIRED" });
                 }
 
                 // check user session validity by date
@@ -109,7 +125,7 @@
                     return onSuccess(session);
                 }
 
-                return onFailure({ code: self.errors.E_SESSION_EXPIRED, error: "E_SESSION_EXPIRED" });
+                return onFailure({ code: errors.E_SESSION_EXPIRED, error: "E_SESSION_EXPIRED" });
             });
         };
 
@@ -127,18 +143,22 @@
          */
         this.authenticateAddress = function(bundle, onSuccess, onFailure) {
 
+            var self = this;
+
             if (!bundle || !bundle.creds || !bundle.address || !bundle.headers)
                 return onFailure({ code: self.errors.E_SERVER_ERROR, error: "E_SERVER_ERROR" });
 
-            var self = this;
+            var secretKey = config.get("pacnem.secretKey");
 
             // first check if client is blocked.
             var query = { address: bundle.address, ipAddress: bundle.from };
             var sorting = { sort: { createdAt: -1 } };
             self.db_.NEMFailedLogins.find(query, null, sorting, function(err, entries) {
+                var errors = new __Errors();
+
                 if (err) {
                     self.logger_.error("[DEBUG]", "[PACNEM AUTH]", "Error reading NEMFailedLogins: " + err);
-                    return onFailure({ code: self.errors.E_SERVER_ERROR, error: "E_SERVER_ERROR" });
+                    return onFailure({ code: errors.E_SERVER_ERROR, error: "E_SERVER_ERROR" });
                 }
 
                 //DEBUG self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Entries: " + entries.length + ": " + JSON.stringify(entries));
@@ -154,31 +174,43 @@
 
                     if (cntCounting >= 5) {
                         // User should not be able to login or TRY login for 1 hour!
-                        return onFailure({ code: self.errors.E_CLIENT_BLOCKED, error: "E_CLIENT_BLOCKED" });
+                        return onFailure({ code: errors.E_CLIENT_BLOCKED, error: "E_CLIENT_BLOCKED" });
                     }
                 }
 
                 // we can safely process this authentication trial
 
-                var token = base64_decode(bundle.creds);
+                var token = bundle.creds.length ? base64_decode(bundle.creds) : "";
+
+                // database stores a hash of the token, not the plain text
+                var uaToken = CryptoJS.lib.WordArray.create(secretKey + token + secretKey);
+                var checksum = CryptoJS.MD5(uaToken).toString();
+
                 //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Verifying Token: '" + token + "' for: " + bundle.address + " from: " + bundle.from);
 
-                self.db_.NEMPersonalToken.findOne({ "address": bundle.address, "plainToken": token }, function(err, entry) {
-                    if (err || !entry) {
+                self.db_.NEMPersonalToken.findOne({ "address": bundle.address, "tokenChecksum": checksum }, function(err, tokenValid) {
+                    var errors = new __Errors();
+
+                    if (err || !tokenValid) {
                         // error code will be different according to *Wrong Provided Token*
                         // and *Never Created Token*.
-                        self.db_.NEMPersonalToken.findOne({ address: bundle.address }, function(err, entry) {
-                            if (err || !entry) {
-                                // No Personal Token ever sent for this Address
-                                return onFailure({ code: self.errors.E_ADDRESS_UNKNOWN, error: "E_ADDRESS_UNKNOWN" });
+                        self.db_.NEMPersonalToken.findOne({ address: bundle.address }, function(err, tokenForAddress) {
+                            if (err) {
+                                self.logger_.error("[DEBUG]", "[PACNEM AUTH]", "Error reading NEMPersonalToken: " + err);
+                                return onFailure({ code: errors.E_SERVER_ERROR, error: "E_SERVER_ERROR" });
                             }
 
-                            return onFailure({ code: self.errors.E_INVALID_CREDENTIALS, error: "E_INVALID_CREDENTIALS" });
+                            if (!tokenForAddress) {
+                                // No Personal Token ever sent for this Address
+                                return onFailure({ code: errors.E_ADDRESS_UNKNOWN, error: "E_ADDRESS_UNKNOWN" });
+                            }
+
+                            return onFailure({ code: errors.E_INVALID_CREDENTIALS, error: "E_INVALID_CREDENTIALS" });
                         });
                     } else {
                         // authentication success
 
-                        return onSuccess(entry);
+                        return onSuccess(tokenValid);
                     }
                 });
             });
@@ -342,6 +374,8 @@
                 return false;
             }
 
+            var secretKey = config.get("pacnem.secretKey");
+
             for (var address in tokensData.tokens) {
                 var normalized = address.replace(/-/g, '');
                 var currentToken = tokensData.tokens[normalized];
@@ -349,14 +383,18 @@
                     if (err)
                         return;
 
+                    // database stores a hash of the token, not the plain text
+                    var uaToken = CryptoJS.lib.WordArray.create(secretKey + currentToken.token + secretKey);
+                    var checksum = CryptoJS.MD5(uaToken).toString();
+
                     if (entry) {
-                        entry.plainToken = currentToken.token;
+                        entry.tokenChecksum = checksum;
                         entry.transactionHash = currentToken.trxHash;
                     } else {
                         // Token read from blockchain but not present in database.
                         entry = new self.db_.NEMPersonalToken({
                             "address": normalized,
-                            "plainToken": currentToken.token,
+                            "tokenChecksum": checksum,
                             "transactionHash": currentToken.trxHash,
                             "createdAt": new Date().valueOf()
                         });
@@ -364,6 +402,59 @@
                     entry.save();
                 });
             }
+        };
+
+        /**
+         * Quite complicated way to generate a random digits only Auth Token
+         * but well, we are here to have fun anyways :)
+         * 
+         * This method will first generate random bytes using nacl, convert them
+         * to hexadecimal and *keep only the digits* - until it finds a group of
+         * at least 24 digits in the generated 32 bytes (64 characters).
+         * 
+         * Second step is to do 2908 rounds of shuffling the extracted digits array
+         * and then we randomly pick indexes out of this shuffled array to build the
+         * 6 character token.
+         * 
+         * @return  {String}
+         */
+        this.generateAuthToken = function() {
+            var self = this;
+            var sdk = self.blockchain_.getSDK();
+
+            // first generate random bytes and keep only digits
+            var rToken = "";
+            do {
+                var rBytes = sdk.crypto.nacl.randomBytes(32);
+                var rHex = sdk.utils.convert.ua2hex(rBytes);
+
+                rToken = rHex.replace(/[^0-9]/g, '');
+            }
+            while (rToken.length < 24); // at least 24 numbers to shuffle
+
+            var aToken = rToken.split("");
+
+            // 2908 rounds of shuffle
+            for (var i = 0; i < 2908; ++i) {
+                aToken = array_shuffle(aToken);
+            }
+
+            // now pick random indexes in the array to build a 6 character
+            // short auth token.
+            var maxIndex = aToken.length;
+            var rIndexes = [];
+            for (var j = 0; j < 6; j++) {
+                var index = Math.floor(Math.random() * maxIndex);
+                rIndexes.push(index);
+            }
+
+            // build token
+            var token = "";
+            for (var c = 0; c < rIndexes.length; c++) {
+                token += aToken[rIndexes[c]];
+            }
+
+            return token;
         };
 
         /**
@@ -375,38 +466,44 @@
          * @param {String}  address
          * @return void | false
          */
-        this.sendPersonalToken = function(address, tokenPlain) {
+        this.sendPersonalToken = function(address) {
             if (!address.length)
                 return false;
 
             var self = this;
+            var tokenPlain = self.generateAuthToken();
 
             // build message with token - the message + address are 
             // used to avoid sending tokens more than 1 time.
             var message = tokenPlain;
+            var secretKey = config.get("pacnem.secretKey");
 
-            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Sending Personal Token with with Token value: '" + message + "'");
+            // database stores a hash of the token, not the plain text
+            var uaToken = CryptoJS.lib.WordArray.create(secretKey + message + secretKey);
+            var checksum = CryptoJS.MD5(uaToken).toString();
+
+            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Sending Personal Token with Token value: '" + message + "'");
 
             // find already paid out Rewards
-            self.db_.NEMPersonalToken.findOne({ "address": address, "encryptedMessage": message },
-                function(err, reward) {
-                    self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "READ NEMPersonalToken JSON: '" + JSON.stringify(reward));
+            self.db_.NEMPersonalToken.findOne({ "address": address, "tokenChecksum": checksum },
+                function(err, existsToken) {
+                    self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "READ NEMPersonalToken JSON: '" + JSON.stringify(existsToken));
 
                     if (err) {
                         self.logger_.error("[ERROR]", "[PACNEM AUTH]", "Error reading NEMPersonalToken: " + JSON.stringify(err));
                         return false;
                     }
 
-                    if (!reward) {
+                    if (!existsToken) {
                         // we only want to payout in case we didn't send mosaics before
                         // for this Game and Player.
                         var createToken = new self.db_.NEMPersonalToken({
                             "address": address,
-                            "encryptedMessage": message
+                            "tokenChecksum": checksum
                         });
                         createToken.save();
 
-                        self.announceTokenTransfer(createToken, address);
+                        self.announceTokenTransfer(createToken, message);
                     }
                 });
         };
@@ -424,7 +521,7 @@
          * @param   {integer}   currentHighScore
          * @return void
          */
-        this.announceTokenTransfer = function(dbTokenEntry) {
+        this.announceTokenTransfer = function(dbTokenEntry, plainToken) {
             var self = this;
             var nemSDK = self.blockchain_.getSDK();
             var appsMosaic = self.blockchain_.getGameMosaicsConfiguration();
@@ -432,17 +529,20 @@
             var countPersonalTokens = 1;
             var privStore = nemSDK.model.objects.create("common")("", self.blockchain_.getPublicWalletSecretKey());
             var mosaicDefPair = nemSDK.model.objects.get("mosaicDefinitionMetaDataPair");
-            var personalTokenName = Object.getOwnPropertyNames(appsMosaic.scores)[0];
+            var personalTokenName = Object.getOwnPropertyNames(appsMosaic.credits)[2];
             var personalTokenSlug = self.blockchain_.getNamespace() + ":" + personalTokenName;
 
-            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Now sending 1 personal-token to player " + dbTokenEntry.address + " with token '" + dbTokenEntry.encryptedMessage + "' paid by " + self.blockchain_.getVendorWallet());
+            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Now sending 1 personal-token to player " + dbTokenEntry.address + " with token '" + dbTokenEntry.tokenChecksum + "' paid by " + self.blockchain_.getVendorWallet());
 
             // Create an un-prepared multisig mosaic transfer transaction object 
             // Amount 1 is "one time x Mosaic Attachments"
             // (use same object as transfer tansaction)
-            var transferTransaction = nemSDK.model.objects.create("transferTransaction")(dbTokenEntry.address, 1, dbTokenEntry.encryptedMessage);
-            transferTransaction.isMultisig = true;
-            transferTransaction.multisigAccount = { publicKey: config.get("pacnem.businessPublic") };
+            var transferTransaction = nemSDK.model.objects.create("transferTransaction")(dbTokenEntry.address, 1, plainToken);
+
+            if (self.blockchain_.useMultisig()) {
+                transferTransaction.isMultisig = true;
+                transferTransaction.multisigAccount = { publicKey: config.get("pacnem.businessPublic") };
+            }
 
             var mosaicAttachPersonalToken = nemSDK.model.objects.create("mosaicAttachment")(self.blockchain_.getNamespace(), personalTokenName, countPersonalTokens);
             var paidOutMosaics = { "Authenticator": { "mosaic": personalTokenSlug, "quantity": countPersonalTokens } };
@@ -452,67 +552,67 @@
             // Need mosaic definition of evias.pacnem:* mosaics to calculate 
             // adequate fees, so we get it from network.
             nemSDK.com.requests.namespace
-                .mosaicDefinitions(self.blockchain_.getEndpoint(), self.blockchain_.getNamespace()).then(
-                    function(res) {
-                        res = res.data;
+                .mosaicDefinitions(self.blockchain_.getEndpoint(), self.blockchain_.getNamespace())
+                .then(function(res) {
+                    res = res.data;
 
-                        var personalTokenDef = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [personalTokenName]);
+                    var personalTokenDef = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [personalTokenName]);
 
-                        if (undefined === personalTokenDef[personalTokenSlug])
-                            return self.logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition with [personalTokenSlug, hofSlug, atbSlug]: " + JSON.stringify([personalTokenSlug]) + " - Obligatory for the game, Please fix!");
+                    if (undefined === personalTokenDef[personalTokenSlug])
+                        return self.logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition with [personalTokenSlug]: " + JSON.stringify([personalTokenSlug]) + " - Obligatory for the game, Please fix!");
 
-                        // Now preparing our Mosaic Transfer Transaction 
-                        // (1) configure mosaic definition pair
-                        // (2) attach mosaics attachments to transfer transaction
-                        // (3) configure transfer transaction
-                        // (4) announce transaction on the network
+                    // Now preparing our Mosaic Transfer Transaction 
+                    // (1) configure mosaic definition pair
+                    // (2) attach mosaics attachments to transfer transaction
+                    // (3) configure transfer transaction
+                    // (4) announce transaction on the network
 
-                        // (1)
-                        mosaicDefPair[personalTokenSlug] = {};
-                        mosaicDefPair[personalTokenSlug].mosaicDefinition = personalTokenDef[personalTokenSlug];
+                    // (1)
+                    mosaicDefPair[personalTokenSlug] = {};
+                    mosaicDefPair[personalTokenSlug].mosaicDefinition = personalTokenDef[personalTokenSlug];
 
-                        // (2)
-                        // always receive evias.pacnem:cheese - this is the mosaic that the pacNEM game
-                        // uses to determine whether someone is/was in the Authenticator.
-                        transferTransaction.mosaics.push(mosaicAttachPersonalToken);
+                    // (2)
+                    transferTransaction.mosaics.push(mosaicAttachPersonalToken);
 
-                        // (3)
-                        // Prepare the mosaic transfer transaction object
-                        var entity = nemSDK.model.transactions.prepare("mosaicTransferTransaction")(
-                            privStore,
-                            transferTransaction,
-                            mosaicDefPair,
-                            self.blockchain_.getNetwork().config.id
-                        );
+                    // (3)
+                    // Prepare the mosaic transfer transaction object
+                    var entity = nemSDK.model.transactions.prepare("mosaicTransferTransaction")(
+                        privStore,
+                        transferTransaction,
+                        mosaicDefPair,
+                        self.blockchain_.getNetwork().config.id
+                    );
 
-                        self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Now sending Mosaic Transfer Transaction to " + dbTokenEntry.address + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
+                    self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Now sending Mosaic Transfer Transaction to " + dbTokenEntry.address + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
 
-                        // (4) announce the mosaic transfer transaction on the NEM network
-                        nemSDK.model.transactions.send(privStore, entity, self.blockchain_.getEndpoint()).then(
-                            function(res) {
-                                delete privStore;
+                    // (4) announce the mosaic transfer transaction on the NEM network
+                    nemSDK.model.transactions
+                        .send(privStore, entity, self.blockchain_.getEndpoint())
+                        .then(function(res) {
+                            delete privStore;
 
-                                // If code >= 2, it's an error
-                                if (res.code >= 2) {
-                                    self.logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + dbTokenEntry.address + ": " + JSON.stringify(res));
-                                    return false;
-                                }
+                            // If code >= 2, it's an error
+                            if (res.code >= 2) {
+                                self.logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + dbTokenEntry.address + ": " + JSON.stringify(res));
+                                return false;
+                            }
 
-                                var trxHash = res.transactionHash.data;
+                            var trxHash = res.transactionHash.data;
 
-                                self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Created a Mosaic transfer transaction for " + dbTokenEntry.address + " with hash '" + trxHash + " and paidOutMosaics: " + JSON.stringify(paidOutMosaics));
+                            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Created a Mosaic transfer transaction for " + dbTokenEntry.address + " with hash '" + trxHash + " and paidOutMosaics: " + JSON.stringify(paidOutMosaics));
 
-                                dbTokenEntry.transactionHash = trxHash;
-                                dbTokenEntry.mosaics = paidOutMosaics;
-                                dbTokenEntry.save();
-                            },
-                            function(err) {
-                                self.logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + dbTokenEntry.address + " with error: " + err);
-                            });
-                    },
-                    function(err) {
-                        self.logger_.error("[NEM] [ERROR]", "[MOSAIC-GET]", "Could not read mosaics definition for namespace: " + self.blockchain_.getNamespace() + ": " + err);
-                    });
+                            dbTokenEntry.transactionHash = trxHash;
+                            dbTokenEntry.mosaics = paidOutMosaics;
+                            dbTokenEntry.save();
+                        }, function(err) {
+                            self.logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + dbTokenEntry.address + " with error: " + err);
+                        });
+
+                }, function(err) {
+                    self.logger_.error("[NEM] [ERROR]", "[MOSAIC-GET]", "Could not read mosaics definition for namespace: " + self.blockchain_.getNamespace() + ": " + err);
+                });
+
+            return self;
         };
     };
 
