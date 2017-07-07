@@ -35,9 +35,7 @@ module.exports = function(grunt) {
                         'www/3rdparty/i18next.min.js',
                         'www/3rdparty/i18next-xhr-backend.min.js',
                         'www/3rdparty/i18next-jquery.min.js',
-                        'www/3rdparty/handlebars.min.js',
-                        'www/js/nem-sdk.js',
-                        '3rdparty/kjua.min.js'
+                        'www/3rdparty/handlebars.min.js'
                     ]
                 }
             }
