@@ -109,6 +109,8 @@
         "username_label": "Player Name",
         "xem_label": "XEM Wallet",
         "date_label": "Date of Game",
+        "transaction_label": "NEM Transaction",
+        "raw_label": "RAW",
         "hide_button": "Hide",
         "empty_high_scores": "Currently, no PacNEM high scores have been saved to the blockchain yet."
     },

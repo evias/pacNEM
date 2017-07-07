@@ -693,6 +693,8 @@ app.get("/api/v1/scores", function(req, res) {
                 username: rScore.username,
                 address: rScore.address,
                 truncAddress: rScore.address.substr(0, 8),
+                transactionHash: rScore.transactionHash,
+                truncHash: rScore.transactionHash.substr(0, 8),
                 scoreDate: fmtTime
             });
         }

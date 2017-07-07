@@ -44,7 +44,7 @@
         this.blockchain_ = chainDataLayer;
         this.db_ = dataLayer;
 
-        this.gameHallOfFame_ = { "ranking": [], "history": {}, "trxIdList": {} };
+        this.gameHallOfFame_ = { "ranking": [], "history": {}, "trxHashList": {} };
 
         /**
          * This method uses the pre-fetched `self.gameHallOfFame_.ranking` object
@@ -79,7 +79,7 @@
 
             if (lastTrxRead === null) {
                 // reset hall of fame - rebuilding from blockchain
-                gameHallOfFame_ = { "ranking": [], "history": {}, "trxIdList": {} };
+                gameHallOfFame_ = { "ranking": [], "history": {}, "trxHashList": {} };
             }
 
             // read outgoing transactions of the account and check for the given mosaic to build a
@@ -157,11 +157,11 @@
                 // message, so we should not care about this transaction.
                     continue;
 
-                if (self.gameHallOfFame_.trxIdList.hasOwnProperty(lastTrxHash))
+                if (self.gameHallOfFame_.trxHashList.hasOwnProperty(lastTrxHash))
                 // reading data we already know about.
                     continue;
 
-                self.gameHallOfFame_.trxIdList[lastTrxHash] = true;
+                self.gameHallOfFame_.trxHashList[lastTrxHash] = true;
 
                 if (content.type != self.blockchain_.getSDK().model.transactionTypes.transfer &&
                     content.type != self.blockchain_.getSDK().model.transactionTypes.multisigTransaction)
@@ -202,6 +202,9 @@
                     // on the blockchain because it can be computed from the NEM Timestamp
                     // of the transaction.
                     player.timestamp = lastTrxDate;
+
+                    // store transaction hash in the history too
+                    player.transactionHash = lastTrxHash;
 
                     if (!player || !player.address || !player.score || !player.username) {
                         // invalid transaction, should contain JSON of Pacman object
