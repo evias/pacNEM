@@ -196,6 +196,7 @@
         };
 
         this.refresh = function() {
+            var i = 0;
             var one_is_alive = false;
             for (var i = 0; i != pacmans_.length; i++) {
                 one_is_alive |= pacmans_[i].isAlive();
@@ -211,7 +212,7 @@
 
                 // Characters
                 start_received_from_ = new Array();
-                for (var i = 0; i != pacmans_.length; i++) {
+                for (i = 0; i < pacmans_.length; i++) {
                     var pacman_x = PACMAN_STARTS[pacmans_.length - 1][i]['x'];
                     var pacman_y = PACMAN_STARTS[pacmans_.length - 1][i]['y'];
                     var pacman_direction = PACMAN_STARTS[pacmans_.length - 1][i]['direction'];
@@ -224,12 +225,12 @@
                     start_received_from_.push(false);
                 }
 
-                for (var i = 0; i != ghosts_.length; i++) {
+                for (i = 0; i < ghosts_.length; i++) {
                     ghosts_[i].restart(GHOST_STARTS_X, GHOST_STARTS_Y);
                     ghosts_[i].setDifficulty(1. * (num_rounds_ * num_rounds_) / (num_rounds_ * num_rounds_ + 7));
                 }
 
-                for (var i = 0; i != sids_.length; i++) {
+                for (i = 0; i != sids_.length; i++) {
                     io.sockets.to(sids_[i]).emit('ready', JSON.stringify({
                         'constants': {
                             'FRAMES_PER_CELL': FRAMES_PER_CELL,
@@ -246,7 +247,7 @@
                 for (var p in pacmans_)
                     playersData.push(pacmans_[p].toDictionary());
 
-                for (var i = 0; i != sids_.length; i++) {
+                for (i = 0; i != sids_.length; i++) {
                     io.sockets.to(sids_[i]).emit('end_of_game', JSON.stringify({
                         "pacmans": playersData,
                         "map": map_,

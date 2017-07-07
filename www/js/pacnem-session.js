@@ -76,10 +76,10 @@ var GameSession = function(API, userName, xemAddress, gameMode) {
         return self;
     };
 
-    this.store = function(validateHeartsPerBlockchain = true) {
+    this.store = function(validateHeartsPerBlockchain) {
         var self = this;
         var storage = window.localStorage;
-
+        validateHeartsPerBlockchain = typeof validateHeartsPerBlockchain == 'undefined' ? true : validateHeartsPerBlockchain;
         self.details_.sid = $("#pacNEM-sessionId").val();
 
         if (!storage)

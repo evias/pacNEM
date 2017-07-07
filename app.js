@@ -111,12 +111,23 @@ app.configure(function() {
     app.use(flash());
     app.use(validator());
 
+    // LOCALES MANAGEMENT in frontend
     app.use(function(req, res, next) {
         req.i18n = i18n;
 
         if (req.session.locale) // check if user has changed i18n settings
             req.i18n.changeLanguage(req.session.locale);
 
+        next();
+    });
+
+    // Cache for Frontend Static Assets (2 Days)
+    app.use(function(req, res, next) {
+        var oneDay = 86400000;
+
+        if (req.url.match(/\.(css|js|png|jpg|gif|svg|ttf|woff)$/)) {
+            res.setHeader('Cache-Control', 'public, max-age=' + (oneDay * 2));
+        }
         next();
     });
 });
@@ -200,7 +211,6 @@ var serveStaticFile = function(req, res, path) {
     // make sure file exists
     var path = __dirname + path + file;
     if (!fs.existsSync(path)) {
-        console.log("file: '" + path + "' does not exist");
         return res.send(404);
     }
 
@@ -289,9 +299,17 @@ app.get('/resources/templates/:name', function(req, res) {
     res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
 });
 app.get('/locales/:lang', function(req, res) {
-    //XXX fileExistsSync
 
-    var json = fs.readFileSync(__dirname + '/locales/' + req.params.lang + '/translation.json');
+    if (!req.params.lang || !req.params.lang.length)
+        req.params.lang = "en";
+
+    // make sure file exists
+    var path = __dirname + '/locales/' + req.params.lang + '/translation.json';
+    if (!fs.existsSync(path)) {
+        path = __dirname + '/locales/en/translation.json';
+    }
+
+    var json = fs.readFileSync(path);
 
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     res.send(json);

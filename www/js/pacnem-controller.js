@@ -163,11 +163,14 @@ var GameController = function(config, socket, nem, chainId) {
     this.serverUpdate = function(rawdata) {
         var data = JSON.parse(rawdata);
 
+        // update grid with eaten cheeses
         for (var i = 0; i != data['eat'].length; i++) {
             var x = data['eat'][i]['x'];
             var y = data['eat'][i]['y'];
             grid_[y][x] = ' ';
         }
+
+        // store current iteration's Positions
         for (var i = 0; i != data['points'].length; i++) {
             points_.push(new DisplayPoints(
                 data['points'][i]['x'],
@@ -177,6 +180,7 @@ var GameController = function(config, socket, nem, chainId) {
         }
 
         if (!ongoing_refresh_ && data['elapsed'] < last_elapsed_) {
+            // we don't need this update anymore
             return;
         }
         ongoing_refresh_ = true;
@@ -187,6 +191,8 @@ var GameController = function(config, socket, nem, chainId) {
             return;
         }
         var ctx = canvas.getContext('2d');
+
+        console.log("[DEBUG] " + "Now re-drawing Board with Data: " + rawdata);
 
         // Draw game
         drawEmptyGameBoard(canvas, ctx, grid_);
@@ -440,18 +446,16 @@ function drawEmptyGameBoard(canvas, ctx, grid) {
 
     for (var i = 0; i != width; i++) {
         for (var j = 0; j != height; j++) {
-            if (grid[j][i] == '#') {
+            if (grid[j][i] == '#') { // display wall
                 ctx.fillStyle = "#777777";
                 ctx.fillRect(i * SIZE + 5, j * SIZE + 5, SIZE, SIZE);
-            } else if (grid[j][i] == '.') {
+                continue;
+            } else if (grid[j][i] == '.' || grid[j][i] == 'o') { // display cheese
+                var sizeFactor = grid[j][i] == 'o' ? .4 : .2;
+
                 ctx.beginPath();
                 ctx.fillStyle = "#aaaa00";
-                ctx.arc((i + .5) * SIZE + 5, (j + .5) * SIZE + 5, .2 * SIZE, 0, 2 * Math.PI, false);
-                ctx.fill();
-            } else if (grid[j][i] == 'o') {
-                ctx.beginPath();
-                ctx.fillStyle = "#aaaa00";
-                ctx.arc((i + .5) * SIZE + 5, (j + .5) * SIZE + 5, .4 * SIZE, 0, 2 * Math.PI, false);
+                ctx.arc((i + .5) * SIZE + 5, (j + .5) * SIZE + 5, sizeFactor * SIZE, 0, 2 * Math.PI, false);
                 ctx.fill();
             }
         }
@@ -463,7 +467,7 @@ function drawEmptyGameBoard(canvas, ctx, grid) {
  * @author Nicolas Dubien (https://github.com/dubzzz)
  */
 function drawPacMan(canvas, ctx, frame, pacman, color) {
-    if (pacman["lifes"] < 0) {
+    if (pacman["lifes"] <= 0) {
         return;
     }
     if (pacman["killed_recently"] != 0 && pacman["killed_recently"] % 4 < 2) {

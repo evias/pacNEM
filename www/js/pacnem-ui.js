@@ -811,8 +811,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * 
      * @return {GameUI}
      */
-    this.resetSession = function(forceNow = false, isBlocked = false) {
+    this.resetSession = function(forceNow, isBlocked) {
         //console.log("[DEBUG] [UI] " + "Now loading session-expire modal");
+
+        forceNow = typeof forceNow == 'undefined' ? false : forceNow;
+        isBlocked = typeof isBlocked == 'undefined' ? false : isBlocked;
 
         if (forceNow === true) {
             session_.clear();
@@ -1173,7 +1176,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
          * 
          * @param {GameUI} ui 
          */
-        var registerStatusHttpFallback = function(ui, seconds = 120) {
+        var registerStatusHttpFallback = function(ui, seconds) {
+
+            seconds = typeof seconds == 'undefined' ? 120 : seconds;
 
             // the `fn_getState` function will issue an API request 
             // to retrieve the current invoice status and will process 
@@ -1322,8 +1327,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @param   {Boolean}   closeable   Whether the Invoice window can be closed
      * @return  {GameUI}
      */
-    this.fillInvoiceModal = function(data, closeable = false) {
+    this.fillInvoiceModal = function(data, closeable) {
         var self = this;
+        closeable = typeof closeable == 'undefined' ? false : closeable;
 
         // read DOM for invoice
         var prefix = $("#pacnem-invoice-prefix").val();
@@ -1698,7 +1704,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * 
      * @return GameUI
      */
-    this.hideLounge = function(callback = null) {
+    this.hideLounge = function(callback) {
+        callback = typeof callback == 'undefined' ? null : callback;
         $("#pacnem-lounge-wrapper").fadeOut("slow", function() {
             if (callback)
                 return callback();

@@ -35,4 +35,7 @@ node_modules
 
 # PacNEM specific ignore rules
 config/
-
+www/js/pacnem.min.js
+www/js/pacnem.min.js.map
+www/3rdparty/pacnem-deps.min.js
+www/3rdparty/pacnem-deps.min.js.map

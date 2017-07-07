@@ -48,7 +48,8 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
      * @param	{Function} 	callback
      * @param 	{boolean}	validateHeartsPerBlockchain
      */
-    this.storeSession = function(details, callback, validateHeartsPerBlockchain = true) {
+    this.storeSession = function(details, callback, validateHeartsPerBlockchain) {
+        validateHeartsPerBlockchain = typeof validateHeartsPerBlockchain == 'undefined' ? true : validateHeartsPerBlockchain;
         this.jquery_.ajax({
             url: "/api/v1/sessions/store",
             type: "POST",
@@ -304,7 +305,9 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
      * @param 	{NEMSponsor} 	sponsor
      * @param	{Object} 	    player  Should contain `username` key
      */
-    this.storeSponsorAdView = function(sponsor, player, callback = null) {
+    this.storeSponsorAdView = function(sponsor, player, callback) {
+
+        callback = typeof callback == 'undefined' ? null : callback;
 
         var params = {
             "sponsor": sponsor.slug,
