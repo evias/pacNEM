@@ -74,6 +74,58 @@
         this.personalTokensTrxes_ = { "trxIdList": {}, "tokens": {} };
 
         /**
+         * This method will expire an active session given the `bundle`
+         * checksum.
+         * 
+         * This method should be used when the User signs out.
+         * 
+         * @param   {Object}    bundle  Should contain keys `ip`, `client` (user agent)
+         *                              and `address` (xem address)
+         * @param   {Function}  callback
+         * @return  void
+         */
+        this.expireActiveSession = function(bundle, callback) {
+
+            if (!bundle || !bundle.ip || !bundle.client || !bundle.address)
+                return callback(null);
+
+            var self = this;
+
+            // build MD5 checksum of client data
+            var payload = JSON.stringify(bundle);
+            var uaSession = CryptoJS.lib.WordArray.create(payload);
+            var checksum = CryptoJS.MD5(uaSession).toString();
+
+            self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Forgetting Session for Player with checksum: " + checksum);
+
+            // load session by checksum - if none is available OR if the session
+            // is too old, nothing needs to be done. If there is an active session
+            // it will be invalidated here (expired).
+            var query = {
+                ipAddress: bundle.ip,
+                address: bundle.address
+            };
+            var sorting = { sort: { createdAt: -1 } };
+            self.db_.PacNEMClientSession.find(query, null, sorting, function(err, sessions) {
+                if (err)
+                    return callback(null);
+
+                if (!sessions || !sessions.length)
+                    return callback(null);
+
+                for (var i = 0; i < sessions.length; i++) {
+                    var session = sessions[i];
+
+                    session.isExpired = true;
+                    session.updatedAt = new Date().valueOf();
+                    session.save();
+                }
+
+                return callback(sessions);
+            });
+        };
+
+        /**
          * The getActiveSession method checks whether the user has an active
          * Client Session for the given Browser and IP. (Sessions are kept active
          * for one Hour).
@@ -107,7 +159,9 @@
             // seconds before the modal box gets closed. 
             var query = {
                 ipAddress: bundle.ip,
-                checksum: checksum
+                address: bundle.address,
+                checksum: checksum,
+                isExpired: false
             };
             var sorting = { sort: { createdAt: -1 } };
             self.db_.PacNEMClientSession.findOne(query, null, sorting, function(err, session) {
@@ -181,6 +235,7 @@
                 // we can safely process this authentication trial
 
                 var token = bundle.creds.length ? base64_decode(bundle.creds) : "";
+                delete bundle.creds;
 
                 // database stores a hash of the token, not the plain text
                 var uaToken = CryptoJS.lib.WordArray.create(secretKey + token + secretKey);
@@ -209,12 +264,41 @@
                         });
                     } else {
                         // authentication success
-
-                        return onSuccess(tokenValid);
+                        return self.saveActiveSession(bundle, checksum, function(session) {
+                            return onSuccess(tokenValid);
+                        });
                     }
                 });
             });
-        }
+        };
+
+        /**
+         * This method will save a new active session in the database.
+         * 
+         * @param   {Object}    bundle  Should contain keys `address`, `from` (IP address)
+         *                              and `headers` (usually `req.headers`).
+         * @param   {String}    checksum
+         * @param   {Function}  callback
+         * @return  void
+         */
+        this.saveActiveSession = function(bundle, checksum, callback) {
+
+            if (!bundle || !bundle.address || !bundle.from || !bundle.headers)
+                return callback(null);
+
+            var self = this;
+
+            var session = new self.db_.PacNEMClientSession({
+                ipAddress: bundle.from,
+                address: bundle.address,
+                browserData: JSON.stringify(bundle.headers),
+                checksum: checksum,
+                createdAt: new Date().valueOf()
+            });
+            session.save(function(err) {
+                return callback(session);
+            });
+        };
 
         /**
          * This method will recursively read transactions from the blockchain.

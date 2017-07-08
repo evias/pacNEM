@@ -18,7 +18,7 @@
         "isPublic": true,
         "canResetData": true,
         "useMultisig": true,
-        "facebookAppId": "757536521101465"
+        "facebookAppId": ""
     },
     "nem": {
         "isTestMode": true,

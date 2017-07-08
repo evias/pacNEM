@@ -685,16 +685,7 @@ app.post("/api/v1/sessions/verify", function(req, res) {
 
     Authenticator.authenticateAddress(bundle, function(token) {
         // Authentication was successful, Player can now play PacNEM
-        var session = new PacNEMDB.PacNEMClientSession({
-            ipAddress: bundle.from,
-            address: bundle.address,
-            browserData: JSON.stringify(req.headers),
-            checksum: checksum,
-            createdAt: new Date().valueOf()
-        });
-        session.save(function(err) {
-            res.send(JSON.stringify({ "status": "ok", "code": 1, "item": session.checksum }));
-        });
+        res.send(JSON.stringify({ "status": "ok", "code": 1, "item": session.checksum }));
 
     }, function(response) {
         // Authentication ERROR !
@@ -715,6 +706,32 @@ app.post("/api/v1/sessions/verify", function(req, res) {
                 res.send(JSON.stringify({ "status": "error", "code": response.code, "error": response.error }));
             });
         }
+    });
+});
+
+app.post("/api/v1/sessions/forget", function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
+
+    var ip = req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
+
+    var bundle = {
+        ip: ip,
+        client: req.headers['user-agent'],
+        address: req.body.address.replace(/-/g, ''),
+    };
+
+    Authenticator.expireActiveSession(bundle, function(session) {
+        if (!session) {
+            return res.send(JSON.stringify({ "status": "error", "code": AuthErrors.E_SERVER_ERROR, "error": "E_SERVER_ERROR" }));
+        }
+
+        return res.send(JSON.stringify({
+            "status": "ok",
+            "code": AuthErrors.E_SESSION_EXPIRED
+        }));
     });
 });
 

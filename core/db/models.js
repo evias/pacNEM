@@ -284,7 +284,9 @@
             address: String,
             browserData: String,
             checksum: String,
-            createdAt: { type: Number, min: 0 }
+            isExpired: { type: Boolean, default: false },
+            createdAt: { type: Number, min: 0 },
+            updatedAt: { type: Number, min: 0 }
         });
 
         // bind our Models classes

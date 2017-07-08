@@ -32,6 +32,7 @@ var PacNEMFacebookUI = function(ui) {
 
             var name = fbMeData.first_name + " " + fbMeData.last_name;
             facebookCanvasUI__.getDOM("#username").val(name);
+            facebookCanvasUI__.getDOM("#username").prop("disabled", true);
         });
     };
 
@@ -77,9 +78,9 @@ var PacNEMFacebookUI = function(ui) {
             if (response.status != 'connected')
                 return false;
 
-            FB.api('/me?fields=first_name', function(data) {
+            FB.api('/me?fields=first_name,last_name', function(data) {
 
-                console.log("[DEBUG] " + "Facebook /me Response: " + JSON.stringify(data));
+                //DEBUG console.log("[DEBUG] " + "Facebook /me Response: " + JSON.stringify(data));
 
                 var welcomeBlock = document.getElementById('fb-welcome');
                 welcomeBlock.innerHTML = 'Welcome to PacNEM, ' + data.first_name + '!';

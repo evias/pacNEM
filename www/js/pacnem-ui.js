@@ -346,10 +346,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             $(".pacnem-summary-close-trigger").off("click");
             $(".pacnem-summary-close-trigger").on("click", function() {
-                window.location.reload();
-                //$("#pacnem-game-wrapper").hide();
-                //self.displayLounge();
-                //$(".pacnem-summary-modal").modal("hide");
+                $("#pacnem-game-wrapper").hide();
+                self.displayLounge();
+                $(".pacnem-summary-modal").modal("hide");
                 return false;
             });
         });
@@ -1663,13 +1662,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     this.initPurgeButton = function() {
         var self = this;
 
-        //XXX make sure user notes username + address
-
-        //XXX should also clear PacNEMClientSession
-
         $("#pacnem-purge-trigger").click(function() {
-            session_.clear();
-            window.location.href = "/";
+
+            API_.forgetPlayerIdentity(self.getPlayerDetails(), function(response) {
+
+                if (session_)
+                    session_.clear();
+
+                window.location.href = "/";
+            });
+
             return false;
         });
 
