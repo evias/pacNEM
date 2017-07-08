@@ -17,7 +17,8 @@
         "dataSalt": "PacNEMSaltForEncryption#*+´-:29.08.1988_:§$%",
         "isPublic": true,
         "canResetData": false,
-        "useMultisig": true
+        "useMultisig": true,
+        "facebookAppId": "757536521101465"
     },
     "nem": {
         "isTestMode": true,

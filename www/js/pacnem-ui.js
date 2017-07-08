@@ -39,6 +39,62 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     var interval_ = null; // fallback AJAX invoice payment status update listener
 
     /**
+     * Getter for the frontend configuration object.
+     *
+     * @return  {Object}
+     */
+    this.getConfig = function() {
+        return config_;
+    }
+
+    /**
+     * Getter for the Socket.IO backend socket.
+     *
+     * @return  {Object}
+     */
+    this.getBackendSocket = function() {
+        return socket_;
+    }
+
+    /**
+     * Getter for the frontend Game Controller instance.
+     *
+     * @return  {GameController}
+     */
+    this.getController = function() {
+        return ctrl_;
+    }
+
+    /**
+     * Getter for the frontend jQuery wrapper object.
+     *
+     * @return  {window.jQuery}
+     */
+    this.getDOMWrapper = function() {
+        return jquery_;
+    }
+
+    /**
+     * Getter for the API wrapper (backend PacNEM API).
+     *
+     * @return  {GameAPI}
+     */
+    this.getAPI() = function() {
+        return API_;
+    }
+
+    /**
+     * Getter for the frontend jQuery File Template 
+     * template manager. This object is used to render
+     * templates asynchronously.
+     *
+     * @return  {jQueryFileTemplate}
+     */
+    this.getTemplateManager = function() {
+        return template_;
+    }
+
+    /**
      * /!\
      * /!\ This function is called automatically upon instance creation. /!\
      * /!\
@@ -638,7 +694,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         } else if (ctrl_.isPlayMode("pay-per-play")) {
             // User needs Auth Code to authenticate
             self.authenticatePlayer(session_, function(response) {
-                console.log("[DEBUG] " + "Player authenticated with checksum: " + response.item);
+                //DEBUG console.log("[DEBUG] " + "Player authenticated with checksum: " + response.item);
 
                 // we can safely emit the session creation, this user is
                 // either a pay-per-play or share-per-play (not yet implemented)

@@ -1,14 +1,19 @@
 
 <script type="text/javascript">
-    var config    = {"business": "{{PacNEM_Frontend_Config.business}}", "application": "{{PacNEM_Frontend_Config.application}}", "namespace": "{{PacNEM_Frontend_Config.namespace}}", "dataSalt": "{{PacNEM_Frontend_Config.dataSalt}}"};
-    var socket    = io.connect(window.location.protocol + '//' + window.location.host);
-    var nem       = require("nem-sdk").default;
-    var game_ctrl = new GameController(config, socket, nem, {{currentNetwork.config.id}});
-    var game_ui   = new GameUI(config, socket, game_ctrl, $, new jQFileTemplate());
+    var __pn_evs_config   = {"business": "{{PacNEM_Frontend_Config.business}}", "application": "{{PacNEM_Frontend_Config.application}}", "namespace": "{{PacNEM_Frontend_Config.namespace}}", "dataSalt": "{{PacNEM_Frontend_Config.dataSalt}}"};
+    var __pn_evs_bSocket  = io.connect(window.location.protocol + '//' + window.location.host);
+    var __pn_evs_nemSDK   = require("nem-sdk").default;
+    var __pn_evs_GameCtrl = new GameController(__pn_evs_config, __pn_evs_bSocket, __pn_evs_nemSDK, {{currentNetwork.config.id}});
+    var __pn_evs_GameUI   = new GameUI(__pn_evs_config, __pn_evs_bSocket, __pn_evs_GameCtrl, $, new jQFileTemplate());
+    var __pn_evs_facebookUI = new PacNEMFacebookUI(__pn_evs_GameUI);
+
+    {{#if isFacebookCanvas}}
+    __pn_evs_facebookUI.directCanvas();
+    {{/if}}
 
     $(document).ready(function()
     {
-        game_ui.initDOMListeners();
+        __pn_evs_GameUI.initDOMListeners();
 
         // set blockchain network
         $("#currentBlockchain-network").text("{{currentNetwork.label}}");

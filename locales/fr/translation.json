@@ -10,8 +10,8 @@
         "Mijin": "Mijin"
     },
     "meta": {
-        "title": "PacMan meets NEM",
-        "description": "Un jeu de PacMan Open Source utilisant la blockchain NEM avec des comptes XEM, Sponsoring par Session, Paiement par Session avec XEM et les Mosaics de NEM.",
+        "title": "PacNEM - PacMan meets NEM",
+        "description": "Reçoit des Mosaics NEM en tant que Joueur ou Sponsor! PacNEM est un jeu de PacMan Multiplayer Open Source utilisant la blockchain NEM avec Paiements Instantanés, Défis Multiplayer et une façon innovante de gérer les Crédits de Jeu à l'aide de la blockchain NEM!",
         "keywords": "pacman, pacnem, multiplayer pacman, multiplayer game, blockchain, nem, nemblockchain, pacman nem, mosaics, namespaces, multi signature, multisig, sponsored play, pay per play, pay-per-play, crypto currencies, cryptocurrency, game advertisement, game sponsor, blockchain gaming"
     },
     "menus": {

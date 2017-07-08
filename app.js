@@ -195,7 +195,8 @@ var PacNEM_Frontend_Config = {
     "business": PacNEMBlockchain.getVendorWallet(),
     "application": PacNEMBlockchain.getPublicWallet(),
     "namespace": PacNEMBlockchain.getNamespace(),
-    "dataSalt": config.get("pacnem.secretKey")
+    "dataSalt": config.get("pacnem.secretKey"),
+    "facebookAppId": config.get("pacnem.facebookAppId")
 };
 
 /**
@@ -463,7 +464,29 @@ app.get("/", function(req, res) {
         currentNetwork: currentNetwork,
         currentLanguage: currentLanguage,
         PacNEM_Frontend_Config: PacNEM_Frontend_Config,
-        notificationMessage: notificationMessage
+        notificationMessage: notificationMessage,
+        isFacebookCanvas: false
+    };
+
+    res.render("play", viewData);
+});
+
+// Facebook Canvas Game
+app.post("/facebook/game", function(req, res) {
+    var currentLanguage = req.i18n.language;
+    var currentNetwork = PacNEMBlockchain.getNetwork();
+    var notificationMessage = typeof flash("info") == "undefined" ? "" : req.flash("info");
+
+    var isFacebook = req.query.fb && parseInt(req.query.fb) === 1;
+
+    console.log("[DEBUG] Handling Facebook Canvas request with: body: '" + JSON.stringify(req.body) + "', headers: '" + JSON.stringify(req.headers) + "', query: '" + JSON.stringify(req.query) + "'");
+
+    var viewData = {
+        currentNetwork: currentNetwork,
+        currentLanguage: currentLanguage,
+        PacNEM_Frontend_Config: PacNEM_Frontend_Config,
+        notificationMessage: notificationMessage,
+        isFacebookCanvas: isFacebook
     };
 
     res.render("play", viewData);
