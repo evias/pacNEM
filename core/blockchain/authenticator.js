@@ -339,7 +339,7 @@
                 try {
                     //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Now interpreting: '" + lastMsgRead + "' as JSON for mosaicStake: " + JSON.stringify(mosaicStake));
 
-                    var token = lastMsgRead;
+                    var token = lastMsgRead; // token stored in plain text on blockchain
                     var normalized = recipient.replace(/-/g, "");
 
                     //self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Token Found: " + token + " for Address: " + recipient);
@@ -374,34 +374,51 @@
                 return false;
             }
 
-            var secretKey = config.get("pacnem.secretKey");
-
             for (var address in tokensData.tokens) {
+
                 var normalized = address.replace(/-/g, '');
                 var currentToken = tokensData.tokens[normalized];
-                self.db_.NEMPersonalToken.findOne({ "address": normalized }, function(err, entry) {
-                    if (err)
-                        return;
 
-                    // database stores a hash of the token, not the plain text
-                    var uaToken = CryptoJS.lib.WordArray.create(secretKey + currentToken.token + secretKey);
-                    var checksum = CryptoJS.MD5(uaToken).toString();
-
-                    if (entry) {
-                        entry.tokenChecksum = checksum;
-                        entry.transactionHash = currentToken.trxHash;
-                    } else {
-                        // Token read from blockchain but not present in database.
-                        entry = new self.db_.NEMPersonalToken({
-                            "address": normalized,
-                            "tokenChecksum": checksum,
-                            "transactionHash": currentToken.trxHash,
-                            "createdAt": new Date().valueOf()
-                        });
-                    }
-                    entry.save();
-                });
+                self.asyncDatabaseUpdate(normalized, currentToken);
             }
+        };
+
+        /**
+         * This method will save the NEMPersonalToken entry given
+         * the XEM address `address` and the token object `token`.
+         * 
+         * The `token` object is created in `processPersonalTokenTransactions`
+         * from reading the NEM blockchain transactions containing Personal Token Mosaics.
+         * 
+         * @param   {String}    address
+         * @param   {Object}    token   Should contain key `trxHash` and `token`
+         * @return  void
+         */
+        this.asyncDatabaseUpdate = function(address, token) {
+            var self = this;
+            var secretKey = config.get("pacnem.secretKey");
+            self.db_.NEMPersonalToken.findOne({ "address": address }, function(err, entry) {
+                if (err)
+                    return;
+
+                // database stores a hash of the token, not the plain text
+                var uaToken = CryptoJS.lib.WordArray.create(secretKey + token.token + secretKey);
+                var checksum = CryptoJS.MD5(uaToken).toString();
+
+                if (entry) {
+                    entry.tokenChecksum = checksum;
+                    entry.transactionHash = token.trxHash;
+                } else {
+                    // Token read from blockchain but not present in database.
+                    entry = new self.db_.NEMPersonalToken({
+                        "address": address,
+                        "tokenChecksum": checksum,
+                        "transactionHash": token.trxHash,
+                        "createdAt": new Date().valueOf()
+                    });
+                }
+                entry.save();
+            });
         };
 
         /**
@@ -499,7 +516,8 @@
                         // for this Game and Player.
                         var createToken = new self.db_.NEMPersonalToken({
                             "address": address,
-                            "tokenChecksum": checksum
+                            "tokenChecksum": checksum,
+                            "createdAt": new Date().valueOf()
                         });
                         createToken.save();
 
