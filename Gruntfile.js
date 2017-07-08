@@ -19,7 +19,7 @@ module.exports = function(grunt) {
         },
         uglify: {
             options: { sourceMap: true },
-            PacNEM: {
+            dist: {
                 files: {
                     'www/js/pacnem.min.js': [
                         'www/js/pacnem-utils.js',
@@ -36,6 +36,9 @@ module.exports = function(grunt) {
                         'www/3rdparty/i18next-xhr-backend.min.js',
                         'www/3rdparty/i18next-jquery.min.js',
                         'www/3rdparty/handlebars.min.js'
+                    ],
+                    'www/js/nem-sdk.min.js': [
+                        'www/js/nem-sdk.js'
                     ]
                 }
             }
