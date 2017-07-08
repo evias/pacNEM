@@ -45,7 +45,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.getConfig = function() {
         return config_;
-    }
+    };
 
     /**
      * Getter for the Socket.IO backend socket.
@@ -54,7 +54,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.getBackendSocket = function() {
         return socket_;
-    }
+    };
 
     /**
      * Getter for the frontend Game Controller instance.
@@ -63,7 +63,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.getController = function() {
         return ctrl_;
-    }
+    };
 
     /**
      * Getter for the frontend jQuery wrapper object.
@@ -72,7 +72,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.getDOMWrapper = function() {
         return jquery_;
-    }
+    };
+
+    /**
+     * Load a jQuery DOM Element by selector
+     *
+     * @return  {window.jQuery}
+     */
+    this.getDOM = function(selector) {
+        return jquery_(selector);
+    };
 
     /**
      * Getter for the API wrapper (backend PacNEM API).
@@ -81,7 +90,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.getAPI = function() {
         return API_;
-    }
+    };
 
     /**
      * Getter for the frontend jQuery File Template 
@@ -92,7 +101,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.getTemplateManager = function() {
         return template_;
-    }
+    };
 
     /**
      * /!\
@@ -615,8 +624,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @return Object
      */
     this.getPlayerDetails = function(session) {
-        var username = $("#username").val();
-        var address = $("#address").val();
+        var username = this.getDOMWrapper()("#username").val();
+        var address = this.getDOMWrapper()("#address").val();
 
         if (!username.length && session && session.getPlayer().length)
             username = session.getPlayer();

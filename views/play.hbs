@@ -7,13 +7,14 @@
     var __pn_evs_GameUI   = new GameUI(__pn_evs_config, __pn_evs_bSocket, __pn_evs_GameCtrl, $, new jQFileTemplate());
     var __pn_evs_facebookUI = new PacNEMFacebookUI(__pn_evs_GameUI);
 
-    {{#if isFacebookCanvas}}
-    __pn_evs_facebookUI.directCanvas();
-    {{/if}}
-
     $(document).ready(function()
     {
         __pn_evs_GameUI.initDOMListeners();
+
+        {{#if isFacebookCanvas}}
+        __pn_evs_facebookUI.directCanvas(__pn_evs_GameUI);
+        {{/if}}
+
 
         // set blockchain network
         $("#currentBlockchain-network").text("{{currentNetwork.label}}");

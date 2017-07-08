@@ -29,12 +29,12 @@
 
         <link rel="stylesheet" href="/3rdparty/bootstrap-3.3.7/css/bootstrap.min.css" />
         <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-        <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
+        <link href="/css/style.css" type="text/css" rel="stylesheet" media="all" />
 
         <script src="/3rdparty/pacnem-deps.min.js"></script>
         <script src="/js/nem-sdk.js"></script>
         <script src="/3rdparty/kjua.min.js"></script>
-        <script src="/js/pacnem.min.js"></script>
+        <script src="/js/pacnem.min.js?nocache=1"></script>
         <script src="/js/pacnem-facebook.js?nocache=1"></script>
         <script src="/socket.io/socket.io.js"></script>
 
@@ -202,7 +202,7 @@ Handlebars.registerHelper("truncateAddress", function (address)
                 });
 
                 if (typeof __pn_evs_facebookUI != 'undefined') {
-                    __pn_evs_facebookUI.init();
+                    __pn_evs_facebookUI.init(__pn_evs_GameUI);
                 }
             };
 

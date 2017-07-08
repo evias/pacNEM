@@ -26,38 +26,47 @@ var PacNEMFacebookUI = function(ui) {
 
     this.ui_ = ui;
 
-    this.init = function() {
+    this.init = function(facebookCanvasUI__) {
         var self = this;
         self.plugFacebookLogin(function(fbMeData) {
 
             var name = fbMeData.first_name + " " + fbMeData.last_name;
-            __pn_evs_GameUI.getDOMWrapper()("#username").val(name);
+            facebookCanvasUI__.getDOM("#username").val(name);
         });
     };
 
-    this.directCanvas = function() {
-        facebookFlowImpl_();
+    this.directCanvas = function(facebookCanvasUI__) {
+        facebookFlowImpl_(facebookCanvasUI__);
     }
 
-    var facebookFlowImpl_ = function() {
+    var facebookFlowImpl_ = function(facebookCanvasUI__) {
+
+        var ctrl = facebookCanvasUI__.getController()
+            .setPlayMode("sponsored")
+            .setAdvertised(true);
+
         // set sponsored UI with "autoSwitch" enabled
-        __pn_evs_GameUI.setSponsoredUI(true, function(ui, sponsor) {
+        facebookCanvasUI__.setSponsoredUI(true, function(ui, sponsor) {
+
+            ctrl.sponsorizeName(ctrl.getSponsor());
+            ctrl.setAdvertised(true);
+
             // now display the advertisement
             ui.displaySponsorAdvertisement(sponsor, function(ui) {
                 // then, emit the session creation
-                __pn_evs_GameUI.getBackendSocket().emit('change_username', JSON.stringify(details));
-                __pn_evs_GameUI.getBackendSocket().emit("notify");
+                facebookCanvasUI__.getBackendSocket().emit('change_username', JSON.stringify(details));
+                facebookCanvasUI__.getBackendSocket().emit("notify");
 
                 // and finally, create a room automatically for Facebook Players
                 // after this, the countdown for the Game should start.
-                var player = __pn_evs_GameUI.getPlayerDetails();
+                var player = facebookCanvasUI__.getPlayerDetails();
 
                 // first create room for the Facebook Player
                 //XXX would be good to Group people on Facebook to 4 Player Games.
-                __pn_evs_GameUI.getBackendSocket().emit("create_room", JSON.stringify(player));
+                facebookCanvasUI__.getBackendSocket().emit("create_room", JSON.stringify(player));
 
                 // second start the game (in 10 seconds..)
-                __pn_evs_GameUI.getBackendSocket().emit("run_game");
+                facebookCanvasUI__.getBackendSocket().emit("run_game");
             });
         });
     };
