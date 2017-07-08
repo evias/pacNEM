@@ -201,7 +201,9 @@ Handlebars.registerHelper("truncateAddress", function (address)
                 version    : 'v2.9'
                 });
 
-                // ADD ADDITIONAL FACEBOOK CODE HERE
+                if (typeof __pn_evs_facebookUI != 'undefined') {
+                    __pn_evs_facebookUI.init();
+                }
             };
 
             (function(d, s, id){
@@ -210,10 +212,6 @@ Handlebars.registerHelper("truncateAddress", function (address)
                 js = d.createElement(s); js.id = id;
                 js.src = "//connect.facebook.net/en_US/sdk.js";
                 fjs.parentNode.insertBefore(js, fjs);
-
-                if (typeof __pn_evs_facebookUI != 'undefined') {
-                    __pn_evs_facebookUI.init();
-                }
 
             }(document, 'script', 'facebook-jssdk'));
         </script>
