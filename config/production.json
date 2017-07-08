@@ -17,7 +17,8 @@
         "dataSalt": "PacNEMSaltForEncryption#*+´-:29.08.1988_:§$%",
         "isPublic": true,
         "canResetData": false,
-        "useMultisig": true
+        "useMultisig": true,
+        "facebookAppId": "757536521101465"
     },
     "nem": {
         "isTestMode": true,
@@ -31,8 +32,8 @@
             { "host": "http://104.251.212.131", "port": 7890 }
         ],
         "nodes_test": [
-            { "host": "http://bob.nem.ninja", "port": 7890 },
             { "host": "http://bigalice2.nem.ninja", "port": 7890 },
+            { "host": "http://bob.nem.ninja", "port": 7890 },
             { "host": "http://192.3.61.243", "port": 7890 },
             { "host": "http://23.228.67.85", "port": 7890 }
         ]

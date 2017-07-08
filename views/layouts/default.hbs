@@ -1,23 +1,41 @@
 <html lang="{{currentLanguage}}">
     <head>
-        <title>PacNEM - {{t "meta.title"}}</title>
+        <title>{{t "meta.title"}}</title>
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
         <meta name="description" content="{{t "meta.description"}}" />
         <meta name="keywords" content="{{t "meta.keywords"}}" />
         <meta name="author" content="Grégory Saive (https://github.com/evias)" />
         <meta name="robots" content="index, follow" />
 
+        <meta property="og:url" content="https://www.pacnem.com" />
+        <meta property="og:type" content="game" />
+        <meta property="og:type" content="{{t "meta.title"}}" />
+        <meta property="og:description" content="{{t "meta.description"}}" />
+        <meta property="og:image" content="https://www.pacnem.com/img/pacnem_logo.png" />
+
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@PacNEM_Game">
+        <meta name="twitter:creator" content="@eVias">
+        <meta name="twitter:title" content="{{t "meta.title"}}">
+        <meta name="twitter:description" content="{{t "meta.description"}}">
+        <meta name="twitter:image" content="https://www.pacnem.com/img/pacnem_logo.png">
+
+        {{#if PacNEM_Frontend_Config.facebookAppId.length}}
+        <meta property="fb:app_id" content="{{PacNEM_Frontend_Config.facebookAppId}}" />
+        {{/if}}
+
         <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
         <link rel="stylesheet" href="/3rdparty/bootstrap-3.3.7/css/bootstrap.min.css" />
         <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-        <link href="css/style.css" type="text/css" rel="stylesheet" media="all" />
+        <link href="/css/style.css" type="text/css" rel="stylesheet" media="all" />
 
         <script src="/3rdparty/pacnem-deps.min.js"></script>
         <script src="/js/nem-sdk.js"></script>
         <script src="/3rdparty/kjua.min.js"></script>
-        <script src="/js/pacnem.min.js"></script>
+        <script src="/js/pacnem.min.js?nocache=1"></script>
+        <script src="/js/pacnem-facebook.js?nocache=1"></script>
         <script src="/socket.io/socket.io.js"></script>
 
         <script type="text/javascript">
@@ -85,7 +103,7 @@ Handlebars.registerHelper("truncateAddress", function (address)
         <script src="/js/jquery-hbs-file-template.js"></script>
     </head>
     <body>
-        <img src="/img/pacnem_logo.png" alt="PacNEM - {{t "meta.title"}}" title="PacNEM - {{t "meta.title"}}" style="display: none;" />
+        <img src="https://www.pacnem.com/img/pacnem_logo.png" alt="{{t "meta.title"}}" title="{{t "meta.title"}}" style="display: none;" />
         <h1 style="display: none;">{{t "meta.title"}}</h1>
         <p style="display: none;">{{t "meta.description"}}</p>
 
@@ -126,6 +144,7 @@ Handlebars.registerHelper("truncateAddress", function (address)
                                 </ul>
                             </li>
                             <li id="currentMosaics" style="display: none;"></li>
+                            <li id="fb-welcome"></li>
                         </ul>
                     </div>
 
@@ -172,5 +191,31 @@ Handlebars.registerHelper("truncateAddress", function (address)
             Credits to Nicolas Dubien for the original open source js-pacman project (<a href="https://github.com/dubzzz/js-pacman" target="_blank">dubzzz/js-pacman</a>).<br />
           </p>
         </footer>
+
+        {{#if PacNEM_Frontend_Config.facebookAppId.length}}
+        <script>
+            window.fbAsyncInit = function() {
+                FB.init({
+                appId      : '{{PacNEM_Frontend_Config.facebookAppId}}',
+                xfbml      : true,
+                version    : 'v2.9'
+                });
+
+                if (typeof __pn_evs_facebookUI != 'undefined') {
+                    __pn_evs_facebookUI.init(__pn_evs_GameUI);
+                }
+            };
+
+            (function(d, s, id){
+                var js, fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) {return;}
+                js = d.createElement(s); js.id = id;
+                js.src = "//connect.facebook.net/en_US/sdk.js";
+                fjs.parentNode.insertBefore(js, fjs);
+
+            }(document, 'script', 'facebook-jssdk'));
+        </script>
+        {{/if}}
+
     </body>
 </html>
