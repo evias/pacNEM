@@ -31,7 +31,7 @@ var PacNEMFacebookUI = function(ui) {
         self.plugFacebookLogin(function(fbMeData) {
 
             var name = fbMeData.first_name + " " + fbMeData.last_name;
-            self.ui_.getjQuery()("#username").val(name);
+            __pn_evs_GameUI.getDOMWrapper()("#username").val(name);
         });
     };
 
@@ -40,26 +40,24 @@ var PacNEMFacebookUI = function(ui) {
     }
 
     var facebookFlowImpl_ = function() {
-        var self = this;
-
         // set sponsored UI with "autoSwitch" enabled
-        self.ui_.setSponsoredUI(true, function(ui, sponsor) {
+        __pn_evs_GameUI.setSponsoredUI(true, function(ui, sponsor) {
             // now display the advertisement
             ui.displaySponsorAdvertisement(sponsor, function(ui) {
                 // then, emit the session creation
-                self.ui_.getBackendSocket().emit('change_username', JSON.stringify(details));
-                self.ui_.getBackendSocket().emit("notify");
+                __pn_evs_GameUI.getBackendSocket().emit('change_username', JSON.stringify(details));
+                __pn_evs_GameUI.getBackendSocket().emit("notify");
 
                 // and finally, create a room automatically for Facebook Players
                 // after this, the countdown for the Game should start.
-                var player = self.ui_.getPlayerDetails();
+                var player = __pn_evs_GameUI.getPlayerDetails();
 
                 // first create room for the Facebook Player
                 //XXX would be good to Group people on Facebook to 4 Player Games.
-                self.ui_.getBackendSocket().emit("create_room", JSON.stringify(player));
+                __pn_evs_GameUI.getBackendSocket().emit("create_room", JSON.stringify(player));
 
                 // second start the game (in 10 seconds..)
-                self.ui_.getBackendSocket().emit("run_game");
+                __pn_evs_GameUI.getBackendSocket().emit("run_game");
             });
         });
     };
