@@ -624,8 +624,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @return Object
      */
     this.getPlayerDetails = function(session) {
-        var username = this.getDOMWrapper()("#username").val();
-        var address = this.getDOMWrapper()("#address").val();
+        var username = $("#username").val();
+        var address = $("#address").val();
 
         if (!username.length && session && session.getPlayer().length)
             username = session.getPlayer();
@@ -1664,6 +1664,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         var self = this;
 
         //XXX make sure user notes username + address
+
+        //XXX should also clear PacNEMClientSession
 
         $("#pacnem-purge-trigger").click(function() {
             session_.clear();
