@@ -113,6 +113,7 @@ var GameController = function(config, socket, nem, chainId) {
     var advertised_ = false;
     var needsPayment_ = false;
     var player_session_ = null;
+    var $roomPlayersDOM_ = {};
 
     this.getSDK = function() {
         return nem_;
@@ -152,6 +153,21 @@ var GameController = function(config, socket, nem, chainId) {
 
         // Draw board
         drawEmptyGameBoard(canvas, ctx, grid_);
+
+        // load room players DOM element now so that we
+        // don't need to query the DOM on each socket message
+        var $rows = $("#pacnem-current-room-wrapper .player-row");
+        var $items = [];
+        for (var i = 0; i < $rows.length; i++) {
+            var $current = $($rows[i]);
+            var username = $current.find(".player").text();
+
+            $roomPlayersDOM_[username] = {
+                "score": $current.find(".pc-score"),
+                "lifes": $current.find(".pc-lifes"),
+                "combo": $current.find(".pc-combo")
+            };
+        }
 
         // Screen transition for a new game
         TransitionHelper(function() {
@@ -196,7 +212,7 @@ var GameController = function(config, socket, nem, chainId) {
 
         // Refresh room Game Board
         refreshRoomBoard(grid_, data, frame_);
-        refreshCharacters(data, canvas, ctx, frame_);
+        refreshCharacters(data, canvas, ctx, frame_, $roomPlayersDOM_);
 
         // display Positions on the Board
         for (var i = 0; i != points_.length; i++) {
@@ -409,12 +425,7 @@ var refreshRoomBoard = function(grid, data, frame) {
     return false;
 };
 
-var refreshCharacters = function(data, canvas, ctx, frame) {
-    var $rows = $("#pacnem-current-room-wrapper .player-row");
-    var $items = [];
-    for (var i = 0; i < $rows.length; i++)
-        $items.push($($rows[i]));
-
+var refreshCharacters = function(data, canvas, ctx, frame, DOMCache) {
     for (var i = 0; i != data['pacmans'].length; i++) {
         var pacman = data['pacmans'][i];
         drawPacMan(canvas, ctx, frame, pacman, data['pacmans'].length == 1 ? "#777700" : PACMAN_COLORS[i % PACMAN_COLORS.length]);
@@ -422,13 +433,16 @@ var refreshCharacters = function(data, canvas, ctx, frame) {
         if (typeof pacman["score"] == "undefined" || typeof pacman["lifes"] == "undefined")
             continue; // do not update with empty values
 
+        var uname = pacman.username;
         var score = pacman["score"] ? pacman["score"] : 0;
         var lifes = pacman["lifes"] < 0 ? 0 : pacman["lifes"];
         var combo = pacman["combo"] ? pacman["combo"] + 1 : 1;
 
-        $items[i].find(".pc-score").text(score);
-        $items[i].find(".pc-lifes").text(lifes);
-        $items[i].find(".pc-combo").text("x" + combo);
+        if (DOMCache[uname]) {
+            DOMCache[uname].score.text(score);
+            DOMCache[uname].lifes.text(lifes);
+            DOMCache[uname].combo.text("x" + combo);
+        }
     }
 
     for (var i = 0; i != data['ghosts'].length; i++) {
