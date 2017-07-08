@@ -79,7 +79,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      *
      * @return  {GameAPI}
      */
-    this.getAPI() = function() {
+    this.getAPI = function() {
         return API_;
     }
 

@@ -443,17 +443,6 @@ app.post("/sponsor", function(req, res) {
     });
 });
 
-app.get("/:lang", function(req, res) {
-    var currentLanguage = req.params.lang;
-    var currentNetwork = PacNEMBlockchain.getNetwork();
-
-    req.session.locale = currentLanguage;
-    if (req.headers.referer)
-        return res.redirect(req.headers.referer);
-
-    return res.redirect("/");
-});
-
 app.get("/", function(req, res) {
     var currentLanguage = req.i18n.language;
     var currentNetwork = PacNEMBlockchain.getNetwork();
@@ -490,6 +479,18 @@ app.post("/facebook/game", function(req, res) {
     };
 
     res.render("play", viewData);
+});
+
+// change language fake middleware
+app.get("/:lang", function(req, res) {
+    var currentLanguage = req.params.lang;
+    var currentNetwork = PacNEMBlockchain.getNetwork();
+
+    req.session.locale = currentLanguage;
+    if (req.headers.referer)
+        return res.redirect(req.headers.referer);
+
+    return res.redirect("/");
 });
 
 /**
