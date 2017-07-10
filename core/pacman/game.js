@@ -302,7 +302,7 @@
                             // No cheese effect - pacman killed
                             pacman.kill();
                             if (pacmans_.length == 1) {
-                                self.refresh();
+                                self.refresh(); // needs `self` because called inside setTimeout()
                                 return;
                             } else {
                                 var pacman_x = PACMAN_STARTS[pacmans_.length - 1][j]['x'];

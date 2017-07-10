@@ -124,6 +124,7 @@ var GameController = function(config, socket, nem, chainId) {
             // Ask the server to start a new game session
             socket_.emit('new');
             last_elapsed_ = 0;
+            frame_ = 0;
         }
 
         return this;
@@ -186,7 +187,9 @@ var GameController = function(config, socket, nem, chainId) {
             grid_[y][x] = ' ';
         }
 
-        // store current iteration's Positions
+        // the `points` key will be filled when the Player
+        // eats special objects like the Bigger Cheeses or 
+        // any Ghost under cheese effect
         for (var i = 0; i != data['points'].length; i++) {
             points_.push(new DisplayPoints(
                 data['points'][i]['x'],

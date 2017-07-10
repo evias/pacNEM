@@ -38,7 +38,6 @@ $.extend(jQFileTemplate.prototype, {
         //} else {
         $.get(T.urlFor(name), function(raw) {
             T.store(name, raw);
-            //        T.render(name, callback);
             callback(T.cached[name]);
         });
         //}

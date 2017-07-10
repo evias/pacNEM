@@ -124,70 +124,68 @@
             // Need mosaic definition of evias.pacnem:* mosaics to calculate 
             // adequate fees, so we get it from network.
             nemSDK.com.requests.namespace
-                .mosaicDefinitions(self.blockchain_.getEndpoint(), self.blockchain_.getNamespace()).then(
-                    function(res) {
-                        res = res.data;
+                .mosaicDefinitions(self.blockchain_.getEndpoint(), self.blockchain_.getNamespace())
+                .then(function(res) {
+                    res = res.data;
 
-                        var adViewDef = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [adViewsMosaicName]);
+                    var adViewDef = nemSDK.utils.helpers.searchMosaicDefinitionArray(res, [adViewsMosaicName]);
 
-                        if (undefined === adViewDef[adViewSlug])
-                            return self.logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition with [adViewSlug]: " + JSON.stringify([adViewSlug]) + " - Obligatory for the game, Please fix!");
+                    if (undefined === adViewDef[adViewSlug])
+                        return self.logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition with [adViewSlug]: " + JSON.stringify([adViewSlug]) + " - Obligatory for the game, Please fix!");
 
-                        // Now preparing our Mosaic Transfer Transaction 
-                        // (1) configure mosaic definition pair
-                        // (2) attach mosaics attachments to transfer transaction
-                        // (3) configure transfer transaction
-                        // (4) announce transaction on the network
+                    // Now preparing our Mosaic Transfer Transaction 
+                    // (1) configure mosaic definition pair
+                    // (2) attach mosaics attachments to transfer transaction
+                    // (3) configure transfer transaction
+                    // (4) announce transaction on the network
 
-                        // (1)
-                        mosaicDefPair[adViewSlug] = {};
-                        mosaicDefPair[adViewSlug].mosaicDefinition = adViewDef[adViewSlug];
+                    // (1)
+                    mosaicDefPair[adViewSlug] = {};
+                    mosaicDefPair[adViewSlug].mosaicDefinition = adViewDef[adViewSlug];
 
-                        // (2)
-                        transferTransaction.mosaics.push(mosaicAttachAdViews);
+                    // (2)
+                    transferTransaction.mosaics.push(mosaicAttachAdViews);
 
-                        // (3)
-                        // Prepare the mosaic transfer transaction object
-                        var entity = nemSDK.model.transactions.prepare("mosaicTransferTransaction")(
-                            privStore,
-                            transferTransaction,
-                            mosaicDefPair,
-                            self.blockchain_.getNetwork().config.id
-                        );
+                    // (3)
+                    // Prepare the mosaic transfer transaction object
+                    var entity = nemSDK.model.transactions.prepare("mosaicTransferTransaction")(
+                        privStore,
+                        transferTransaction,
+                        mosaicDefPair,
+                        self.blockchain_.getNetwork().config.id
+                    );
 
-                        //DEBUG self.logger_.info("[DEBUG]", "[PACNEM SPONSOR]", "Now sending Mosaic Transfer Transaction to " + sponsor.xem + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
+                    //DEBUG self.logger_.info("[DEBUG]", "[PACNEM SPONSOR]", "Now sending Mosaic Transfer Transaction to " + sponsor.xem + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
 
-                        // (4) announce the mosaic transfer transaction on the NEM network
-                        nemSDK.model.transactions.send(privStore, entity, self.blockchain_.getEndpoint()).then(
-                            function(res) {
-                                delete privStore;
+                    // (4) announce the mosaic transfer transaction on the NEM network
+                    nemSDK.model.transactions.send(privStore, entity, self.blockchain_.getEndpoint())
+                        .then(function(res) {
+                            delete privStore;
 
-                                // If code >= 2, it's an error
-                                if (res.code >= 2) {
-                                    self.logger_.error("[NEM] [ERROR] [PACNEM SPONSOR]", __line, "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + sponsor.xem + ": " + JSON.stringify(res));
-                                    return false;
-                                }
+                            // If code >= 2, it's an error
+                            if (res.code >= 2) {
+                                self.logger_.error("[NEM] [ERROR] [PACNEM SPONSOR]", __line, "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + sponsor.xem + ": " + JSON.stringify(res));
+                                return false;
+                            }
 
-                                var trxHash = res.transactionHash.data;
-                                var paidOutRewards = {};
-                                paidOutRewards[adViewsMosaicName] = {
-                                    "mosaic": adViewSlug,
-                                    "quantity": countAdViews
-                                };
+                            var trxHash = res.transactionHash.data;
+                            var paidOutRewards = {};
+                            paidOutRewards[adViewsMosaicName] = {
+                                "mosaic": adViewSlug,
+                                "quantity": countAdViews
+                            };
 
-                                self.logger_.info("[DEBUG]", "[PACNEM SPONSOR]", "Created a Mosaic transfer transaction for " + sponsor.xem + " with hash '" + trxHash + " and paidOutRewards: " + JSON.stringify(paidOutRewards));
+                            self.logger_.info("[DEBUG]", "[PACNEM SPONSOR]", "Created a Mosaic transfer transaction for " + sponsor.xem + " with hash '" + trxHash + " and paidOutRewards: " + JSON.stringify(paidOutRewards));
 
-                                nemReward.transactionHash = trxHash;
-                                nemReward.rewards = paidOutRewards;
-                                nemReward.save();
-                            },
-                            function(err) {
-                                self.logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + sponsor.xem + " with error: " + err);
-                            });
-                    },
-                    function(err) {
-                        self.logger_.error("[NEM] [ERROR]", "[MOSAIC-GET]", "Could not read mosaics definition for namespace: " + self.blockchain_.getNamespace() + ": " + err);
-                    });
+                            nemReward.transactionHash = trxHash;
+                            nemReward.rewards = paidOutRewards;
+                            nemReward.save();
+                        }, function(err) {
+                            self.logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + sponsor.xem + " with error: " + err);
+                        });
+                }, function(err) {
+                    self.logger_.error("[NEM] [ERROR]", "[MOSAIC-GET]", "Could not read mosaics definition for namespace: " + self.blockchain_.getNamespace() + ": " + err);
+                });
         };
     };
 

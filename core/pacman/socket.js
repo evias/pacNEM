@@ -107,6 +107,7 @@
 
                         var parsed = JSON.parse(details);
                         self.roomManager_.changeUsername(socket.id, parsed);
+                        self.gameCredits_.gamerSynchronization(socket.id, parsed);
                     });
 
                     // Join an existing room

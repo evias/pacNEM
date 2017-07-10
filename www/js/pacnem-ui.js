@@ -158,6 +158,20 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             //socket_.emit("create_room");
         });
 
+        socket_.on("pacnem_gamer_sync", function(rawdata) {
+            var data = JSON.parse(rawdata);
+            var player = self.getPlayerDetails();
+
+            if (!player.address || !player.address.length)
+                return false;
+
+            if (player.address !== data.address)
+            // this update is not for this session
+                return false;
+
+            console.log("[DEBUG] " + "Gamer Mosaics: " + rawdata);
+        });
+
         socket_.on("pacnem_heart_sync", function(rawdata) {
             var data = JSON.parse(rawdata);
             var player = self.getPlayerDetails();
@@ -183,15 +197,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             if (credits > 0) {
                 $("#pacNEM-needs-payment").val("0");
-            } else
+                $(".pacnem-invoice-close-trigger").show();
+            } else {
                 $("#pacNEM-needs-payment").val("1");
+            }
 
             if (typeof session_ != 'undefined' && session_.details_.hearts != data) {
                 session_.details_.hearts = credits;
                 session_.storeLocal();
             }
-
-            $(".pacnem-invoice-close-trigger").show();
         });
 
         socket_.on("pacnem_payment_success", function(rawdata) {
@@ -1210,7 +1224,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 var $invoiceBox = $(".pacnem-invoice-modal").first();
 
                 if (callback)
-                    return callback(ui);
+                    return callback(ui, true);
             }
         };
 
@@ -1617,12 +1631,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             if (self.formValidate()) {
 
-                var postPaymentCallback = function(ui) {
+                var postPaymentCallback = function(ui, withPurchases) {
                     ui.createSession();
                     ui.displayPlayerUI();
                     ui.displayLounge();
                     $("#rooms").parent().show();
                     $(".pacnem-credits-submenu").removeClass("hidden");
+
+                    if (withPurchases == true)
+                        $("#playerPurchases").fadeIn("slow");
+                    else
+                        $("#playerPurchases").remove();
                 };
 
                 if (ctrl_.isPlayMode("sponsored")) {
@@ -1630,14 +1649,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                     ctrl_.setAdvertised(true);
 
                     self.displaySponsorAdvertisement(ctrl_.getSponsor(), function() {
-                        postPaymentCallback(self);
+                        postPaymentCallback(self, false);
                     });
                 } else if (ctrl_.isPlayMode("pay-per-play")) {
 
                     var player = self.getPlayerDetails();
                     API_.fetchRemainingHearts(player, function(data) {
                         if (data > 0) {
-                            postPaymentCallback(self)
+                            postPaymentCallback(self, true)
                         } else {
                             self.watchInvoice(postPaymentCallback);
                         }
@@ -1902,7 +1921,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             if ("sponsored" == thisMode)
                 self.setSponsoredUI(false, function(ui) {});
             else {
-                $("#currentHearts a").first().attr("data-toggle", "dropdown");
+                $("#playerPurchases a").first().attr("data-toggle", "dropdown");
                 self.unsetSponsoredUI();
             }
 
@@ -1910,8 +1929,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 $(".pacnem-credits-submenu").removeClass("hidden");
                 self.prepareInvoiceBox(function(ui) {});
             } else {
-                $("#currentHearts a").first().removeAttr("data-toggle");
-                $(".pacnem-credits-submenu").removeClass("hidden").addClass("hidden");
+                $("#playerPurchases").remove();
             }
 
             // game mode choice has been done now, next is username and address.

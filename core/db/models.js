@@ -289,6 +289,13 @@
             updatedAt: { type: Number, min: 0 }
         });
 
+        this.PacNEMDailyMosaic_ = new mongoose.Schema({
+            slug: String,
+            countSeenToday: String,
+            createdAt: { type: Number, min: 0 },
+            updatedAt: { type: Number, min: 0 }
+        });
+
         // bind our Models classes
         this.NEMGameCredit = mongoose.model("NEMGameCredit", this.NEMGameCredit_);
         this.NEMGamer = mongoose.model("NEMGamer", this.NEMGamer_);

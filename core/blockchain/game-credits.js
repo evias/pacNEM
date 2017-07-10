@@ -511,6 +511,52 @@
 
             return self;
         };
+
+        this.gamerSynchronization = function(gamerSocketId, gamerDetails) {
+            var self = this;
+            var gameMosaics = self.blockchain_.getGameMosaicsConfiguration();
+            var playerMosaics = {};
+
+            // read Mosaics owned by the given address's XEM wallet
+            self.blockchain_.getSDK()
+                .com.requests.account.mosaics
+                .owned(self.blockchain_.getEndpoint(), gamerDetails.address)
+                .then(function(res) {
+                    if (!res.data || !res.data.length) {
+                        // do not emit on unresponsive NEM Endpoint
+                        return null;
+                    }
+
+                    //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.mosaics.owned: " + JSON.stringify(res));
+
+                    // this accounts owns mosaics, check if he has evias.pacnem:heart
+                    // mosaic so that he can play.
+                    for (var i in res.data) {
+                        var mosaic = res.data[i];
+                        var slug = mosaic.mosaicId.namespaceId + ":" + mosaic.mosaicId.name;
+
+                        var quantity = mosaic.quantity;
+                        if (slug == "nem:xem")
+                            quantity = quantity / Math.pow(10, 6);
+
+                        playerMosaics[slug] = {
+                            quantity: quantity,
+                            name: slug
+                        };
+                    }
+
+                    return self.socketIO_.sockets
+                        .to(gamerSocketId)
+                        .emit("pacnem_gamer_sync", JSON.stringify({
+                            address: gamerDetails.address,
+                            mosaics: playerMosaics
+                        }));
+                }, function(err) {
+                    // NO Mosaics available / wrong Network for address / Unresolved Promise Errors
+
+                    return null;
+                });
+        };
     };
 
     module.exports.GameCredits = GameCredits;

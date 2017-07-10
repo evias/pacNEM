@@ -22,7 +22,8 @@
         "language": "Sprache",
         "buy_credits": "Credits kaufen",
         "invoice_history": "Meine Bestellungen",
-        "become_sponsor": "Sponsor werden!"
+        "become_sponsor": "Sponsor werden!",
+        "my_invoices": "My Purchases"
     },
     "guest": {
         "logged_in_title": "Ihre Details",
@@ -109,6 +110,8 @@
         "username_label": "Spieler Name",
         "xem_label": "XEM Wallet",
         "date_label": "Spieldatum",
+        "transaction_label": "NEM Transaction",
+        "raw_label": "RAW",
         "hide_button": "Ausblenden",
         "empty_high_scores": "Es wurden bisher noch keine High Scores auf die Blockchain veröffentlicht."
     },
@@ -206,17 +209,21 @@
         "label_mosaic_personal_token": "Login Token"
     },
     "security": {
-        "title_session_expire": "Your session is about to expire",
-        "explain_session_expire": "The PacNEM Sponsor Engine allows you to stay online only for a limited amount of Time.",
-        "explain_session_expire_redirect": "You will now be redirected back to the PacNEM Welcome Screen. You can also select Sponsored Play Mode again.",
-        "button_closing_in": "Redirecting in",
-        "seconds_suffix": "seconds",
-        "title_player_authenticate": "Enter your PacNEM Personal Token",
-        "explain_player_authenticate": "Welcome back! The first time you have Paid for Credits on PacNEM, we have sent you a Transaction in your XEM Wallet containing a Personal Token. Please use this Personal Token (the Message in the said Transaction) whenever you come back to PacNEM!",
-        "explain_player_authenticate_first": "If this is the first time you paid for PacNEM credits, please check your Wallet as you should have received a Transaction containing a pacnem:personal-token Mosaic along with a Message (which is your Personal Token).",
-        "info_player_authenticate": "If you don't remember your Personal Token anymore, check your Wallet and look for the Transaction containing a <b>pacnem:personal-token</b> Mosaic. The <i>message</i> of this transaction is your <b>Personal Token</b>.",
-        "check_account_address": "Please check following Account for Incoming Transactions with a Mosaic <b>pacnem:personal-token</b>:",
-        "button_authenticate": "Login",
-        "button_cancel": "Cancel"
+        "title_session_expire": "Ihre Session läuft jetzt aus",
+        "explain_session_expire": "Der PacNEM Sponsor Engine beschrenkt die Dauer einer Session.",
+        "explain_session_expire_redirect": "Du wirst jetzt zu dem PacNEM Welcome Screen weitergeleitet. Du kannst weiterhin im Sponsored Play Modus Spielen!",
+        "button_closing_in": "Weiterleitung in",
+        "seconds_suffix": "Sekunden",
+        "title_player_authenticate": "Gib dein PacNEM Login Token ein",
+        "explain_player_authenticate": "Willkommen zurück! Das erste Mal wo du dich bei PacNEM angemeldet hast, haben wir dir einen Login Token auf deinem XEM Wallet verschickt. Bitte benutze dieses Token jedes Mal wenn du bei PacNEM wieder Spielen möchtest!",
+        "explain_player_authenticate_first": "Wenn dies das erste Mal ist, dass du PacNEM Game Credits gekauft hast, so schaue bitte auf dein XEM Wallet. Du solltest eine Transaktion mit einem pacnem:personal-token Mosaic und eine Nachricht von PacNEM erhalten haben. Die Nachricht in der Transaktion ist dein Login Token!",
+        "info_player_authenticate": "Wenn du dich nicht mehr an dein Login Token errinerst, bitte benutze das NanoWallet und schaue nach Mosaic Transfer Transaktionen mit <b>pacnem:personal-token</b> Mosaics. Die <i>Nachricht</i> dieser Transaktion in dein <b>Login Token</b>.",
+        "check_account_address": "Bitte schaue auf folgende XEM Wallet Adresse nach einer <b>pacnem:personal-token</b> Mosaic Transaktion und kopiere die <b>Nachricht</b>:",
+        "button_authenticate": "Anmelden",
+        "button_cancel": "Abbrechen",
+        "token_placeholder": "Dein Token",
+        "title_session_blocked": "Deine Session wurde gesperrt",
+        "explain_session_blocked": "Geehrter NEMber, wir haben eine unzulässige Anzahl an <b>fehlgeschlagene Anmeldungsversuche</b> mit deinem Konto beobachtet und mussten so dein Konto für 1 Stunde sperren.",
+        "explain_session_blocked_redirect": "Du wirst nun zum PacNEM Welcome Screen weitergeleitet. Du kannst immer noch im Sponsored Play Modus spielen."
     }
 }

@@ -1,3 +1,4 @@
+<!doctype html>
 <html lang="{{currentLanguage}}">
     <head>
         <title>{{t "meta.title"}}</title>
@@ -11,14 +12,14 @@
         <meta property="og:type" content="game" />
         <meta property="og:type" content="{{t "meta.title"}}" />
         <meta property="og:description" content="{{t "meta.description"}}" />
-        <meta property="og:image" content="https://www.pacnem.com/img/pacnem_logo.png" />
+        <meta property="og:image" content="/img/pacnem_logo.png" />
 
-        <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:site" content="@PacNEM_Game">
-        <meta name="twitter:creator" content="@eVias">
-        <meta name="twitter:title" content="{{t "meta.title"}}">
-        <meta name="twitter:description" content="{{t "meta.description"}}">
-        <meta name="twitter:image" content="https://www.pacnem.com/img/pacnem_logo.png">
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@PacNEM_Game" />
+        <meta name="twitter:creator" content="@eVias" />
+        <meta name="twitter:title" content="{{t "meta.title"}}" />
+        <meta name="twitter:description" content="{{t "meta.description"}}" />
+        <meta name="twitter:image" content="/img/pacnem_logo.png" />
 
         {{#if PacNEM_Frontend_Config.facebookAppId.length}}
         <meta property="fb:app_id" content="{{PacNEM_Frontend_Config.facebookAppId}}" />
@@ -37,62 +38,69 @@
         <script src="/js/pacnem.min.js?nocache=1"></script>
         <script src="/js/pacnem-facebook.js?nocache=1"></script>
         <script src="/socket.io/socket.io.js"></script>
+    </head>
+    <body>
+        <img src="/img/pacnem_logo.png?nocache=1" alt="{{t "meta.title"}}" title="{{t "meta.title"}}" style="display: none;" />
+        <h1 style="display: none;">{{t "meta.title"}}</h1>
+        <p style="display: none;">{{t "meta.description"}}</p>
 
         <script type="text/javascript">
 /**
- * Specification for i18next object so that Asynchronously
+ * Specification for localization object so that Asynchronously
  * loaded Templates can also contain translations and use
  * the t() custom handlebars template from pacNEM.
- *
- * Requires i18nextXHRBackend and i18nextJquery plugins
- * to function correctly.
  *
  * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
  * @link    https://github.com/evias/pacNEM
  */
-window.i18next.use(window.i18nextXHRBackend).init({
-    lng: "{{currentLanguage}}",
-    fallbackLng: "en",
-    defaultNS: "translation",
-    whitelist: ["en", "de", "fr"],
-    nonExplicitWhitelist: true,
-    preload: ["{{currentLanguage}}"],
-    backend: {
-        loadPath: "/locales/\{\{lng\}\}"
-    }
-}, function(err, t) {
-    window.i18nextJquery.init(window.i18next, $);
-});
+var PacNEM_i18n = function() {
+    this.get = function(key) {
+        var json = '{{{ PacNEM_Frontend_Config.localesJSON }}}';
+        var locales = JSON.parse(json);
+        var lang = locales["{{currentLanguage}}"];
+
+        var subs = key.split(".");
+
+        if (!subs.length && !lang.hasOwnProperty(key))
+            return key;
+
+        var object = lang[subs[0]];
+        for (var i = 1; i < subs.length; i++) {
+            object = object[subs[i]];
+        }
+        return object;
+    };
+};
 
 /**
- * Handlebars t() helper implementation for frontend
- * templates.
- */
+* Handlebars t() helper implementation for frontend
+* templates.
+*/
 Handlebars.registerHelper('t', function(key, sub)
 {
     if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
         // dynamic subnamespace
         var key = key + "." + sub;
 
-    return new Handlebars.SafeString(window.i18next.t(key));
+    return new Handlebars.SafeString((new PacNEM_i18n()).get(key));
 });
 
 /**
- * Handlebars counter() helper implementation for frontend
- * templates
- */
+* Handlebars counter() helper implementation for frontend
+* templates
+*/
 Handlebars.registerHelper("counter", function (index)
 {
     return index + 1;
 });
 
 /**
- * Handlebars truncateAddress() helper implementation for frontend
- * templates - truncate a NEM address in following format:
- *  TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU
- *  will be truncated as:
- *  TCTIMU-...-MPSU
- */
+* Handlebars truncateAddress() helper implementation for frontend
+* templates - truncate a NEM address in following format:
+*  TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU
+*  will be truncated as:
+*  TCTIMU-...-MPSU
+*/
 Handlebars.registerHelper("truncateAddress", function (address)
 {
     var truncated = address.substring(0, 6) + "-...-" + address.substring(address.length - 4);
@@ -101,11 +109,6 @@ Handlebars.registerHelper("truncateAddress", function (address)
         </script>
 
         <script src="/js/jquery-hbs-file-template.js"></script>
-    </head>
-    <body>
-        <img src="https://www.pacnem.com/img/pacnem_logo.png" alt="{{t "meta.title"}}" title="{{t "meta.title"}}" style="display: none;" />
-        <h1 style="display: none;">{{t "meta.title"}}</h1>
-        <p style="display: none;">{{t "meta.description"}}</p>
 
         <div class="row page-header" style="margin-top: 20px;">
             <div class="container-fluid">
@@ -132,11 +135,17 @@ Handlebars.registerHelper("truncateAddress", function (address)
                                 <input type="hidden" id="pacNEM-sessionId" value="" />
                                 <input type="hidden" id="pacNEM-needs-payment" value="" />
                             </li>
-                            <li id="currentHearts" class="dropdown" style="display: none;">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <li id="currentHearts" style="display: none;">
+                                <a href="#">
                                     <span class="glyphicon glyphicon-heart"></span>&nbsp;
                                     <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>&nbsp;
-                                    <span class="caret pacnem-credits-submenu hidden"></span>
+                                </a>
+                            </li>
+                            <li id="playerPurchases" class="dropdown" style="display: none;">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <span class="glyphicon glyphicon-qrcode"></span>&nbsp;
+                                    <span>{{t "menus.my_invoices"}}</span>
+                                    <span class="caret pacnem-credits-submenu"></span>
                                 </a>
                                 <ul class="dropdown-menu pacnem-credits-submenu hidden">
                                     <li><a href="#" id="pacnem-invoice-show-trigger" class="text-danger"><span class="glyphicon glyphicon-plus"></span>&nbsp;<span>{{t "menus.buy_credits"}}</span></a></li>
@@ -216,6 +225,5 @@ Handlebars.registerHelper("truncateAddress", function (address)
             }(document, 'script', 'facebook-jssdk'));
         </script>
         {{/if}}
-
     </body>
 </html>

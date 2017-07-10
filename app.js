@@ -135,6 +135,24 @@ app.configure(function() {
  * End Application Middlewares
  */
 
+// redirect non-www to www
+app.get('/*', function(req, res, next) {
+    var protocol = 'http' + (req.connection.encrypted ? 's' : '') + '://',
+        host = req.headers.host,
+        href;
+
+    if (!req.headers.host.match(/^(www|m)\./)) {
+        var newHost = protocol + 'www.pacnem.com';
+
+        res.statusCode = 301;
+        res.setHeader("Location", newHost);
+        res.write("Redirecting to " + newHost);
+        return res.end();
+    } else {
+        return next();
+    }
+});
+
 /**
  * Configure the PacNEM Backend Modules. This includes following:
  * 
@@ -191,12 +209,31 @@ var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
 var PacNEM_Crons = new JobsScheduler(logger, PacNEMBlockchain, PacNEMDB);
 PacNEM_Crons.hourly();
 
+var PacNEM_i18n = function() {
+    this.getLocales = function() {
+        var paths = {
+            "en": __dirname + '/locales/en/translation.json',
+            "de": __dirname + '/locales/de/translation.json',
+            "fr": __dirname + '/locales/fr/translation.json'
+        };
+
+        var locales = { "en": {}, "de": {}, "fr": {} };
+        for (var lang in paths) {
+            var json = fs.readFileSync(paths[lang]);
+            locales[lang] = JSON.parse(json);
+        }
+
+        return locales;
+    };
+};
+
 var PacNEM_Frontend_Config = {
     "business": PacNEMBlockchain.getVendorWallet(),
     "application": PacNEMBlockchain.getPublicWallet(),
     "namespace": PacNEMBlockchain.getNamespace(),
     "dataSalt": config.get("pacnem.secretKey"),
-    "facebookAppId": config.get("pacnem.facebookAppId")
+    "facebookAppId": config.get("pacnem.facebookAppId"),
+    "localesJSON": JSON.stringify((new PacNEM_i18n()).getLocales()).replace(/'/g, "\\'")
 };
 
 /**
@@ -287,7 +324,7 @@ app.get('/resources/templates/:address/player-authenticate', function(req, res) 
     Authenticator.getActiveSession(bundle, function(session) {
         // Player has an active Session, no need to authenticate
         var tpl = fs.readFileSync(__dirname + '/views/partials/player-back.hbs');
-        tpl = tpl.toString().replace(/%TOKEN%/g, session.checksum)
+        tpl = tpl.toString().replace(/%TOKEN%/g, session.checksum);
 
         return res.send(tpl);
     }, function(response) {
@@ -299,6 +336,7 @@ app.get('/resources/templates/:address/player-authenticate', function(req, res) 
 app.get('/resources/templates/:name', function(req, res) {
     res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
 });
+/*
 app.get('/locales/:lang', function(req, res) {
 
     if (!req.params.lang || !req.params.lang.length)
@@ -312,9 +350,12 @@ app.get('/locales/:lang', function(req, res) {
 
     var json = fs.readFileSync(path);
 
+    var oneDay = 86400000;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader('Cache-Control', 'public, max-age=' + (oneDay * 7));
     res.send(json);
 });
+*/
 
 /**
  * Frontend Web Application Serving
