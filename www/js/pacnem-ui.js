@@ -1725,36 +1725,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     };
 
     this.setLoadingUI = function() {
-        if ($(".pacnem-loading-overlay").length) {
-            return $(".pacnem-loading-overlay").fadeIn("slow");
-        }
-
-        var $wrapper = $("#pacNEMWrapper");
-        var $overlay = $("<div class='pacnem-loading-overlay'></div>");
-        $overlay.css({
-            "position": "absolute",
-            "zIndex": 10,
-            "backgroundColor": "rgba(255,255,255, 0.8)",
-            "backgroundImage": "url(/img/loading_nem.gif)",
-            "backgroundRepeat": "no-repeat",
-            "backgroundPosition": "center",
-            "height": "100%",
-            "width": "100%",
-            "display": "none"
+        $(".pacnem-loading-overlay-modal").first().modal({
+            backdrop: "static",
+            keyboard: false,
+            show: true
         });
-
-        $wrapper.css({ "position": "relative" });
-        $overlay.prependTo($wrapper);
-        $overlay.attr("data-display", 1);
-        $overlay.fadeIn("slow");
     };
 
     this.unsetLoadingUI = function() {
-        var $wrapper = $("#pacNEMWrapper");
-        var $overlay = $wrapper.find(".pacnem-loading-overlay").first();
-
-        if ($overlay.is(":visible"))
-            $overlay.fadeOut("slow");
+        $(".pacnem-loading-overlay-modal").first().modal("hide");
     };
 
     this.initTooltips = function() {

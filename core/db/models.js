@@ -120,7 +120,7 @@
                             credits.countPlayedHearts = credits.countPlayedHearts + countPlayed;
 
                         if (countExchanged > -1)
-                            credits.countExchangedHearts = credits.countExchangedHearts + countExchanged;
+                            credits.countExchangedHearts = countExchanged;
 
                         credits.lastRead = new Date().valueOf();
                         credits.save();

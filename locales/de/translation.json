@@ -225,5 +225,8 @@
         "title_session_blocked": "Deine Session wurde gesperrt",
         "explain_session_blocked": "Geehrter NEMber, wir haben eine unzulässige Anzahl an <b>fehlgeschlagene Anmeldungsversuche</b> mit deinem Konto beobachtet und mussten so dein Konto für 1 Stunde sperren.",
         "explain_session_blocked_redirect": "Du wirst nun zum PacNEM Welcome Screen weitergeleitet. Du kannst immer noch im Sponsored Play Modus spielen."
+    },
+    "general": {
+        "modal_title_loading": "Bitte warten.."
     }
 }
