@@ -47,7 +47,7 @@
          * This method fetches mosaics for the given XEM address.
          *
          * If the mosaic evias.pacnem:heart can be found in the account, a call
-         * to `fetchGameCreditsRealHistoryByGamer` will be issued in order
+         * to `readBuyHistory` will be issued in order
          * to fetch `allTransactions` of the account.
          *
          * We will fetch all transactions only for accounts which we know they
@@ -90,22 +90,18 @@
                             // of Available Lives! The user may have *Played* Hearts or *Sent Back*
                             // Hearts to the pacnem-business wallet.
 
-                            //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found mosaic '" + heartsMosaicSlug + "' - Now validating with Transaction history.");
-
-                            // computing the exact balance of the user (we now know that the user owns hearts.)
-                            self.fetchGameCreditsBurnHistoryByGamer(gamer, mosaic, null, function(creditBurnData) {
-                                self.fetchGameCreditsRealHistoryByGamer(gamer, mosaic, null, function(creditsData) {
-                                    self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Total of " + creditsData.countHearts + " " + heartsMosaicSlug + " found and " + creditBurnData.countHearts + " " + redeemMosaicSlug + " for " + gamer.getAddress());
-                                    creditsData["countHearts"] = creditsData.countHearts - creditBurnData.countHearts;
-                                    gamer.updateCredits(creditsData);
-                                });
-                            });
                             hasHearts = true;
                         }
                     }
 
-                    if (!hasHearts)
+                    if (hasHearts) {
+                        // computing the exact balance of the user (we now know that the user owns hearts.)
+                        //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found mosaic '" + heartsMosaicSlug + "' - Now validating with Transaction history.");
+                        return self.readBurnHistory(gamer, null, null);
+                    } else {
                         gamer.updateCredits({ countHearts: 0 });
+                    }
+
                 }, function(err) {
                     // NO Mosaics available / wrong Network for address / Unresolved Promise Errors
 
@@ -120,7 +116,7 @@
          * @param  {NEMGamer} gamer
          * @param  {nem.objects.mosaicAttachment} mosaic
          */
-        this.fetchGameCreditsBurnHistoryByGamer = function(gamer, mosaic, lastTrxRead, callback) {
+        this.readBurnHistory = function(gamer, lastTrxRead, callback) {
             var self = this;
             var redeemMosaicSlug = self.blockchain_.getGameMosaicsConfiguration()["credits"]["hearts--"].slug;
 
@@ -143,7 +139,7 @@
 
                     var transactions = res.data;
 
-                    lastTrxRead = self.saveGameCreditsBurnHistoryForGamer(gamer, mosaic, transactions);
+                    lastTrxRead = self.saveBurnHistoryChunk(gamer, transactions);
 
                     if (lastTrxRead !== false && 25 == transactions.length) {
                         // recursion..
@@ -152,12 +148,21 @@
                         // will look for transactions BEFORE this hash or ID (25 before ID..).
                         // We pass transactions IDs because all NEM nodes support those, hashes are
                         // only supported by a subset of the NEM nodes.
-                        self.fetchGameCreditsBurnHistoryByGamer(gamer, mosaic, lastTrxRead, callback);
+                        self.readBurnHistory(gamer, lastTrxRead, callback);
                     }
 
-                    if (callback && (lastTrxRead === false || transactions.length < 25)) {
-                        // done.
-                        callback(creditBurnHistory_[gamer.getAddress()]);
+                    if (lastTrxRead === false || transactions.length < 25) {
+                        // done reading BURN history.
+                        // now we can read the BUY History
+                        self.readBuyHistory(gamer, null, function(creditsData) {
+                            //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "creditsData: " + JSON.stringify(creditsData) + " & creditBurnData: " + JSON.stringify(creditBurnData) + " for " + gamer.getAddress());
+                            var creditBurnData = creditBurnHistory_[gamer.getAddress()];
+                            creditsData.countHearts = creditsData.countHearts - creditBurnData.countHearts;
+                            gamer.updateCredits(creditsData);
+
+                            if (typeof callback == "function")
+                                return callback(creditsData);
+                        });
                     }
 
                 }, function(err) {
@@ -179,9 +184,9 @@
          * @param  {NEMGamer} gamer
          * @param  {nem.objects.mosaicAttachment} mosaic
          */
-        this.fetchGameCreditsRealHistoryByGamer = function(gamer, mosaic, lastTrxRead, callback) {
+        this.readBuyHistory = function(gamer, lastTrxRead, callback) {
             var self = this;
-            var heartsMosaicSlug = mosaic.mosaicId.namespaceId + ":" + mosaic.mosaicId.name;
+            var heartsMosaicSlug = self.blockchain_.getGameMosaicsConfiguration()["credits"]["heart"].slug;
 
             if (!gameCreditsHistory_.hasOwnProperty(gamer.getAddress()) || lastTrxRead === null) {
                 // trxIdList is an OBJECT because we want to leverage the useful hasOwnProperty
@@ -203,7 +208,7 @@
 
                     var transactions = res.data;
 
-                    lastTrxRead = self.saveGameCreditsRealHistoryForGamer(gamer, mosaic, transactions);
+                    lastTrxRead = self.saveBuyHistoryChunk(gamer, transactions);
 
                     if (lastTrxRead !== false && 25 == transactions.length) {
                         // recursion..
@@ -212,7 +217,7 @@
                         // will look for transactions BEFORE this hash or ID (25 before ID..).
                         // We pass transactions IDs because all NEM nodes support those, hashes are
                         // only supported by a subset of the NEM nodes.
-                        self.fetchGameCreditsRealHistoryByGamer(gamer, mosaic, lastTrxRead, callback);
+                        self.readBuyHistory(gamer, lastTrxRead, callback);
                     }
 
                     if (callback && (lastTrxRead === false || transactions.length < 25)) {
@@ -234,7 +239,7 @@
          * @param  {Array} transactions [description]
          * @return integer | boolean    Integer if read Trx (last Trx ID) - Boolean false if already read.
          */
-        this.saveGameCreditsBurnHistoryForGamer = function(gamer, mosaic, transactions) {
+        this.saveBurnHistoryChunk = function(gamer, transactions) {
             var self = this;
             var gamerBurnHistory = creditBurnHistory_[gamer.getAddress()];
             var redeemMosaicSlug = self.blockchain_.getGameMosaicsConfiguration()["credits"]["hearts--"].slug;
@@ -266,7 +271,7 @@
                 // change the evias.pacnem:heart balance of XEM address
                     continue;
 
-                if (!lastTrxMsg.length)
+                if (!lastTrxMsg || !lastTrxMsg.length)
                     continue;
 
                 var burnMsgReg = new RegExp(/[A-Z0-9,]/);
@@ -304,10 +309,10 @@
          * @param  {Array} transactions [description]
          * @return integer | boolean    Integer if read Trx (last Trx ID) - Boolean false if already read.
          */
-        this.saveGameCreditsRealHistoryForGamer = function(gamer, mosaic, transactions) {
+        this.saveBuyHistoryChunk = function(gamer, transactions) {
             var self = this;
             var gamerHistory = gameCreditsHistory_[gamer.getAddress()];
-            var heartsMosaicSlug = mosaic.mosaicId.namespaceId + ":" + mosaic.mosaicId.name;
+            var heartsMosaicSlug = self.blockchain_.getGameMosaicsConfiguration()["credits"]["heart"].slug;
 
             var lastTrxRead = null;
             var lastTrxHash = null;
@@ -585,45 +590,45 @@
 
             // Need mosaic definition of evias.pacnem:heart to calculate adequate fees, so we get it from network.
             self.blockchain_.getSDK().com.requests.namespace
-                .mosaicDefinitions(self.blockchain_.getEndpoint(), self.blockchain_.getNamespace()).then(
-                    function(res) {
-                        res = res.data;
+                .mosaicDefinitions(self.blockchain_.getEndpoint(), self.blockchain_.getNamespace())
+                .then(function(res) {
+                    res = res.data;
 
-                        var redeemDef = self.blockchain_.getSDK().utils.helpers.searchMosaicDefinitionArray(res, [redeemingMosaicName]);
+                    var redeemDef = self.blockchain_.getSDK().utils.helpers.searchMosaicDefinitionArray(res, [redeemingMosaicName]);
 
-                        if (undefined === redeemDef[redeemSlug])
-                            return self.logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition for " + redeemSlug + " - Obligatory for the game, Please fix!");
+                    if (undefined === redeemDef[redeemSlug])
+                        return self.logger_.error("[NEM] [ERROR]", __line, "Missing Mosaic Definition for " + redeemSlug + " - Obligatory for the game, Please fix!");
 
-                        mosaicDefPair[redeemSlug] = {};
-                        mosaicDefPair[redeemSlug].mosaicDefinition = redeemDef[redeemSlug];
+                    mosaicDefPair[redeemSlug] = {};
+                    mosaicDefPair[redeemSlug].mosaicDefinition = redeemDef[redeemSlug];
 
-                        // Prepare the mosaic transfer transaction object and broadcast
-                        var transactionEntity = self.blockchain_.getSDK().model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
+                    // Prepare the mosaic transfer transaction object and broadcast
+                    var transactionEntity = self.blockchain_.getSDK().model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
 
-                        //DEBUG self.logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending Mosaic Transfer Transaction to " + sinkXEM + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
+                    //DEBUG self.logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending Mosaic Transfer Transaction to " + sinkXEM + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
 
-                        self.blockchain_.getSDK().model.transactions.send(privStore, transactionEntity, self.blockchain_.getEndpoint()).then(
-                            function(res) {
-                                delete privStore;
+                    self.blockchain_.getSDK().model
+                        .transactions
+                        .send(privStore, transactionEntity, self.blockchain_.getEndpoint())
+                        .then(function(res) {
+                            delete privStore;
 
-                                // If code >= 2, it's an error
-                                if (res.code >= 2) {
-                                    self.logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + sinkXEM + ": " + JSON.stringify(res));
-                                    return false;
-                                }
+                            // If code >= 2, it's an error
+                            if (res.code >= 2) {
+                                self.logger_.error("[NEM] [ERROR]", __line, "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + sinkXEM + ": " + JSON.stringify(res));
+                                return false;
+                            }
 
-                                var trxHash = res.transactionHash.data;
-                                //DEBUG self.logger_.info("[NEM] [CREDITS SINK]", "[CREATED]", "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug + " sent to " + sinkXEM);
-                            },
-                            function(err) {
-                                self.logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + sinkXEM + " with error: " + err);
-                            });
+                            var trxHash = res.transactionHash.data;
+                            //DEBUG self.logger_.info("[NEM] [CREDITS SINK]", "[CREATED]", "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug + " sent to " + sinkXEM);
+                        }, function(err) {
+                            self.logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + sinkXEM + " with error: " + err);
+                        });
 
-                        delete privStore;
-                    },
-                    function(err) {
-                        self.logger_.error("[NEM] [ERROR]", "[MOSAIC-GET]", "Could not read mosaics definition for namespace: " + self.blockchain_.getNamespace() + ": " + err);
-                    });
+                    delete privStore;
+                }, function(err) {
+                    self.logger_.error("[NEM] [ERROR]", "[MOSAIC-GET]", "Could not read mosaics definition for namespace: " + self.blockchain_.getNamespace() + ": " + err);
+                });
 
             return self;
         };
