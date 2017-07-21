@@ -363,4 +363,23 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
             }
         });
     };
+
+    this.forgetPlayerIdentity = function(session, callback) {
+        var params = {
+            "address": session.address
+        };
+        this.jquery_.ajax({
+            url: "/api/v1/sessions/forget",
+            type: "POST",
+            dataType: "json",
+            data: params,
+            beforeSend: function(req) {
+                if (req && req.overrideMimeType)
+                    req.overrideMimeType("application/json;charset=UTF-8");
+            },
+            success: function(response) {
+                if (callback) callback(response);
+            }
+        });
+    };
 };

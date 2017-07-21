@@ -22,7 +22,8 @@
         "language": "Language",
         "buy_credits": "Buy Credits",
         "invoice_history": "Purchases History",
-        "become_sponsor": "Be a Sponsor!"
+        "become_sponsor": "Be a Sponsor!",
+        "my_invoices": "My Purchases"
     },
     "guest": {
         "logged_in_title": "Your Details",
@@ -224,5 +225,8 @@
         "title_session_blocked": "Your session has been blocked",
         "explain_session_blocked": "Dear NEMber, we have observed too many <b>Invalid Login Attempts</b> and you have been blocked for 1 Hour.",
         "explain_session_blocked_redirect": "You will now be redirected back to the PacNEM Welcome Screen. You can still play in Sponsored Play Mode."
+    },
+    "general": {
+        "modal_title_loading": "Please wait.."
     }
 }

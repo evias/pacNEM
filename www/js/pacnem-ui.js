@@ -158,6 +158,20 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             //socket_.emit("create_room");
         });
 
+        socket_.on("pacnem_gamer_sync", function(rawdata) {
+            var data = JSON.parse(rawdata);
+            var player = self.getPlayerDetails();
+
+            if (!player.address || !player.address.length)
+                return false;
+
+            if (player.address !== data.address)
+            // this update is not for this session
+                return false;
+
+            console.log("[DEBUG] " + "Gamer Mosaics: " + rawdata);
+        });
+
         socket_.on("pacnem_heart_sync", function(rawdata) {
             var data = JSON.parse(rawdata);
             var player = self.getPlayerDetails();
@@ -183,15 +197,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             if (credits > 0) {
                 $("#pacNEM-needs-payment").val("0");
-            } else
+                $(".pacnem-invoice-close-trigger").show();
+            } else {
                 $("#pacNEM-needs-payment").val("1");
+            }
 
             if (typeof session_ != 'undefined' && session_.details_.hearts != data) {
                 session_.details_.hearts = credits;
                 session_.storeLocal();
             }
-
-            $(".pacnem-invoice-close-trigger").show();
         });
 
         socket_.on("pacnem_payment_success", function(rawdata) {
@@ -346,10 +360,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             $(".pacnem-summary-close-trigger").off("click");
             $(".pacnem-summary-close-trigger").on("click", function() {
-                window.location.reload();
-                //$("#pacnem-game-wrapper").hide();
-                //self.displayLounge();
-                //$(".pacnem-summary-modal").modal("hide");
+                $("#pacnem-game-wrapper").hide();
+                self.displayLounge();
+                $(".pacnem-summary-modal").modal("hide");
                 return false;
             });
         });
@@ -1211,7 +1224,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 var $invoiceBox = $(".pacnem-invoice-modal").first();
 
                 if (callback)
-                    return callback(ui);
+                    return callback(ui, true);
             }
         };
 
@@ -1618,12 +1631,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             if (self.formValidate()) {
 
-                var postPaymentCallback = function(ui) {
+                var postPaymentCallback = function(ui, withPurchases) {
                     ui.createSession();
                     ui.displayPlayerUI();
                     ui.displayLounge();
                     $("#rooms").parent().show();
                     $(".pacnem-credits-submenu").removeClass("hidden");
+
+                    if (withPurchases == true)
+                        $("#playerPurchases").fadeIn("slow");
+                    else
+                        $("#playerPurchases").remove();
                 };
 
                 if (ctrl_.isPlayMode("sponsored")) {
@@ -1631,14 +1649,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                     ctrl_.setAdvertised(true);
 
                     self.displaySponsorAdvertisement(ctrl_.getSponsor(), function() {
-                        postPaymentCallback(self);
+                        postPaymentCallback(self, false);
                     });
                 } else if (ctrl_.isPlayMode("pay-per-play")) {
 
                     var player = self.getPlayerDetails();
                     API_.fetchRemainingHearts(player, function(data) {
                         if (data > 0) {
-                            postPaymentCallback(self)
+                            postPaymentCallback(self, true)
                         } else {
                             self.watchInvoice(postPaymentCallback);
                         }
@@ -1663,13 +1681,16 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     this.initPurgeButton = function() {
         var self = this;
 
-        //XXX make sure user notes username + address
-
-        //XXX should also clear PacNEMClientSession
-
         $("#pacnem-purge-trigger").click(function() {
-            session_.clear();
-            window.location.href = "/";
+
+            API_.forgetPlayerIdentity(self.getPlayerDetails(), function(response) {
+
+                if (session_)
+                    session_.clear();
+
+                window.location.href = "/";
+            });
+
             return false;
         });
 
@@ -1704,36 +1725,15 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     };
 
     this.setLoadingUI = function() {
-        if ($(".pacnem-loading-overlay").length) {
-            return $(".pacnem-loading-overlay").fadeIn("slow");
-        }
-
-        var $wrapper = $("#pacNEMWrapper");
-        var $overlay = $("<div class='pacnem-loading-overlay'></div>");
-        $overlay.css({
-            "position": "absolute",
-            "zIndex": 10,
-            "backgroundColor": "rgba(255,255,255, 0.8)",
-            "backgroundImage": "url(/img/loading_nem.gif)",
-            "backgroundRepeat": "no-repeat",
-            "backgroundPosition": "center",
-            "height": "100%",
-            "width": "100%",
-            "display": "none"
+        $(".pacnem-loading-overlay-modal").first().modal({
+            backdrop: "static",
+            keyboard: false,
+            show: true
         });
-
-        $wrapper.css({ "position": "relative" });
-        $overlay.prependTo($wrapper);
-        $overlay.attr("data-display", 1);
-        $overlay.fadeIn("slow");
     };
 
     this.unsetLoadingUI = function() {
-        var $wrapper = $("#pacNEMWrapper");
-        var $overlay = $wrapper.find(".pacnem-loading-overlay").first();
-
-        if ($overlay.is(":visible"))
-            $overlay.fadeOut("slow");
+        $(".pacnem-loading-overlay-modal").first().modal("hide");
     };
 
     this.initTooltips = function() {
@@ -1900,7 +1900,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             if ("sponsored" == thisMode)
                 self.setSponsoredUI(false, function(ui) {});
             else {
-                $("#currentHearts a").first().attr("data-toggle", "dropdown");
+                $("#playerPurchases a").first().attr("data-toggle", "dropdown");
                 self.unsetSponsoredUI();
             }
 
@@ -1908,8 +1908,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 $(".pacnem-credits-submenu").removeClass("hidden");
                 self.prepareInvoiceBox(function(ui) {});
             } else {
-                $("#currentHearts a").first().removeAttr("data-toggle");
-                $(".pacnem-credits-submenu").removeClass("hidden").addClass("hidden");
+                $("#playerPurchases").remove();
             }
 
             // game mode choice has been done now, next is username and address.

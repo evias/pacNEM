@@ -1,6 +1,6 @@
 {
     "name": "PacNEM",
-    "version": "0.7.5",
+    "version": "0.7.6",
     "author": "Grégory Saive <greg@evias.be>",
     "description": "PacNEM is a PacMan game with NodeJS using NEM Blockchain",
     "keywords": "pacman, game, nem, blockchain, rewards",
@@ -42,7 +42,9 @@
     },
     "scripts": {
         "test": "node node_modules/mocha/bin/mocha",
-        "minify": "grunt uglify",
-        "start": "./node_modules/grunt-cli/bin/grunt uglify && node app.js"
+        "minify": "./node_modules/grunt-cli/bin/grunt uglify",
+        "postinstall": "./node_modules/grunt-cli/bin/grunt uglify",
+        "dist": "./node_modules/grunt-cli/bin/grunt uglify:dist && node app.js",
+        "start": "node app.js"
     }
 }

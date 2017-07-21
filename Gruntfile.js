@@ -19,7 +19,7 @@ module.exports = function(grunt) {
         },
         uglify: {
             options: { sourceMap: true },
-            PacNEM: {
+            dist: {
                 files: {
                     'www/js/pacnem.min.js': [
                         'www/js/pacnem-utils.js',
@@ -32,10 +32,14 @@ module.exports = function(grunt) {
                     'www/3rdparty/pacnem-deps.min.js': [
                         'www/3rdparty/jquery.min.js',
                         'www/3rdparty/bootstrap-3.3.7/js/bootstrap.min.js',
-                        'www/3rdparty/i18next.min.js',
-                        'www/3rdparty/i18next-xhr-backend.min.js',
-                        'www/3rdparty/i18next-jquery.min.js',
                         'www/3rdparty/handlebars.min.js'
+                    ]
+                }
+            },
+            deps: {
+                files: {
+                    'www/js/nem-sdk.min.js': [
+                        'www/js/nem-sdk.js'
                     ]
                 }
             }
@@ -48,6 +52,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-mocha-istanbul");
 
     // Tasks to run tests and uglify frontend assets
-    grunt.registerTask('default', ['uglify', 'mocha_istanbul']);
+    grunt.registerTask('default', ['uglify:dist', 'uglify:deps', 'mocha_istanbul']);
     grunt.registerTask('mocha', 'mocha_istanbul');
 };

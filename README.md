@@ -1,19 +1,19 @@
-# pacNEM: single and multiplayers
+# PacNEM: Multiplayer Pacman Game with the NEM Blockchain
 
-A PacMan game with NodeJS using NEM Blockchain
+PacNEM is a multiplayer Pacman Game using the NEM Blockchain to Reward Players and registered Sponsors.
 
-An online version of the famous PacMan game. It features the ability to play online with up to 4 players on the same grid.
+This game features the ability to play online with up to 4 players on the same grid, arranged in Rooms manage with Socket.io.
 
-This fork aims to specialize the game for the NEM blockchain. A first version of the NEM integration will save High Scores
-in Blockchain Transactions.
+This fork aims to specialize the game for the NEM blockchain.
 
 ### Installation
 
 ```evias/pacNEM``` requires NodeJS, Socket.IO and Express libraries:
 - Socket.IO: heavily used in this project to handle the communications between the server and its clients to establich and then run the game
-- Express: used to serve static files (mainly used for its routes)
+- Express: used to serve static files and the PacNEM API.
 
 Installing these dependencies using the terminal works as follows:
+
 ```
 $ cd /path/to/this/clone
 $ npm install
@@ -21,16 +21,29 @@ $ npm install
 
 ### Run the Game server locally
 
-First install all dependencies, then run following command from the Terminal:
+Now that the game is installed, you will need to Minify the Javascript using grunt, proceed as following:
+
+```
+$ cd /path/to/this/clone
+$ ./node_modules/grunt-cli/bin/grunt uglify:dist
+$ ./node_modules/grunt-cli/bin/grunt uglify:deps
+```
+
+Now you can safely start the PacNEM game:
 
 ```
 node app.js
 ```
 
+When the PacNEM Backend is started, you should something like the following Screenshot:
+
+![Started PacNEM Backend](/img/readme-pacnem-backend.png)
+
 ## Play:
 
-http://www.pacnem.com
-https://pacnem.herokuapp.com
+Visit the following URL to start playing PacNEM:
+
+https://pacnem.com
 
 ### Pot de vin
 

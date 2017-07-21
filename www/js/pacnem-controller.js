@@ -113,6 +113,7 @@ var GameController = function(config, socket, nem, chainId) {
     var advertised_ = false;
     var needsPayment_ = false;
     var player_session_ = null;
+    var $roomPlayersDOM_ = {};
 
     this.getSDK = function() {
         return nem_;
@@ -123,6 +124,7 @@ var GameController = function(config, socket, nem, chainId) {
             // Ask the server to start a new game session
             socket_.emit('new');
             last_elapsed_ = 0;
+            frame_ = 0;
         }
 
         return this;
@@ -153,6 +155,21 @@ var GameController = function(config, socket, nem, chainId) {
         // Draw board
         drawEmptyGameBoard(canvas, ctx, grid_);
 
+        // load room players DOM element now so that we
+        // don't need to query the DOM on each socket message
+        var $rows = $("#pacnem-current-room-wrapper .player-row");
+        var $items = [];
+        for (var i = 0; i < $rows.length; i++) {
+            var $current = $($rows[i]);
+            var username = $current.find(".player").text();
+
+            $roomPlayersDOM_[username] = {
+                "score": $current.find(".pc-score"),
+                "lifes": $current.find(".pc-lifes"),
+                "combo": $current.find(".pc-combo")
+            };
+        }
+
         // Screen transition for a new game
         TransitionHelper(function() {
             socket_.emit('start');
@@ -170,7 +187,9 @@ var GameController = function(config, socket, nem, chainId) {
             grid_[y][x] = ' ';
         }
 
-        // store current iteration's Positions
+        // the `points` key will be filled when the Player
+        // eats special objects like the Bigger Cheeses or 
+        // any Ghost under cheese effect
         for (var i = 0; i != data['points'].length; i++) {
             points_.push(new DisplayPoints(
                 data['points'][i]['x'],
@@ -192,29 +211,13 @@ var GameController = function(config, socket, nem, chainId) {
         }
         var ctx = canvas.getContext('2d');
 
-        console.log("[DEBUG] " + "Now re-drawing Board with Data: " + rawdata);
+        //DEBUG console.log("[DEBUG] " + "Now re-drawing Board with Data: " + rawdata);
 
-        // Draw game
-        drawEmptyGameBoard(canvas, ctx, grid_);
-        var $items = $("#pacnem-current-room-wrapper .player-row");
-        for (var i = 0; i != data['pacmans'].length; i++) {
-            var pacman = data['pacmans'][i];
-            drawPacMan(canvas, ctx, frame_, pacman, data['pacmans'].length == 1 ? "#777700" : PACMAN_COLORS[i % PACMAN_COLORS.length]);
+        // Refresh room Game Board
+        refreshRoomBoard(grid_, data, frame_);
+        refreshCharacters(data, canvas, ctx, frame_, $roomPlayersDOM_);
 
-            if (typeof pacman["score"] == "undefined" || typeof pacman["lifes"] == "undefined")
-                continue; // do not update with empty values
-
-            var score = pacman["score"] ? pacman["score"] : 0;
-            var lifes = pacman["lifes"] < 0 ? 0 : pacman["lifes"];
-            var combo = pacman["combo"] ? pacman["combo"] + 1 : 1;
-
-            $($items[i]).find(".pc-score").text(score);
-            $($items[i]).find(".pc-lifes").text(lifes);
-            $($items[i]).find(".pc-combo").text("x" + combo);
-        }
-        for (var i = 0; i != data['ghosts'].length; i++) {
-            drawGhost(canvas, ctx, frame_, data['ghosts'][i], GHOSTS_COLORS[i % GHOSTS_COLORS.length]);
-        }
+        // display Positions on the Board
         for (var i = 0; i != points_.length; i++) {
             drawPoints(canvas, ctx, points_[i]);
         }
@@ -237,20 +240,7 @@ var GameController = function(config, socket, nem, chainId) {
         // forward end_of_game to backend for scores processing
         socket_.emit("end_of_game", JSON.stringify({ pacmans: data.pacmans }));
 
-        // refresh game board canvas for room's next game
-        var grid_ = data['map'];
-
-        var canvas = document.getElementById('myCanvas');
-        if (!canvas.getContext) {
-            return;
-        }
-        var ctx = canvas.getContext('2d');
-        var height = grid_.length;
-        var width = grid_[0].length;
-        canvas.width = width * SIZE + 10;
-        canvas.height = height * SIZE + 10;
-
-        drawEmptyGameBoard(canvas, ctx, grid_);
+        refreshRoomBoard(null, data, 0); // map (grid) inside data
         return this;
     };
 
@@ -415,11 +405,59 @@ var GameController = function(config, socket, nem, chainId) {
     };
 };
 
+var refreshRoomBoard = function(grid, data, frame) {
+    // refresh game board canvas for room's next game
+    if (!grid && data.hasOwnProperty("map"))
+        grid = data['map'];
+    else if (!grid) {
+        console.log("[DEBUG] " + "Error refreshing Board, grid object not available!");
+        return false;
+    }
+
+    var canvas = document.getElementById('myCanvas');
+    if (!canvas.getContext) {
+        return;
+    }
+    var ctx = canvas.getContext('2d');
+    var height = grid.length;
+    var width = grid[0].length;
+    canvas.width = width * SIZE + 10;
+    canvas.height = height * SIZE + 10;
+
+    drawEmptyGameBoard(canvas, ctx, grid);
+    return false;
+};
+
+var refreshCharacters = function(data, canvas, ctx, frame, DOMCache) {
+    for (var i = 0; i != data['pacmans'].length; i++) {
+        var pacman = data['pacmans'][i];
+        drawPacMan(canvas, ctx, frame, pacman, data['pacmans'].length == 1 ? "#777700" : PACMAN_COLORS[i % PACMAN_COLORS.length]);
+
+        if (typeof pacman["score"] == "undefined" || typeof pacman["lifes"] == "undefined")
+            continue; // do not update with empty values
+
+        var uname = pacman.username;
+        var score = pacman["score"] ? pacman["score"] : 0;
+        var lifes = pacman["lifes"] < 0 ? 0 : pacman["lifes"];
+        var combo = pacman["combo"] ? pacman["combo"] + 1 : 1;
+
+        if (DOMCache[uname]) {
+            DOMCache[uname].score.text(score);
+            DOMCache[uname].lifes.text(lifes);
+            DOMCache[uname].combo.text("x" + combo);
+        }
+    }
+
+    for (var i = 0; i != data['ghosts'].length; i++) {
+        drawGhost(canvas, ctx, frame, data['ghosts'][i], GHOSTS_COLORS[i % GHOSTS_COLORS.length]);
+    }
+};
+
 /**
  * Draw an empty game board
  * @author Nicolas Dubien (https://github.com/dubzzz)
  */
-function drawEmptyGameBoard(canvas, ctx, grid) {
+var drawEmptyGameBoard = function(canvas, ctx, grid) {
     /**
      * Draw the Game Board
      */
@@ -460,13 +498,13 @@ function drawEmptyGameBoard(canvas, ctx, grid) {
             }
         }
     }
-}
+};
 
 /**
  * Draw the PacMan
  * @author Nicolas Dubien (https://github.com/dubzzz)
  */
-function drawPacMan(canvas, ctx, frame, pacman, color) {
+var drawPacMan = function(canvas, ctx, frame, pacman, color) {
     if (pacman["lifes"] <= 0) {
         return;
     }
@@ -503,13 +541,13 @@ function drawPacMan(canvas, ctx, frame, pacman, color) {
             ctx.stroke();
         }
     }
-}
+};
 
 /**
  * Draw a ghost
  * @author Nicolas Dubien (https://github.com/dubzzz)
  */
-function drawGhost(canvas, ctx, frame, ghost, color) {
+var drawGhost = function(canvas, ctx, frame, ghost, color) {
     if (ghost['cheese_effect'] != 0 && ghost['cheese_effect'] <= CHEESE_EFFECT_FRAMES / 5 && (ghost['cheese_effect'] % 4 == 1 || ghost['cheese_effect'] % 4 == 2)) {
         return;
     }
@@ -570,14 +608,14 @@ function drawGhost(canvas, ctx, frame, ghost, color) {
     ctx.arc(ghost_px_x + .12 * SIZE, ghost_px_y - .17 * SIZE, .1 * SIZE, 0, Math.PI, false);
     ctx.arc(ghost_px_x + .12 * SIZE, ghost_px_y - .21 * SIZE, .1 * SIZE, Math.PI, 2 * Math.PI, false);
     ctx.fill();
-}
+};
 
 /**
  * Draw points
  * @author Nicolas Dubien (https://github.com/dubzzz) */
-function drawPoints(canvas, ctx, pts) {
+var drawPoints = function(canvas, ctx, pts) {
     ctx.fillStyle = pts.color;
     ctx.font = "bold " + Math.ceil(5 + 4 * pts.iter * SIZE / 3 / FPS) + "px Arial";
     ctx.fillText("+" + pts.value, pts.x * SIZE + 5, pts.y * SIZE + 5);
     pts.iter++;
-}
+};

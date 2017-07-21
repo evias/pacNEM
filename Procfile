@@ -1,1 +1,1 @@
-web: ./node_modules/grunt-cli/bin/grunt uglify && node app.js
+web: node app.js

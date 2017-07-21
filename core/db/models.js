@@ -55,7 +55,6 @@
             xem: String,
             readTransactionIds: [String],
             countHearts: { type: Number, min: 0 },
-            countPlayedHearts: { type: Number, min: 0 },
             countExchangedHearts: { type: Number, min: 0 },
             lastRead: { type: Number, min: 0 }
         });
@@ -66,7 +65,7 @@
             },
 
             getCountRemaining: function() {
-                return this.countHearts - this.countPlayedHearts;
+                return this.countHearts;
             }
         };
 
@@ -91,18 +90,17 @@
             },
 
             updateCredits: function(creditObject) {
-                var countHearts = -1;
-                var countPlayed = -1;
-                var countExchanged = -1;
+                var countHearts = null;
+                var countExchanged = null;
 
                 if (typeof creditObject.countHearts != 'undefined' && creditObject.countHearts !== false)
                     countHearts = parseInt(creditObject.countHearts); // /!\ Divisibility of evias.pacnem:heart is 0
 
-                if (typeof creditObject.countPlayedHearts != 'undefined' && creditObject.countPlayedHearts > 0)
-                    countPlayed = parseInt(creditObject.countPlayedHearts);
-
                 if (typeof creditObject.countExchangedHearts != 'undefined' && creditObject.countExchangedHearts > 0)
                     countExchanged = parseInt(creditObject.countExchangedHearts);
+
+                if (typeof creditObject.countPlayedHearts != 'undefined' && creditObject.countPlayedHearts > 0)
+                    countHearts = -parseInt(creditObject.countPlayedHearts);
 
                 var address = this.getAddress();
                 mongoose.model("NEMGameCredit").findOne({ xem: address }, function(err, credits) {
@@ -110,17 +108,15 @@
                         // update NEMGameCredit mode
                         credits.xem = address;
 
-                        if (countHearts > -1)
-                            credits.countHearts = countHearts;
-
-                        // played count and exchanged count are ONLY updated when they
-                        // must be incremented. - if none of both is provided, only the 
-                        // countHearts property will be updated.
-                        if (countPlayed > -1)
-                            credits.countPlayedHearts = credits.countPlayedHearts + countPlayed;
+                        if (countHearts !== null) {
+                            // set remaining count
+                            if (countHearts >= 0) credits.countHearts = countHearts;
+                            // or burn credits
+                            else credits.countHearts = credits.countHearts - countHearts;
+                        }
 
                         if (countExchanged > -1)
-                            credits.countExchangedHearts = credits.countExchangedHearts + countExchanged;
+                            credits.countExchangedHearts = countExchanged;
 
                         credits.lastRead = new Date().valueOf();
                         credits.save();
@@ -130,7 +126,6 @@
                         var credits = new NEMGameCredit({
                             xem: address,
                             countHearts: (countHearts > -1 ? countHearts : 0),
-                            countPlayedHearts: (countPlayed > -1 ? countPlayed : 0),
                             countExchangedHearts: (countExchanged > -1 ? countExchanged : 0),
                             lastRead: new Date().valueOf()
                         });
@@ -284,7 +279,16 @@
             address: String,
             browserData: String,
             checksum: String,
-            createdAt: { type: Number, min: 0 }
+            isExpired: { type: Boolean, default: false },
+            createdAt: { type: Number, min: 0 },
+            updatedAt: { type: Number, min: 0 }
+        });
+
+        this.PacNEMDailyMosaic_ = new mongoose.Schema({
+            slug: String,
+            countSeenToday: String,
+            createdAt: { type: Number, min: 0 },
+            updatedAt: { type: Number, min: 0 }
         });
 
         // bind our Models classes

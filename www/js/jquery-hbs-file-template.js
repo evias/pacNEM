@@ -36,11 +36,10 @@ $.extend(jQFileTemplate.prototype, {
         //if (T.isCached(name)) {
         //    callback(T.cached[name]);
         //} else {
-            $.get(T.urlFor(name), function(raw) {
-                T.store(name, raw);
-        //        T.render(name, callback);
-                callback(T.cached[name]);
-            });
+        $.get(T.urlFor(name), function(raw) {
+            T.store(name, raw);
+            callback(T.cached[name]);
+        });
         //}
     },
     renderSync: function(name, callback) {
@@ -56,8 +55,8 @@ $.extend(jQFileTemplate.prototype, {
     },
     fetch: function(name) {
         // synchronous, for those times when you need it.
-        if (! T.isCached(name)) {
-            var raw = $.ajax({'url': T.urlFor(name), 'async': false}).responseText;
+        if (!T.isCached(name)) {
+            var raw = $.ajax({ 'url': T.urlFor(name), 'async': false }).responseText;
             T.store(name, raw);
         }
     },
@@ -68,6 +67,6 @@ $.extend(jQFileTemplate.prototype, {
         T.cached[name] = Handlebars.compile(raw);
     },
     urlFor: function(name) {
-        return "/resources/templates/"+ name;
+        return "/resources/templates/" + name;
     }
 });
