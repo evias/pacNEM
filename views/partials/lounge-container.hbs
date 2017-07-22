@@ -46,27 +46,62 @@
                 <ul style="margin: 0; padding: 0;">
 
                     {{#unless lounge.cntMosaics}}
-                        <li style="display: inline-block;">
-                            <span>{{t "lounge.empty_mosaics_list"}}</span>
-                        </li>
+                    <li style="display: inline-block;">
+                        <span>{{t "lounge.empty_mosaics_list"}}</span>
+                    </li>
                     {{/unless}}
 
                     {{#if lounge.cntMosaics}}
                         {{#each lounge.mosaics}}
-                        <li style="display: inline-block;">
-                            <div tabindex="0"
-                                class="{{label}} label-mosaic"
-                                data-toggle="tooltip"
-                                data-trigger="focus"
-                                data-placement="top"
-                                title="<i class='{{icon}}'></i> {{t title}}">
-                                <b><i class="{{icon}}"></i>&nbsp;{{total}}x</b>
-                            </div>
-                        </li>
+                    <li style="display: inline-block;">
+                        <div tabindex="0"
+                            class="{{label}} label-mosaic"
+                            data-toggle="tooltip"
+                            data-trigger="focus"
+                            data-placement="top"
+                            title="<i class='{{icon}}'></i> {{t title}}">
+                            <b><i class="{{icon}}"></i>&nbsp;{{total}}x</b>
+                        </div>
+                    </li>
                         {{/each}}
                     {{/if}}
                 </ul>
             </div>
         </div>
     </div>
+    <!--
+    <div class="row">
+        <div class="col-md-4">
+            <h4 class="wrapper-title text-left">
+                <i class="glyphicon glyphicon-user"></i>&nbsp;{{t "lounge.daily_scores_title"}}
+            </h4>
+
+            <table class="table table-hover">
+                <thead style="display: none;"><th>&nbsp;</th><th>&nbsp;</th></thead>
+                <tbody>
+
+                    {{#unless lounge.cntScores}}
+                        <li style="display: inline-block;">
+                            <span>{{t "lounge.empty_mosaics_list"}}</span>
+                        </li>
+                    {{/unless}}
+
+                    {{#if lounge.cntScores}}
+                        {{#each lounge.scores}}
+                    <tr>
+                        <td class="text-center" style="border: 0;" colspan="2">
+                            <span class="{{label}}">
+                                <i class="glyphicon glyphicon-globe"></i>&nbsp;
+                                <span>{{score}} {{t title}}</span>
+                            </span>
+                        </td>
+                    </tr>
+                        {{/each}}
+                    {{/if}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    -->
+
 </div>
