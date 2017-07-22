@@ -1898,7 +1898,19 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         var self = this;
 
         $(".pacnem-gamemode-trigger").on("click", function() {
-            var thisMode = $(this).attr("data-value");
+            var $button = $(this);
+
+            var thisMode = $button.attr("data-value");
+
+            var sibChecked = $button.find(".fake-checkbox.checked").first();
+            var sibUnchecked = $button.find(".fake-checkbox.unchecked").first();
+
+            // uncheck all checkboxes and enable/disable
+            // only the one on the current button
+            $(".fake-checkbox.checked").hide();
+            $(".fake-checkbox.unchecked").show();
+            sibChecked.show();
+            sibUnchecked.hide();
 
             ctrl_.setPlayMode(thisMode);
 

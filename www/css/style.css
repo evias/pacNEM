@@ -406,3 +406,8 @@ blockquote.bq-minimal-centered {
 .form-error {
     border-color: #f00;
 }
+
+.fake-checkbox {
+    width: 32px;
+    height: 32px;
+}
