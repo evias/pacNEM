@@ -188,7 +188,7 @@
         "mosaics_data_title": "Heutige Mosaics auf PacNEM",
         "charts_data_title": "PacNEM in Zahlen",
         "games_data_title": "PacNEM Live",
-        "empty_mosaics_list": "Heute wurden von PacNEM noch keine Mosaics gesehen.."
+        "empty_mosaics_list": "Heute hat PacNEM noch keine Mosaics gesehen :("
     },
     "mosaics": {
         "label_mosaic_heart": "Spiel Kredite",
@@ -206,7 +206,8 @@
         "label_mosaic_rampage": "Rampage",
         "label_mosaic_ghostbuster": "Ghostbuster",
         "label_mosaic_godlike_101010": "Godlike (101010)",
-        "label_mosaic_personal_token": "Login Token"
+        "label_mosaic_personal_token": "Login Token",
+        "label_mosaic_external": "Externer Token"
     },
     "security": {
         "title_session_expire": "Ihre Session läuft jetzt aus",

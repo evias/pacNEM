@@ -285,8 +285,8 @@
         });
 
         this.PacNEMDailyMosaic_ = new mongoose.Schema({
-            slug: String,
-            countSeenToday: String,
+            daySlug: String,
+            mosaics: Object,
             createdAt: { type: Number, min: 0 },
             updatedAt: { type: Number, min: 0 }
         });
@@ -304,6 +304,7 @@
         this.NEMPersonalToken = mongoose.model("NEMPersonalToken", this.NEMPersonalToken_);
         this.NEMFailedLogins = mongoose.model("NEMFailedLogins", this.NEMFailedLogins_);
         this.PacNEMClientSession = mongoose.model("PacNEMClientSession", this.PacNEMClientSession_);
+        this.PacNEMDailyMosaic = mongoose.model("PacNEMDailyMosaic", this.PacNEMDailyMosaic_);
     };
 
     module.exports.pacnem = pacnem;
@@ -319,4 +320,5 @@
     module.exports.NEMPersonalToken = pacnem.NEMPersonalToken;
     module.exports.NEMFailedLogins = pacnem.NEMFailedLogins;
     module.exports.PacNEMClientSession = pacnem.PacNEMClientSession;
+    module.exports.PacNEMDailyMosaic = pacnem.PacNEMDailyMosaic;
 }());

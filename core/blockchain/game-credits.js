@@ -633,50 +633,171 @@
             return self;
         };
 
-        this.gamerSynchronization = function(gamerSocketId, gamerDetails) {
+        this.saveSessionsMosaics = function(sessions, daySlug, index, stack, callback) {
             var self = this;
-            var gameMosaics = self.blockchain_.getGameMosaicsConfiguration();
-            var playerMosaics = {};
 
-            // read Mosaics owned by the given address's XEM wallet
+            if (index === null) {
+                index = 0;
+                stack = {}; // read reset
+            }
+
+            if (index == sessions.length) {
+                // recursion BREAK point is when we hit 
+                // the end of the sessions array.
+                return self.saveMosaicsDatabaseSummary(stack, callback);
+            }
+
+            var address = sessions[index].address;
+            if (stack.hasOwnProperty(address)) {
+                // address already handled, we can skip to next index
+                return self.saveSessionsMosaics(sessions, daySlug, index + 1, stack, callback);
+            }
+
+            stack[address] = {};
+            self.readGamerMosaics(address, function(gamerMosaics) {
+                stack[address] = gamerMosaics;
+
+                // recursion until we are done reading all sessions mosaics
+                return self.saveSessionsMosaics(sessions, daySlug, index + 1, stack, callback);
+            });
+        };
+
+        /**
+         * Read a given `address` XEM Address Mosaic Balances.
+         * 
+         * This is used in the Lounge for daily mosaics.
+         * 
+         * @param   {String}    address     XEM address
+         * @return  {Array}     Array of objects with keys `quantity` and `name`.
+         */
+        this.readGamerMosaics = function(address, callback) {
+            var self = this;
+            address = address.replace(/-/g, '').replace(/\s/g, '');
+
+            var playerMosaics = [];
             self.blockchain_.getSDK()
                 .com.requests.account.mosaics
-                .owned(self.blockchain_.getEndpoint(), gamerDetails.address)
+                .owned(self.blockchain_.getEndpoint(), address)
                 .then(function(res) {
                     if (!res.data || !res.data.length) {
                         // do not emit on unresponsive NEM Endpoint
                         return null;
                     }
 
-                    //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.mosaics.owned: " + JSON.stringify(res));
-
-                    // this accounts owns mosaics, check if he has evias.pacnem:heart
-                    // mosaic so that he can play.
+                    //DEBUG self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Result from NIS API account.mosaics.owned for " + address + ": " + JSON.stringify(res));
                     for (var i in res.data) {
                         var mosaic = res.data[i];
                         var slug = mosaic.mosaicId.namespaceId + ":" + mosaic.mosaicId.name;
 
                         var quantity = mosaic.quantity;
+
+                        //XXX other mosaics divisibility
                         if (slug == "nem:xem")
                             quantity = quantity / Math.pow(10, 6);
 
-                        playerMosaics[slug] = {
+                        playerMosaics.push({
                             quantity: quantity,
                             name: slug
-                        };
+                        });
                     }
 
-                    return self.socketIO_.sockets
-                        .to(gamerSocketId)
-                        .emit("pacnem_gamer_sync", JSON.stringify({
-                            address: gamerDetails.address,
-                            mosaics: playerMosaics
-                        }));
+                    return callback(playerMosaics);
                 }, function(err) {
                     // NO Mosaics available / wrong Network for address / Unresolved Promise Errors
-
-                    return null;
+                    return callback([]);
                 });
+        };
+
+        /**
+         * Execute synchronization of Gamer Mosaics for a given Socket.io
+         * `gamerSocketId` socket ID and `gamerDetails` object.
+         * 
+         * The gamerDetails object should contain a key with `address` field.
+         * 
+         * @param   {String}    gamerSockerId
+         * @param   {Object}    gamerDetails    Must contain `address` field.
+         * @return  {String}
+         */
+        this.gamerSynchronization = function(gamerSocketId, gamerDetails) {
+            var self = this;
+            var gameMosaics = self.blockchain_.getGameMosaicsConfiguration();
+
+            var sessions = [];
+            sessions.push({ "address": gamerDetails.address });
+
+            var daySlug = new Date().toJSON().replace(/T.*$/, '');
+
+            self.saveSessionsMosaics(sessions, daySlug, null, {}, function(dailyStack) {
+                var gamerStack = dailyStack.hasOwnProperty(gamerDetails.address) ? dailyStack[gamerDetails.address] : [];
+                var socketJSON = JSON.stringify({
+                    address: gamerDetails.address,
+                    mosaics: gamerStack
+                });
+                return self.socketIO_.sockets
+                    .to(gamerSocketId)
+                    .emit("pacnem_gamer_sync", socketJSON);
+            });
+        };
+
+        this.saveMosaicsDatabaseSummary = function(dailyStack, callback) {
+            var self = this;
+            var startDay = new Date();
+            var daySlug = startDay.toJSON().replace(/T.*$/, '');
+
+            self.db_.PacNEMDailyMosaic.findOne({ daySlug: daySlug }, function(err, summary) {
+
+                if (err) {
+                    self.logger.error("[NEM] [LOUNGE]", "[ERROR]", "Error reading PacNEMDailyMosaic: " + err);
+                    return (typeof callback == "function" ? callback(dailyStack) : true);
+                }
+
+                if (!summary) {
+                    summary = new self.db_.PacNEMDailyMosaic({
+                        daySlug: daySlug,
+                        createdAt: new Date().valueOf()
+                    });
+                }
+
+                var mosSummary = {};
+                for (var addr in dailyStack) {
+                    var gamerMosaics = dailyStack[addr];
+
+                    if (!gamerMosaics || !gamerMosaics.length)
+                        continue;
+
+                    for (var i = 0; i < gamerMosaics.length; i++) {
+                        var mosSlug = gamerMosaics[i].name;
+                        var quantity = gamerMosaics[i].quantity;
+                        var mosDetails = self.blockchain_.getMosaicDetails(mosSlug);
+                        var normSlug = mosSlug.replace(/\./g, '_').replace(/:/g, '_');
+
+                        if (!mosSummary.hasOwnProperty(normSlug)) {
+                            mosSummary[normSlug] = {
+                                total: 0,
+                                label: mosDetails.label,
+                                title: mosDetails.title,
+                                icon: mosDetails.icon,
+                                slug: mosDetails.slug
+                            };
+                        }
+
+                        mosSummary[normSlug]["total"] = mosSummary[normSlug]["total"] + quantity;
+                    }
+                }
+
+                // we are now done reading ALL mosaic from ALL players today
+                // -> we can save the summary.
+                summary.mosaics = mosSummary;
+                summary.updatedAt = new Date().valueOf();
+                summary.save(function(err) {
+                    if (err) {
+                        self.logger.error("[NEM] [LOUNGE]", "[ERROR]", "Error saving PacNEMDailyMosaic: " + err);
+                    }
+
+                    //self.logger.info("[NEM] [LOUNGE]", "[FETCH]", "Done building Mosaic details summary for " + daySlug + " with: " + JSON.stringify(summary.mosaics));
+                    return (typeof callback == "function" ? callback(dailyStack) : true);
+                });
+            });
         };
     };
 

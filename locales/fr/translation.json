@@ -188,7 +188,7 @@
         "mosaics_data_title": "Mosaics sur PacNEM aujourd'hui",
         "charts_data_title": "PacNEM en Nombres",
         "games_data_title": "PacNEM Live",
-        "empty_mosaics_list": "PacNEM n'a pas aperçu de Mosaics aujourd'hui.."
+        "empty_mosaics_list": "PacNEM n'a pas aperçu de Mosaics aujourd'hui :("
     },
     "mosaics": {
         "label_mosaic_heart": "Crédits de Jeu",
@@ -206,7 +206,8 @@
         "label_mosaic_rampage": "Rampage",
         "label_mosaic_ghostbuster": "Ghostbuster",
         "label_mosaic_godlike_101010": "Godlike (101010)",
-        "label_mosaic_personal_token": "Login Token"
+        "label_mosaic_personal_token": "Login Token",
+        "label_mosaic_external": "Token Externe"
     },
     "security": {
         "title_session_expire": "Your session is about to expire",

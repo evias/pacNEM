@@ -206,8 +206,9 @@ var PacNEMProtocol = require("./core/pacman/socket.js").PacNEMProtocol;
 var PacNEMSockets = new PacNEMProtocol(io, logger, PacNEMBlockchain, PacNEMDB, HallOfFame, SponsorEngine, Authenticator, GameCredits);
 
 var JobsScheduler = require("./core/scheduler.js").JobsScheduler;
-var PacNEM_Crons = new JobsScheduler(logger, PacNEMBlockchain, PacNEMDB);
+var PacNEM_Crons = new JobsScheduler(logger, PacNEMBlockchain, PacNEMDB, GameCredits);
 PacNEM_Crons.hourly();
+PacNEM_Crons.fetchHourlySeenMosaics();
 
 var PacNEM_i18n = function() {
     this.getLocales = function() {
@@ -336,26 +337,6 @@ app.get('/resources/templates/:address/player-authenticate', function(req, res) 
 app.get('/resources/templates/:name', function(req, res) {
     res.sendfile(__dirname + '/views/partials/' + req.params.name + '.hbs');
 });
-/*
-app.get('/locales/:lang', function(req, res) {
-
-    if (!req.params.lang || !req.params.lang.length)
-        req.params.lang = "en";
-
-    // make sure file exists
-    var path = __dirname + '/locales/' + req.params.lang + '/translation.json';
-    if (!fs.existsSync(path)) {
-        path = __dirname + '/locales/en/translation.json';
-    }
-
-    var json = fs.readFileSync(path);
-
-    var oneDay = 86400000;
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader('Cache-Control', 'public, max-age=' + (oneDay * 7));
-    res.send(json);
-});
-*/
 
 /**
  * Frontend Web Application Serving
@@ -1193,11 +1174,24 @@ app.get("/api/v1/lounge/get", function(req, res) {
                 "lounge": loungeSessions || 0,
                 "playing": playingSessions || 0
             },
-            "mosaics": allMosaics
+            "mosaics": {},
+            "cntMosaics": 0
         }
     };
 
-    res.send(JSON.stringify({ "status": "ok", "data": loungeData }));
+    var startDay = new Date();
+    var tsStart = startDay.setHours(0, 0, 0, 0);
+    var daySlug = startDay.toJSON().replace(/T.*$/, '');
+
+    PacNEMDB.PacNEMDailyMosaic.findOne({ daySlug: daySlug }, function(err, summary) {
+
+        if (err || !summary)
+            return res.send(JSON.stringify({ "status": "ok", "data": loungeData }));
+
+        loungeData["lounge"]["mosaics"] = summary.mosaics;
+        loungeData["lounge"]["cntMosaics"] = Object.getOwnPropertyNames(summary.mosaics).length;
+        return res.send(JSON.stringify({ "status": "ok", "data": loungeData }));
+    });
 });
 
 app.get("/api/v1/reset", function(req, res) {

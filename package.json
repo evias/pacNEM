@@ -1,6 +1,6 @@
 {
     "name": "PacNEM",
-    "version": "0.7.6",
+    "version": "0.7.7",
     "author": "Grégory Saive <greg@evias.be>",
     "description": "PacNEM is a PacMan game with NodeJS using NEM Blockchain",
     "keywords": "pacman, game, nem, blockchain, rewards",

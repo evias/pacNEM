@@ -170,6 +170,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 return false;
 
             console.log("[DEBUG] " + "Gamer Mosaics: " + rawdata);
+
+            //XXX update lounge data in case lounge is loaded
         });
 
         socket_.on("pacnem_heart_sync", function(rawdata) {
@@ -1739,8 +1741,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     this.initTooltips = function() {
         $("[data-toggle='tooltip']").tooltip({
             html: true,
-            template: '<div class="tooltip tooltip-mosaic"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
+            template: '<div class="tooltip tooltip-mosaic"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
+            trigger: 'hover focus'
         });
+
+        $("[data-toggle='popover']").popover({});
     };
 
     /**

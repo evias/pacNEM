@@ -27,10 +27,11 @@
      *
      * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
      */
-    var JobsScheduler = function(logger, chainDataLayer, dataLayer) {
+    var JobsScheduler = function(logger, chainDataLayer, dataLayer, gameCredits) {
         this.blockchain_ = chainDataLayer;
         this.logger = logger;
         this.db_ = dataLayer;
+        this.credits_ = gameCredits;
         this.crons = { "daily": {}, "hourly": {} };
 
         this.daily = function() {
@@ -60,7 +61,7 @@
 
             var hourly_MosaicsSeen = new CronJob('00 00 * * * *',
                 function() {
-                    self.fetchHourlySeenMosaics(function(result, err) {
+                    self.fetchHourlySeenMosaics(function(err, result) {
                         if (!err)
                             self.logger.info("[NEM] [LOUNGE]", "[FETCH]", "Seen Mosaics: " + JSON.stringify(result));
                         else
@@ -132,7 +133,29 @@
         this.fetchHourlySeenMosaics = function(callback) {
             var self = this;
 
-            //XXX
+            var startDay = new Date();
+            var endDay = new Date();
+            var tsStart = startDay.setHours(0, 0, 0, 0);
+            var tsEnd = endDay.setHours(23, 59, 59, 999);
+
+            //self.logger.info("[NEM] [LOUNGE]", "[FETCH]", "Now fetching seen Mosaics");
+
+            var daySlug = startDay.toJSON().replace(/T.*$/, '');
+
+            self.db_.PacNEMClientSession.find({
+                createdAt: { $gt: tsStart, $lt: tsEnd }
+            }, function(err, sessions) {
+                // for each authenticated session of the day, check for
+                // available mosaics to report on the lounge
+
+                if (err || !sessions || !sessions.length) {
+                    return (typeof callback == "function" ? callback([]) : null);
+                }
+
+                self.credits_.saveSessionsMosaics(sessions, daySlug, null, {}, function(dailyStack) {
+                    self.logger.info("[NEM] [LOUNGE]", "[FETCH]", "Daily Mosaics Read: " + JSON.stringify(dailyStack));
+                });
+            });
 
             return true;
         };
