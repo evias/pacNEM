@@ -153,60 +153,7 @@
                 }
 
                 self.credits_.saveSessionsMosaics(sessions, daySlug, null, {}, function(dailyStack) {
-                    self.db_.PacNEMDailyMosaic.findOne({ daySlug: daySlug }, function(err, summary) {
-
-                        if (err) {
-                            self.logger.error("[NEM] [LOUNGE]", "[ERROR]", "Error reading PacNEMDailyMosaic: " + err);
-                            return (typeof callback == "function" ? callback(dailyStack) : true);
-                        }
-
-                        if (!summary) {
-                            summary = new self.db_.PacNEMDailyMosaic({
-                                daySlug: daySlug,
-                                createdAt: new Date().valueOf()
-                            });
-                        }
-
-                        var mosSummary = {};
-                        for (var addr in dailyStack) {
-                            var gamerMosaics = dailyStack[addr];
-
-                            if (!gamerMosaics || !gamerMosaics.length)
-                                continue;
-
-                            for (var i = 0; i < gamerMosaics.length; i++) {
-                                var mosSlug = gamerMosaics[i].name;
-                                var quantity = gamerMosaics[i].quantity;
-                                var mosDetails = self.blockchain_.getMosaicDetails(mosSlug);
-                                var normSlug = mosSlug.replace(/\./g, '_').replace(/:/g, '_');
-
-                                if (!mosSummary.hasOwnProperty(normSlug)) {
-                                    mosSummary[normSlug] = {
-                                        total: 0,
-                                        label: mosDetails.label,
-                                        title: mosDetails.title,
-                                        icon: mosDetails.icon,
-                                        slug: mosDetails.slug
-                                    };
-                                }
-
-                                mosSummary[normSlug]["total"] = mosSummary[normSlug]["total"] + quantity;
-                            }
-                        }
-
-                        // we are now done reading ALL mosaic from ALL players today
-                        // -> we can save the summary.
-                        summary.mosaics = mosSummary;
-                        summary.updatedAt = new Date().valueOf();
-                        summary.save(function(err) {
-                            if (err) {
-                                self.logger.error("[NEM] [LOUNGE]", "[ERROR]", "Error saving PacNEMDailyMosaic: " + err);
-                            }
-
-                            //self.logger.info("[NEM] [LOUNGE]", "[FETCH]", "Done building Mosaic details summary for " + daySlug + " with: " + JSON.stringify(summary.mosaics));
-                            return (typeof callback == "function" ? callback(summary.mosaics) : true);
-                        });
-                    });
+                    self.logger.info("[NEM] [LOUNGE]", "[FETCH]", "Daily Mosaics Read: " + JSON.stringify(dailyStack));
                 });
             });
 

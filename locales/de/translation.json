@@ -188,7 +188,7 @@
         "mosaics_data_title": "Heutige Mosaics auf PacNEM",
         "charts_data_title": "PacNEM in Zahlen",
         "games_data_title": "PacNEM Live",
-        "empty_mosaics_list": "Heute wurden von PacNEM noch keine Mosaics gesehen.."
+        "empty_mosaics_list": "Heute hat PacNEM noch keine Mosaics gesehen :("
     },
     "mosaics": {
         "label_mosaic_heart": "Spiel Kredite",

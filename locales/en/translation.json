@@ -188,7 +188,7 @@
         "mosaics_data_title": "Today's Mosaics on PacNEM",
         "charts_data_title": "PacNEM in Numbers",
         "games_data_title": "PacNEM Live",
-        "empty_mosaics_list": "Today PacNEM has not sent any Mosaics Transfers yet.."
+        "empty_mosaics_list": "Today PacNEM has not seen any Mosaics :("
     },
     "mosaics": {
         "label_mosaic_heart": "Game Credits",

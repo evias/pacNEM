@@ -42,7 +42,7 @@
                 <i class="glyphicon glyphicon-star"></i>&nbsp;{{t "lounge.mosaics_data_title"}}
             </h4>
 
-            <div class="container-fluid pacnem-lounge-mosaics">
+            <div class="container-fluid pacnem-lounge-mosaics text-left">
                 <ul style="margin: 0; padding: 0;">
 
                     {{#unless lounge.cntMosaics}}
@@ -54,13 +54,14 @@
                     {{#if lounge.cntMosaics}}
                         {{#each lounge.mosaics}}
                         <li style="display: inline-block;">
-                            <a href="#" role="button"
-                                class="{{label}} label-mosaic" 
-                                data-toggle="popover"
+                            <div tabindex="0"
+                                class="{{label}} label-mosaic"
+                                data-toggle="tooltip"
+                                data-trigger="focus"
                                 data-placement="top"
-                                data-html="Testing <b>Popover</b>">
-                                <b>{{total}}x&nbsp;<i class="{{icon}}"></i></b>
-                            </a>
+                                title="<i class='{{icon}}'></i> {{t title}}">
+                                <b><i class="{{icon}}"></i>&nbsp;{{total}}x</b>
+                            </div>
                         </li>
                         {{/each}}
                     {{/if}}
