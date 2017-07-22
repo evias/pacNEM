@@ -44,93 +44,26 @@
 
             <div class="container-fluid pacnem-lounge-mosaics">
                 <ul style="margin: 0; padding: 0;">
-                    {{#each lounge.mosaics.credits}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
 
-                    {{#each lounge.mosaics.rewards.purchases}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
+                    {{#unless lounge.cntMosaics}}
+                        <li style="display: inline-block;">
+                            <span>{{t "lounge.empty_mosaics_list"}}</span>
+                        </li>
+                    {{/unless}}
 
-                    {{#each lounge.mosaics.rewards.high_score}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
-
-                    {{#each lounge.mosaics.achievements.return_x2}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
-
-                    {{#each lounge.mosaics.achievements.return_x5}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
-
-                    {{#each lounge.mosaics.achievements.return_x10}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
-
-                    {{#each lounge.mosaics.achievements.return_x100}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
-
-                    {{#each lounge.mosaics.achievements.combo_x3}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
-
-                    {{#each lounge.mosaics.achievements.combo_x5}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
-
-                    {{#each lounge.mosaics.achievements.combo_x7}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
-
-                    {{#each lounge.mosaics.achievements.combo_x10}}
-                    <li style="display: inline-block;">
-                        <div class="{{label}} label-mosaic" title="<i class='{{icon}}'></i> {{t title}}" data-toggle="tooltip">
-                            <b>1&nbsp;<i class="{{icon}}"></i></b>
-                        </div>
-                    </li>
-                    {{/each}}
+                    {{#if lounge.cntMosaics}}
+                        {{#each lounge.mosaics}}
+                        <li style="display: inline-block;">
+                            <a href="#" role="button"
+                                class="{{label}} label-mosaic" 
+                                data-toggle="popover"
+                                data-placement="top"
+                                data-html="Testing <b>Popover</b>">
+                                <b>{{total}}x&nbsp;<i class="{{icon}}"></i></b>
+                            </a>
+                        </li>
+                        {{/each}}
+                    {{/if}}
                 </ul>
             </div>
         </div>

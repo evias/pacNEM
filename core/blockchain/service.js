@@ -29,33 +29,33 @@
     var pacNEM_NS_ = (process.env["APP_NAMESPACE"] || config.get("pacnem.namespace"));
     var pacNEM_mosaics = {
         "credits": {
-            "heart": { "icon": "glyphicon glyphicon-heart", "label": "label label-success", "slug": [pacNEM_NS_, "heart"].join(":"), "title": "mosaics.label_mosaic_heart" },
-            "hearts--": { "icon": "glyphicon glyphicon-heart-empty", "label": "label label-danger", "slug": [pacNEM_NS_, "hearts--"].join(":"), "title": "mosaics.label_mosaic_heart_redeem" },
-            "personal-token": { "icon": "glyphicon glyphicon-lock", "label": "label label-success", "slug": [pacNEM_NS_, "personal-token"].join(":"), "title": "mosaics.label_mosaic_personal_token" }
+            "heart": { "icon": "glyphicon glyphicon-heart", "label": "label label-success", "slug": [pacNEM_NS_, "heart"].join(":"), "title": "mosaics.label_mosaic_heart", "ns": pacNEM_NS_, "name": "heart" },
+            "hearts--": { "icon": "glyphicon glyphicon-heart-empty", "label": "label label-danger", "slug": [pacNEM_NS_, "hearts--"].join(":"), "title": "mosaics.label_mosaic_heart_redeem", "ns": pacNEM_NS_, "name": "hearts--" },
+            "personal-token": { "icon": "glyphicon glyphicon-lock", "label": "label label-success", "slug": [pacNEM_NS_, "personal-token"].join(":"), "title": "mosaics.label_mosaic_personal_token", "ns": pacNEM_NS_, "name": "personal-token" }
         },
-        "scores": { "cheese": { "icon": "glyphicon glyphicon-globe", "label": "label label-primary", "slug": [pacNEM_NS_, "cheese"].join(":"), "title": "mosaics.label_mosaic_cheese" } },
+        "scores": { "cheese": { "icon": "glyphicon glyphicon-globe", "label": "label label-primary", "slug": [pacNEM_NS_, "cheese"].join(":"), "title": "mosaics.label_mosaic_cheese", "ns": pacNEM_NS_, "name": "cheese" } },
         "rewards": {
             "purchases": {
-                "beta-player": { "icon": "glyphicon glyphicon-star-empty", "label": "label label-warning", "slug": [pacNEM_NS_, "beta-player"].join(":"), "title": "mosaics.label_mosaic_beta_player" },
-                "player": { "icon": "glyphicon glyphicon-user", "label": "label label-warning", "slug": [pacNEM_NS_, "player"].join(":"), "title": "mosaics.label_mosaic_player" }
+                "beta-player": { "icon": "glyphicon glyphicon-star-empty", "label": "label label-warning", "slug": [pacNEM_NS_, "beta-player"].join(":"), "title": "mosaics.label_mosaic_beta_player", "ns": pacNEM_NS_, "name": "beta-player" },
+                "player": { "icon": "glyphicon glyphicon-user", "label": "label label-warning", "slug": [pacNEM_NS_, "player"].join(":"), "title": "mosaics.label_mosaic_player", "ns": pacNEM_NS_, "name": "player" }
             },
-            "return_x2": { "n00b": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "n00b"].join(":"), "title": "mosaics.label_mosaic_n00b" } },
-            "return_x5": { "nember": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "nember"].join(":"), "title": "mosaics.label_mosaic_nember" } },
-            "return_x10": { "afficionado": { "icon": "glyphicon glyphicon-refresh", "label": "label label-info", "slug": [pacNEM_NS_, "afficionado"].join(":"), "title": "mosaics.label_mosaic_afficionado" } },
-            "return_x100": { "great-supporter": { "icon": "glyphicon glyphicon-refresh", "label": "label label-primary", "slug": [pacNEM_NS_, "great-supporter"].join(":"), "title": "mosaics.label_mosaic_great_supporter" } },
+            "return_x2": { "n00b": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "n00b"].join(":"), "title": "mosaics.label_mosaic_n00b", "ns": pacNEM_NS_, "name": "n00b" } },
+            "return_x5": { "nember": { "icon": "glyphicon glyphicon-refresh", "label": "label label-default", "slug": [pacNEM_NS_, "nember"].join(":"), "title": "mosaics.label_mosaic_nember", "ns": pacNEM_NS_, "name": "nember" } },
+            "return_x10": { "afficionado": { "icon": "glyphicon glyphicon-refresh", "label": "label label-info", "slug": [pacNEM_NS_, "afficionado"].join(":"), "title": "mosaics.label_mosaic_afficionado", "ns": pacNEM_NS_, "name": "afficionado" } },
+            "return_x100": { "great-supporter": { "icon": "glyphicon glyphicon-refresh", "label": "label label-primary", "slug": [pacNEM_NS_, "great-supporter"].join(":"), "title": "mosaics.label_mosaic_great_supporter", "ns": pacNEM_NS_, "name": "great-supporter" } },
             "high_score": {
-                "hall-of-famer": { "icon": "glyphicon glyphicon-education", "label": "label label-info", "slug": [pacNEM_NS_, "hall-of-famer"].join(":"), "title": "mosaics.label_mosaic_hall_of_famer" },
-                "all-time-best-player": { "icon": "glyphicon glyphicon-sunglasses", "label": "label label-success", "slug": [pacNEM_NS_, "all-time-best-player"].join(":"), "title": "mosaics.label_mosaic_all_time_best_player" }
+                "hall-of-famer": { "icon": "glyphicon glyphicon-education", "label": "label label-info", "slug": [pacNEM_NS_, "hall-of-famer"].join(":"), "title": "mosaics.label_mosaic_hall_of_famer", "ns": pacNEM_NS_, "name": "hall-of-famer" },
+                "all-time-best-player": { "icon": "glyphicon glyphicon-sunglasses", "label": "label label-success", "slug": [pacNEM_NS_, "all-time-best-player"].join(":"), "title": "mosaics.label_mosaic_all_time_best_player", "ns": pacNEM_NS_, "name": "all-time-best-player" }
             }
         },
         "achievements": {
-            "combo_x3": { "multikill": { "minCombo": 3, "icon": "glyphicon glyphicon-fire", "label": "label label-warning", "slug": [pacNEM_NS_, "multikill"].join(":"), "title": "mosaics.label_mosaic_multikill" } },
-            "combo_x5": { "rampage": { "minCombo": 5, "icon": "glyphicon glyphicon-fire", "label": "label label-info", "slug": [pacNEM_NS_, "rampage"].join(":"), "title": "mosaics.label_mosaic_rampage" } },
-            "combo_x7": { "ghostbuster": { "minCombo": 7, "icon": "glyphicon glyphicon-fire", "label": "label label-primary", "slug": [pacNEM_NS_, "ghostbuster"].join(":"), "title": "mosaics.label_mosaic_ghostbuster" } },
-            "combo_x10": { "godlike-101010": { "minCombo": 10, "icon": "glyphicon glyphicon-plane", "label": "label label-success", "slug": [pacNEM_NS_, "godlike-101010"].join(":"), "title": "mosaics.label_mosaic_godlike_101010" } }
+            "combo_x3": { "multikill": { "minCombo": 3, "icon": "glyphicon glyphicon-fire", "label": "label label-warning", "slug": [pacNEM_NS_, "multikill"].join(":"), "title": "mosaics.label_mosaic_multikill", "ns": pacNEM_NS_, "name": "multikill" } },
+            "combo_x5": { "rampage": { "minCombo": 5, "icon": "glyphicon glyphicon-fire", "label": "label label-info", "slug": [pacNEM_NS_, "rampage"].join(":"), "title": "mosaics.label_mosaic_rampage", "ns": pacNEM_NS_, "name": "rampage" } },
+            "combo_x7": { "ghostbuster": { "minCombo": 7, "icon": "glyphicon glyphicon-fire", "label": "label label-primary", "slug": [pacNEM_NS_, "ghostbuster"].join(":"), "title": "mosaics.label_mosaic_ghostbuster", "ns": pacNEM_NS_, "name": "ghostbuster" } },
+            "combo_x10": { "godlike-101010": { "minCombo": 10, "icon": "glyphicon glyphicon-plane", "label": "label label-success", "slug": [pacNEM_NS_, "godlike-101010"].join(":"), "title": "mosaics.label_mosaic_godlike_101010", "ns": pacNEM_NS_, "name": "godlike-101010" } }
         },
         "sponsors": {
-            "daily-ad-view": { "icon": "glyphicon glyphicon-eye-open", "label": "label label-info", "slug": [pacNEM_NS_, "daily-ad-view"].join(":"), "title": "mosaics.label_mosaic_daily_ad_view" }
+            "daily-ad-view": { "icon": "glyphicon glyphicon-eye-open", "label": "label label-info", "slug": [pacNEM_NS_, "daily-ad-view"].join(":"), "title": "mosaics.label_mosaic_daily_ad_view", "ns": pacNEM_NS_, "name": "daily-ad-view" }
         }
     };
 
@@ -429,6 +429,84 @@
 
             // not a mosaic transer, `content.amount` is our XEM amount.
             return realContent.amount;
+        };
+
+        /**
+         * Build a mosaic details object to be displayed in the lounge.
+         * 
+         * The returned object will contain following fields:
+         * - label : the bootstrap label classes
+         * - icon  : glyphicon classes
+         * - title : translation key
+         * - slug  : the mosaic fully qualified name (including namespace)
+         * - ns    : the mosaic namespace
+         * - name  : the mosaic name (without namespace)
+         * 
+         * @param   {String}    slug    Example: "nem:xem"
+         * @return  {Object}
+         */
+        this.getMosaicDetails = function(slug) {
+            var self = this;
+            var gameMosaics = self.getGameMosaicsConfiguration();
+
+            var namespace = slug.replace(/:[^:]+$/, "");
+            var mosaicName = slug.replace(/^[^:]+:/, "");
+
+            if (namespace != self.getNamespace()) {
+                // ALL external mosaics should be displayed similarly
+                var config = gameMosaics.hasOwnProperty("external") ? gameMosaics.external : null;
+
+                if (config && config.hasOwnProperty(slug)) {
+                    // known external Third Party Token
+                    config = config[mosaicName];
+                } else {
+                    // unknown extern Third Party Token
+                    config = {
+                        label: "label label-default",
+                        icon: "glyphicon glyphicon-question-sign",
+                        title: "mosaics.label_mosaic_external",
+                        slug: slug,
+                        ns: namespace,
+                        name: mosaicName
+                    };
+                }
+
+                return config;
+            }
+
+            // maybe found through simple mosaic iteration (scores, credits, sponsors)
+            for (var mod in gameMosaics) {
+                var currentModule = gameMosaics[mod];
+
+                if (currentModule.hasOwnProperty(mosaicName))
+                    return currentModule[mosaicName];
+            }
+
+            // maybe found in rewards
+            for (var reward in gameMosaics["rewards"]) {
+                var currentReward = gameMosaics["rewards"][reward];
+
+                if (currentReward.hasOwnProperty(mosaicName))
+                    return currentReward[mosaicName];
+            }
+
+            // maybe found in 
+            for (var achievement in gameMosaics["achievements"]) {
+                var currentAch = gameMosaics["achievements"][achievement];
+
+                if (currentAch.hasOwnProperty(mosaicName))
+                    return currentAch[mosaicName];
+            }
+
+            // unidentified PacNEM mosaic
+            return {
+                label: "label label-warning",
+                icon: "glyphicon glyphicon-question-sign",
+                title: "mosaics.label_mosaic_external",
+                slug: slug,
+                ns: namespace,
+                name: mosaicName
+            };
         };
 
         /**

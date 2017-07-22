@@ -205,7 +205,7 @@ footer {
     font-size: 110%;
     display: inline-block;
     margin: 2px;
-    width: 60px;
+    min-width: 60px;
 }
 
 .label-bigger {
