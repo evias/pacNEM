@@ -298,6 +298,9 @@ app.get('/js/*', function(req, res) {
 app.get('/favicon.ico', function(req, res) {
     res.sendfile(__dirname + '/www/favicon.ico');
 });
+app.get('/robots.txt', function(req, res) {
+    res.sendfile(__dirname + '/www/robots.txt');
+});
 
 /**
  * - Asynchronous `player-authenticate` login screen
