@@ -509,6 +509,11 @@ app.post("/facebook/game", function(req, res) {
 // change language fake middleware
 app.get("/:lang", function(req, res) {
     var currentLanguage = req.params.lang;
+
+    var validLang = { "en": true, "de": true, "fr": true };
+    if (!validLang.hasOwnProperty(currentLanguage))
+        currentLanguage = "en";
+
     var currentNetwork = PacNEMBlockchain.getNetwork();
 
     req.session.locale = currentLanguage;
