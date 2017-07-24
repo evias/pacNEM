@@ -362,9 +362,10 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             $(".pacnem-summary-close-trigger").off("click");
             $(".pacnem-summary-close-trigger").on("click", function() {
-                $("#pacnem-game-wrapper").hide();
-                self.displayLounge();
-                $(".pacnem-summary-modal").modal("hide");
+                //$("#pacnem-game-wrapper").hide();
+                //self.displayLounge();
+                //$(".pacnem-summary-modal").modal("hide");
+                window.location.reload();
                 return false;
             });
         });
