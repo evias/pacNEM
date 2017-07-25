@@ -170,6 +170,7 @@
             if (!one_is_alive) {
                 return;
             }
+
             last_timeout_ = setTimeout(this.iterate, 1000 / FPS);
         };
 

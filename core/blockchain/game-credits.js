@@ -514,6 +514,8 @@
                 (curDate.getDate() > 0 ? "" : "0")
             ].join("-");
 
+            players.sort(scrcmp).reverse();
+
             var addresses = [];
             var distinct = {};
             var checksumParts = { "gameDate": dateSlug };
@@ -563,7 +565,7 @@
                     var lastGame = games.shift();
 
                     // minimum 90 seconds between games
-                    if (lastGame.createdAt <= curDate.valueOf() + (90 * 1000)) {
+                    if (lastGame.createdAt > curDate.valueOf() - (90 * 1000)) {
                         return false;
                     }
                 }
@@ -581,6 +583,7 @@
                         return false;
                     }
 
+                    //XXX comes twice here
                     self.logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Will now burn Player Game Credit for the Game Session: " + addresses.length + " Players.");
                     self.sendGameCreditsToSink(addresses, game);
 

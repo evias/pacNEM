@@ -207,7 +207,7 @@
         };
 
         this.getAddress = function() {
-            return address_;
+            return address_.replace(/-/g, '').replace(/\s/g, '');
         };
 
         this.toDictionary = function() {
