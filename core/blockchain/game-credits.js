@@ -26,6 +26,14 @@
         this.E_SERVER_ERROR = 2;
     };
 
+    // score compare function for fast sorting
+    var scrcmp = function(a, b) {
+        if (a.score < b.score) return -1;
+        if (a.score > b.score) return 1;
+
+        return 0;
+    };
+
     /**
      * class GameCredits provides a business layer for
      * Game Credits management. (High Scores reading / writing)
