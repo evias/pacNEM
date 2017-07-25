@@ -19,10 +19,19 @@
 (function() {
 
     var config = require("config"),
-        path = require('path');
+        path = require('path'),
+        CryptoJS = require("crypto-js");
 
     var __Errors = function() {
         this.E_SERVER_ERROR = 2;
+    };
+
+    // score compare function for fast sorting
+    var scrcmp = function(a, b) {
+        if (a.score < b.score) return -1;
+        if (a.score > b.score) return 1;
+
+        return 0;
     };
 
     /**
@@ -154,10 +163,9 @@
                     if (lastTrxRead === false || transactions.length < 25) {
                         // done reading BURN history.
                         // now we can read the BUY History
-                        self.readBuyHistory(gamer, null, function(creditsData) {
+                        var creditBurnData = creditBurnHistory_[gamer.getAddress()];
+                        self.readBuyHistory(creditBurnData, gamer, null, function(creditsData) {
                             //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "creditsData: " + JSON.stringify(creditsData) + " & creditBurnData: " + JSON.stringify(creditBurnData) + " for " + gamer.getAddress());
-                            var creditBurnData = creditBurnHistory_[gamer.getAddress()];
-                            creditsData.countHearts = creditsData.countHearts - creditBurnData.countHearts;
                             gamer.updateCredits(creditsData);
 
                             if (typeof callback == "function")
@@ -184,7 +192,7 @@
          * @param  {NEMGamer} gamer
          * @param  {nem.objects.mosaicAttachment} mosaic
          */
-        this.readBuyHistory = function(gamer, lastTrxRead, callback) {
+        this.readBuyHistory = function(burnData, gamer, lastTrxRead, callback) {
             var self = this;
             var heartsMosaicSlug = self.blockchain_.getGameMosaicsConfiguration()["credits"]["heart"].slug;
 
@@ -217,12 +225,20 @@
                         // will look for transactions BEFORE this hash or ID (25 before ID..).
                         // We pass transactions IDs because all NEM nodes support those, hashes are
                         // only supported by a subset of the NEM nodes.
-                        self.readBuyHistory(gamer, lastTrxRead, callback);
+                        self.readBuyHistory(burnData, gamer, lastTrxRead, callback);
                     }
 
                     if (callback && (lastTrxRead === false || transactions.length < 25)) {
                         // done.
-                        callback(gameCreditsHistory_[gamer.getAddress()]);
+                        var gamerHistory = gameCreditsHistory_[gamer.getAddress()];
+                        if (gamerHistory.countHearts > 0 && burnData.countHearts > 0)
+                            gamerHistory.countHearts = gamerHistory.countHearts - burnData.countHearts;
+
+                        if (gamerHistory.countHearts < 0 || isNaN(gamerHistory.countHearts))
+                            gamerHistory.countHearts = 0;
+
+                        //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + gamerHistory.countHearts + " remaining " + heartsMosaicSlug + " for " + gamer.getAddress());
+                        callback(gamerHistory);
                     }
 
                 }, function(err) {
@@ -247,7 +263,7 @@
             var lastTrxRead = null;
             var lastTrxHash = null;
             var lastTrxMsg = null;
-            var totalHeartsOutgo = 0;
+            var chunkBurnedCount = 0;
             for (var i = 0; i < transactions.length; i++) {
                 var content = transactions[i].transaction;
                 var meta = transactions[i].meta;
@@ -283,16 +299,15 @@
                 if (-1 !== lastTrxMsg.search(gamer.getAddress())) {
                     // gamer's address found in transaction message, means one 
                     // credit burned by the gamer.
-                    totalHeartsOutgo++;
+                    chunkBurnedCount++;
                 }
             }
 
-            //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + totalHeartsOutgo + " " + redeemMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
+            //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + chunkBurnedCount + " " + redeemMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
 
-            gamerBurnHistory.countHearts = gamerBurnHistory.countHearts + totalHeartsOutgo;
+            gamerBurnHistory.countHearts = gamerBurnHistory.countHearts + chunkBurnedCount;
 
             //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Credit BURN Data for " + gamer.getAddress() + ": " + JSON.stringify(gamerBurnHistory));
-
             creditBurnHistory_[gamer.getAddress()] = gamerBurnHistory;
             return lastTrxRead;
         };
@@ -362,7 +377,6 @@
             gamerHistory.exchangedHearts = gamerHistory.exchangedHearts + totalHeartsOutgo;
 
             //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Credit Data for " + gamer.getAddress() + ": " + JSON.stringify(gamerHistory));
-
             gameCreditsHistory_[gamer.getAddress()] = gamerHistory;
             return lastTrxRead;
         };
@@ -494,46 +508,109 @@
          * @param   {Object}    gameState   Object received through Socket.io
          * @return void
          */
-        this.processGameCreditsBurning = function(gamers) {
+        this.processGameCreditsBurning = function(gamers, pacmans) {
             var self = this;
 
-            var players = gamers;
+            var players = pacmans;
             if (!players || !players.length)
                 return false;
 
-            // read addresses in ended game state data
+            var curDate = new Date();
+            var dateSlug = [
+                curDate.getFullYear(),
+                (curDate.getMonth() + 1 > 0 ? "" : "0"),
+                (curDate.getDate() > 0 ? "" : "0")
+            ].join("-");
+
+            players.sort(scrcmp).reverse();
+
             var addresses = [];
             var distinct = {};
+            var checksumParts = { "gameDate": dateSlug };
             for (var i = 0; i < players.length; i++) {
-                if (!players[i].getAddress() || !players[i].getAddress().length)
+                var player = players[i];
+
+                if (!player.address || !player.address.length)
                     continue;
 
                 // validate NEM address with NEM-sdk
-                var address = players[i].getAddress();
+                var address = player.address;
+                var username = player.username;
                 var chainId = self.blockchain_.getNetwork().config.id;
                 var isValid = self.blockchain_.getSDK().model.address.isFromNetwork(address, chainId);
                 if (!isValid)
                 //XXX add error log, someone tried to send invalid data
                     continue;
 
-                if (distinct.hasOwnProperty(address))
+                var unique = (username + "-" + address).replace(/\./g, '').replace(/\s/g, '');
+                if (distinct.hasOwnProperty(unique))
                     continue;
 
-                distinct[address] = true;
+                distinct[unique] = true;
                 addresses.push(address);
+
+                checksumParts[unique] = {
+                    address: player.address,
+                    username: player.username,
+                    score: player.score
+                };
             }
 
-            //DEBUG self.logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Will now burn Player Game Credit for the Game Session: " + addresses.length + " Players.");
+            var payload = JSON.stringify(checksumParts);
+            var uaGame = CryptoJS.lib.WordArray.create(payload);
+            var checksum = CryptoJS.MD5(uaGame).toString();
 
-            self.sendGameCreditsToSink(addresses);
+            // we use the GameSession DB model to make sure the game credits SINK transaction
+            // is created only once and not or each player.
+            self.db_.GameSession.find({ checksum: checksum }, null, { sort: { createdAt: -1 } }, function(err, games) {
+                if (err) {
+                    self.logger_.error("[NEM] [ERROR]", "[DB READ]", "Could not read GameSession model: " + err);
+                    return false;
+                }
 
-            // for each address we also need to update the 
-            // NEMGameCredit entry for given NEMGamer.
-            for (var j = 0; j < players.length; j++) {
-                var gamer = players[j];
+                if (games && games.length) {
+                    // make sure we didnt already send those credits to the sink.
+                    var lastGame = games.shift();
 
-                gamer.updateCredits({ countPlayedHearts: 1 });
-            }
+                    // minimum 90 seconds between games
+                    if (lastGame.createdAt > curDate.valueOf() - (20 * 1000)) {
+                        return false;
+                    }
+                }
+
+                // save this game.
+                var game = new self.db_.GameSession({
+                    "addresses": addresses,
+                    "checksum": checksum,
+                    "countHearts": addresses.length,
+                    "createdAt": new Date().valueOf()
+                });
+                game.save(function(err) {
+                    if (err) {
+                        self.logger_.error("[NEM] [ERROR]", "[DB READ]", "Could not save GameSession model: " + err);
+                        return false;
+                    }
+
+                    //XXX comes twice here
+                    self.logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Will now burn Player Game Credit for the Game Session: " + addresses.length + " Players.");
+                    self.sendGameCreditsToSink(addresses, game);
+
+                    // for each address we also need to update the 
+                    // NEMGameCredit entry for given NEMGamer.
+                    for (var j = 0; j < gamers.length; j++) {
+                        var gamer = gamers[j];
+
+                        // there can be more than 1 pacman for 1 address
+                        // because in sponsored mode we choose randomly.
+                        var cntPac = 0;
+                        for (var p = 0; p < pacmans.length; p++)
+                            if (pacmans[p].address == gamer.xem)
+                                cntPac++;
+
+                        gamer.updateCredits({ countPlayedHearts: cntPac });
+                    }
+                });
+            });
         };
 
         /**
@@ -548,9 +625,10 @@
          * a multiplayer game is ended).
          * 
          * @param   {Array}     addresses   List of XEM addresses (players)
+         * @param   {GameSession}   game    PacNEMDB.GameSession object
          * @return  self
          */
-        this.sendGameCreditsToSink = function(addresses) {
+        this.sendGameCreditsToSink = function(addresses, game) {
             var self = this;
 
             // addresses will be added to a message which will be encrypted
@@ -620,6 +698,10 @@
                             }
 
                             var trxHash = res.transactionHash.data;
+
+                            game.burnTransactionHash = trxHash;
+                            game.save();
+
                             //DEBUG self.logger_.info("[NEM] [CREDITS SINK]", "[CREATED]", "Created a Mosaic transfer transaction for " + countRedeem + " " + redeemSlug + " sent to " + sinkXEM);
                         }, function(err) {
                             self.logger_.error("[NEM] [ERROR]", "[TRX-SEND]", "Could not send Transaction for " + self.blockchain_.getVendorWallet() + " to " + sinkXEM + " with error: " + err);

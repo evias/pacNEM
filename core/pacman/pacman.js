@@ -190,6 +190,10 @@
             return increase;
         };
 
+        this.getScore = function() {
+            return score_;
+        };
+
         this.setUsername = function(username) {
             username_ = username;
         };
@@ -203,7 +207,7 @@
         };
 
         this.getAddress = function() {
-            return address_;
+            return address_.replace(/-/g, '').replace(/\s/g, '');
         };
 
         this.toDictionary = function() {
