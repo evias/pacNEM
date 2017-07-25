@@ -565,7 +565,7 @@
                     var lastGame = games.shift();
 
                     // minimum 90 seconds between games
-                    if (lastGame.createdAt > curDate.valueOf() - (90 * 1000)) {
+                    if (lastGame.createdAt > curDate.valueOf() - (20 * 1000)) {
                         return false;
                     }
                 }
