@@ -51,6 +51,15 @@
         });
 
         // Schema definition
+
+        this.GameSession_ = new mongoose.Schema({
+            addresses: [String],
+            checksum: String,
+            burnTransactionHash: String,
+            countHearts: { type: Number, min: 0 },
+            createdAt: { type: Number, min: 0 }
+        });
+
         this.NEMGameCredit_ = new mongoose.Schema({
             xem: String,
             readTransactionIds: [String],
@@ -292,6 +301,7 @@
         });
 
         // bind our Models classes
+        this.GameSession = mongoose.model("GameSession", this.GameSession_);
         this.NEMGameCredit = mongoose.model("NEMGameCredit", this.NEMGameCredit_);
         this.NEMGamer = mongoose.model("NEMGamer", this.NEMGamer_);
         this.NEMSponsor = mongoose.model("NEMSponsor", this.pacNEMSponsor_);
@@ -308,6 +318,7 @@
     };
 
     module.exports.pacnem = pacnem;
+    module.exports.GameSession = pacnem.GameSession;
     module.exports.NEMGameCredit = pacnem.NEMGameCredit;
     module.exports.NEMGamer = pacnem.NEMGamer;
     module.exports.NEMSponsor = pacnem.NEMSponsor;

@@ -177,7 +177,7 @@
                                 return false;
                             }
 
-                            self.gameCredits_.processGameCreditsBurning(gamers);
+                            self.gameCredits_.processGameCreditsBurning(gamers, details.pacmans);
                             self.hallOfFame_.processGameScores(details.pacmans);
                         });
                     });

@@ -190,6 +190,10 @@
             return increase;
         };
 
+        this.getScore = function() {
+            return score_;
+        };
+
         this.setUsername = function(username) {
             username_ = username;
         };
