@@ -154,10 +154,9 @@
                     if (lastTrxRead === false || transactions.length < 25) {
                         // done reading BURN history.
                         // now we can read the BUY History
-                        self.readBuyHistory(gamer, null, function(creditsData) {
+                        var creditBurnData = creditBurnHistory_[gamer.getAddress()];
+                        self.readBuyHistory(creditBurnData, gamer, null, function(creditsData) {
                             //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "creditsData: " + JSON.stringify(creditsData) + " & creditBurnData: " + JSON.stringify(creditBurnData) + " for " + gamer.getAddress());
-                            var creditBurnData = creditBurnHistory_[gamer.getAddress()];
-                            creditsData.countHearts = creditsData.countHearts - creditBurnData.countHearts;
                             gamer.updateCredits(creditsData);
 
                             if (typeof callback == "function")
@@ -184,7 +183,7 @@
          * @param  {NEMGamer} gamer
          * @param  {nem.objects.mosaicAttachment} mosaic
          */
-        this.readBuyHistory = function(gamer, lastTrxRead, callback) {
+        this.readBuyHistory = function(burnData, gamer, lastTrxRead, callback) {
             var self = this;
             var heartsMosaicSlug = self.blockchain_.getGameMosaicsConfiguration()["credits"]["heart"].slug;
 
@@ -217,12 +216,20 @@
                         // will look for transactions BEFORE this hash or ID (25 before ID..).
                         // We pass transactions IDs because all NEM nodes support those, hashes are
                         // only supported by a subset of the NEM nodes.
-                        self.readBuyHistory(gamer, lastTrxRead, callback);
+                        self.readBuyHistory(burnData, gamer, lastTrxRead, callback);
                     }
 
                     if (callback && (lastTrxRead === false || transactions.length < 25)) {
                         // done.
-                        callback(gameCreditsHistory_[gamer.getAddress()]);
+                        var gamerHistory = gameCreditsHistory_[gamer.getAddress()];
+                        if (gamerHistory.countHearts > 0 && burnData.countHearts > 0)
+                            gamerHistory.countHearts = gamerHistory.countHearts - burnData.countHearts;
+
+                        if (gamerHistory.countHearts < 0 || isNaN(gamerHistory.countHearts))
+                            gamerHistory.countHearts = 0;
+
+                        self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + gamerHistory.countHearts + " remaining " + heartsMosaicSlug + " for " + gamer.getAddress());
+                        callback(gamerHistory);
                     }
 
                 }, function(err) {
@@ -247,7 +254,7 @@
             var lastTrxRead = null;
             var lastTrxHash = null;
             var lastTrxMsg = null;
-            var totalHeartsOutgo = 0;
+            var chunkBurnedCount = 0;
             for (var i = 0; i < transactions.length; i++) {
                 var content = transactions[i].transaction;
                 var meta = transactions[i].meta;
@@ -283,16 +290,15 @@
                 if (-1 !== lastTrxMsg.search(gamer.getAddress())) {
                     // gamer's address found in transaction message, means one 
                     // credit burned by the gamer.
-                    totalHeartsOutgo++;
+                    chunkBurnedCount++;
                 }
             }
 
-            //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + totalHeartsOutgo + " " + redeemMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
+            self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + chunkBurnedCount + " " + redeemMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
 
-            gamerBurnHistory.countHearts = gamerBurnHistory.countHearts + totalHeartsOutgo;
+            gamerBurnHistory.countHearts = gamerBurnHistory.countHearts + chunkBurnedCount;
 
             //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Credit BURN Data for " + gamer.getAddress() + ": " + JSON.stringify(gamerBurnHistory));
-
             creditBurnHistory_[gamer.getAddress()] = gamerBurnHistory;
             return lastTrxRead;
         };
@@ -356,13 +362,12 @@
             }
 
             var creditsInChunk = totalHeartsIncome - totalHeartsOutgo;
-            //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + creditsInChunk + " " + heartsMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
+            self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Found " + creditsInChunk + " " + heartsMosaicSlug + " in " + transactions.length + " transactions for " + gamer.getAddress());
 
             gamerHistory.countHearts = gamerHistory.countHearts + creditsInChunk;
             gamerHistory.exchangedHearts = gamerHistory.exchangedHearts + totalHeartsOutgo;
 
             //self.logger_.info("[DEBUG]", "[PACNEM CREDITS]", "Credit Data for " + gamer.getAddress() + ": " + JSON.stringify(gamerHistory));
-
             gameCreditsHistory_[gamer.getAddress()] = gamerHistory;
             return lastTrxRead;
         };
