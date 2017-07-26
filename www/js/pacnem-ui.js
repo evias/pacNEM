@@ -1989,6 +1989,27 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @return GameUI
      */
     this.registerKeyListeners = function() {
+
+        var canvas = document.getElementById("pacnem-canvas");
+        var manager = new Hammer(canvas);
+        manager.get("swipe").set({ direction: Hammer.DIRECTION_ALL });
+
+        manager.on("swipeleft", function(e) {
+            console.log("Swiped Left");
+        });
+
+        manager.on("swiperight", function(e) {
+            console.log("Swiped Right");
+        });
+
+        manager.on("swipeup", function(e) {
+            console.log("Swiped Up");
+        });
+
+        manager.on("swipedown", function(e) {
+            console.log("Swiped Down");
+        });
+
         document.onkeydown = function(e) {
             if ([37, 38, 39, 40].indexOf(e.keyCode) > -1)
                 socket_.emit('keydown', e.keyCode);

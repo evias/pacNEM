@@ -46,7 +46,7 @@ var TransitionHelper = function(callback) {
     var frame_ = 0;
 
     var run_ = function() {
-        var canvas = document.getElementById('myCanvas');
+        var canvas = document.getElementById('pacnem-canvas');
         if (!canvas.getContext) {
             return;
         }
@@ -142,7 +142,7 @@ var GameController = function(config, socket, nem, chainId) {
         }
 
         // Setup the canvas
-        var canvas = document.getElementById('myCanvas');
+        var canvas = document.getElementById('pacnem-canvas');
         if (!canvas.getContext) {
             return;
         }
@@ -205,7 +205,7 @@ var GameController = function(config, socket, nem, chainId) {
         ongoing_refresh_ = true;
         last_elapsed_ = data['elapsed'];
 
-        var canvas = document.getElementById('myCanvas');
+        var canvas = document.getElementById('pacnem-canvas');
         if (!canvas.getContext) {
             return;
         }
@@ -294,12 +294,17 @@ var GameController = function(config, socket, nem, chainId) {
     };
 
     this.sponsorizeName = function(sponsor) {
+
+        if (parseInt($("#username").attr("data-is-sponsored")))
+            return false;
+
         // little nem in here.. just for the fun of it.
         var rBytes = nem_.crypto.nacl.randomBytes(2);
         var rHex = nem_.utils.convert.ua2hex(rBytes);
         var uname = $("#username").val();
         var sName = sponsor.slug + rHex + "-" + uname;
 
+        $("#username").attr("data-is-sponsored", 1);
         $("#username").val(sName);
     };
 
@@ -414,7 +419,7 @@ var refreshRoomBoard = function(grid, data, frame) {
         return false;
     }
 
-    var canvas = document.getElementById('myCanvas');
+    var canvas = document.getElementById('pacnem-canvas');
     if (!canvas.getContext) {
         return;
     }

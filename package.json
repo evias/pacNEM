@@ -37,6 +37,7 @@
         "istanbul": "~0.3.13",
         "mocha": "~2.2.4",
         "should": "~6.0.1",
+        "hammerjs": "latest",
 
         "nem-sdk": "git://github.com/evias/NEM-sdk.git#dev-fee_structure"
     },
