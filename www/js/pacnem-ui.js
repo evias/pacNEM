@@ -1990,34 +1990,40 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.registerKeyListeners = function() {
 
+        var SPACE_ = 32;
+        var LEFT_ = 37;
+        var UP_ = 38;
+        var RIGHT_ = 39;
+        var DOWN_ = 40;
+
         var canvas = document.getElementById("pacnem-canvas");
         var manager = new Hammer(canvas);
         manager.get("swipe").set({ direction: Hammer.DIRECTION_ALL });
 
         manager.on("swipeleft", function(e) {
-            console.log("Swiped Left");
-        });
-
-        manager.on("swiperight", function(e) {
-            console.log("Swiped Right");
+            socket_.emit('keydown', LEFT_);
         });
 
         manager.on("swipeup", function(e) {
-            console.log("Swiped Up");
+            socket_.emit('keydown', UP_);
+        });
+
+        manager.on("swiperight", function(e) {
+            socket_.emit('keydown', RIGHT_);
         });
 
         manager.on("swipedown", function(e) {
-            console.log("Swiped Down");
+            socket_.emit('keydown', DOWN_);
         });
 
         document.onkeydown = function(e) {
-            if ([37, 38, 39, 40].indexOf(e.keyCode) > -1)
+            if ([LEFT_, UP_, RIGHT_, DOWN_].indexOf(e.keyCode) > -1)
                 socket_.emit('keydown', e.keyCode);
         };
 
         window.addEventListener("keydown", function(e) {
             // space and arrow keys
-            if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1)
+            if ([SPACE_, LEFT_, UP_, RIGHT_, DOWN_].indexOf(e.keyCode) > -1)
                 e.preventDefault();
         }, false);
 
