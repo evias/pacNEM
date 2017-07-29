@@ -52,11 +52,8 @@
         // @return dictionary representing the room
         this.toDictionary = function() {
             return {
-                'status': status_ == Room.STATUS_JOIN ?
-                    'join' :
-                    (status_ == Room.STATUS_WAIT ?
-                        'wait' :
-                        'play'),
+                'status': status_ == Room.STATUS_JOIN ? 'join' :
+                    (status_ == Room.STATUS_WAIT ? 'wait' : 'play'),
                 'wait': status_ == Room.STATUS_WAIT ? (Room.WAIT_TIME_MS - has_waited_) / 1000 : 0,
                 'users': members_,
                 'addresses': addresses_,

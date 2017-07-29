@@ -19,183 +19,182 @@
 
 (function() {
 
-var assert = require('assert');
-var Room = require('./room.js').Room;
+    var assert = require('assert');
+    var Room = require('./room.js').Room;
 
-var RoomManager = function(io) 
-{
-	assert(io);
+    var RoomManager = function(io) {
+        assert(io);
 
-	var io = io;
-	var self = this;
-	var start_time_ = Date.now();
+        var io = io;
+        var self = this;
+        var start_time_ = Date.now();
 
-	var last_room_id_ = 0;
+        var last_room_id_ = 0;
 
-	var map_member_username_ = {};
-	var map_member_address_  = {};
-	var map_member_roomid_   = {};
-	var map_id_rooms_ = {};
+        var map_member_username_ = {};
+        var map_member_address_ = {};
+        var map_member_roomid_ = {};
+        var map_id_rooms_ = {};
 
-	// Notify RoomManager members of changes in Room
-	// @param sid is optional
-	this.notifyChanges = function(sid) {
-		var rooms = new Array();
-		for (var room_id in map_id_rooms_) {
-			var dict = map_id_rooms_[room_id].toDictionary();
-			dict['id'] = room_id;
-			rooms.push(dict);
-		}
-		var sid_list = sid === undefined ? Object.keys(map_member_roomid_) : [sid];
-		for (var i = 0 ; i < sid_list.length ; i++) {
-			io.sockets.to(sid_list[i]).emit('rooms_update', JSON.stringify({
-				'sid': sid_list[i],
-				'users': map_member_username_,
-				'addresses': map_member_address_,
-				'rooms': rooms,
-				'time': Date.now() - start_time_,
-			}));
-		}
-	};
+        // Notify RoomManager members of changes in Room
+        // @param sid is optional
+        this.notifyChanges = function(sid) {
+            var rooms = new Array();
+            for (var room_id in map_id_rooms_) {
+                var dict = map_id_rooms_[room_id].toDictionary();
+                dict['id'] = room_id;
+                rooms.push(dict);
+            }
 
-	// Register a new user to the RoomManager
-	this.register = function(sid) {
-		assert(! map_member_roomid_.hasOwnProperty(sid));
-		assert(! map_member_username_.hasOwnProperty(sid));
-		assert(! map_member_address_.hasOwnProperty(sid));
+            var sid_list = sid === undefined ? Object.keys(map_member_roomid_) : [sid];
+            for (var i = 0; i < sid_list.length; i++) {
+                io.sockets.to(sid_list[i]).emit('rooms_update', JSON.stringify({
+                    'sid': sid_list[i],
+                    'users': map_member_username_,
+                    'addresses': map_member_address_,
+                    'rooms': rooms,
+                    'time': Date.now() - start_time_,
+                }));
+            }
+        };
 
-		map_member_roomid_[sid] = undefined; // no room has been defined so far
-		map_member_username_[sid] = undefined;
-		map_member_address_[sid] = undefined;
-		self.notifyChanges(sid);
-	};
+        // Register a new user to the RoomManager
+        this.register = function(sid) {
+            assert(!map_member_roomid_.hasOwnProperty(sid));
+            assert(!map_member_username_.hasOwnProperty(sid));
+            assert(!map_member_address_.hasOwnProperty(sid));
 
-	// Change the username for sid
-	this.changeUsername = function(sid, details) {
-		assert(map_member_roomid_.hasOwnProperty(sid));
-		assert(map_member_username_.hasOwnProperty(sid));
-		assert(map_member_address_.hasOwnProperty(sid));
-		assert(details.hasOwnProperty("username"));
-		assert(details.hasOwnProperty("address"));
+            map_member_roomid_[sid] = undefined; // no room has been defined so far
+            map_member_username_[sid] = undefined;
+            map_member_address_[sid] = undefined;
+            self.notifyChanges(sid);
+        };
 
-		map_member_username_[sid] = details.username.substr(0, 20);
-		map_member_address_[sid]  = details.address;
-		if (map_member_roomid_[sid] !== undefined) {
-			self.notifyChanges();
-		}
-	};
+        // Change the username for sid
+        this.changeUsername = function(sid, details) {
+            assert(map_member_roomid_.hasOwnProperty(sid));
+            assert(map_member_username_.hasOwnProperty(sid));
+            assert(map_member_address_.hasOwnProperty(sid));
+            assert(details.hasOwnProperty("username"));
+            assert(details.hasOwnProperty("address"));
 
-	// @return Room instance associated to the user (if it exists)
-	this.getRoom = function(sid) {
-		assert(map_member_roomid_.hasOwnProperty(sid));
-		var room_id = map_member_roomid_[sid];
-		if (room_id === undefined) {
-			return undefined;
-		}
-		assert(map_id_rooms_.hasOwnProperty(room_id));
+            map_member_username_[sid] = details.username.substr(0, 20);
+            map_member_address_[sid] = details.address;
+            if (map_member_roomid_[sid] !== undefined) {
+                self.notifyChanges();
+            }
+        };
 
-		return map_id_rooms_[room_id];
-	};
+        // @return Room instance associated to the user (if it exists)
+        this.getRoom = function(sid) {
+            assert(map_member_roomid_.hasOwnProperty(sid));
+            var room_id = map_member_roomid_[sid];
+            if (room_id === undefined) {
+                return undefined;
+            }
+            assert(map_id_rooms_.hasOwnProperty(room_id));
 
-	// Join a room
-	this.joinRoom = function(sid, room_id, details) {
-		assert(map_member_roomid_.hasOwnProperty(sid));
-		assert.strictEqual(map_member_roomid_[sid], undefined);
-		assert(map_id_rooms_.hasOwnProperty(room_id));
+            return map_id_rooms_[room_id];
+        };
 
-		if (map_id_rooms_[room_id].join(sid, details)) {
-			map_member_roomid_[sid] = room_id;
-			self.notifyChanges();
-		}
-	};
+        // Join a room
+        this.joinRoom = function(sid, room_id, details) {
+            assert(map_member_roomid_.hasOwnProperty(sid));
+            assert.strictEqual(map_member_roomid_[sid], undefined);
+            assert(map_id_rooms_.hasOwnProperty(room_id));
 
-	// Create a new room
-	this.createRoom = function(sid, details) {
-		assert(map_member_roomid_.hasOwnProperty(sid));
+            if (map_id_rooms_[room_id].join(sid, details)) {
+                map_member_roomid_[sid] = room_id;
+                self.notifyChanges();
+            }
+        };
 
-		var members = {};
-		members[sid] = details;
+        // Create a new room
+        this.createRoom = function(sid, details) {
+            assert(map_member_roomid_.hasOwnProperty(sid));
 
-		var room_id = last_room_id_++;
-		var room = new Room(io, self, members);
-		var hasJoined = room.join(sid, details);
-		assert(hasJoined);
-	   	map_member_roomid_[sid] = room_id;
-		map_id_rooms_[room_id] = room;
-		self.notifyChanges();
-	};
+            var members = {};
+            members[sid] = details;
 
-	// Leave room
-	this.leaveRoom = function(sid) {
-		assert(map_member_roomid_.hasOwnProperty(sid));
-		assert.notStrictEqual(map_member_roomid_[sid], undefined);
-		assert(map_id_rooms_.hasOwnProperty(map_member_roomid_[sid]));
+            //console.log("[DEBUG] [ROOMS]" + "New room #" + (last_room_id_ + 1) + " with: " + JSON.stringify(members));
 
-		var room_id = map_member_roomid_[sid];
-		var room = map_id_rooms_[room_id];
-		room.leave(sid);
-		if (room.isEmpty()) {
-			delete map_id_rooms_[room_id];
-		}
-		map_member_roomid_[sid] = undefined;
-		self.notifyChanges();
-	};
+            var room_id = last_room_id_++;
+            var room = new Room(io, self, members);
+            var hasJoined = room.join(sid, details);
+            assert(hasJoined);
+            map_member_roomid_[sid] = room_id;
+            map_id_rooms_[room_id] = room;
+            self.notifyChanges();
+        };
 
-	// Acknowledge a room membership
-	this.ackRoomMember = function(sid, rid)
-	{
-		assert(map_member_roomid_.hasOwnProperty(sid));
+        // Leave room
+        this.leaveRoom = function(sid) {
+            assert(map_member_roomid_.hasOwnProperty(sid));
+            assert.notStrictEqual(map_member_roomid_[sid], undefined);
+            assert(map_id_rooms_.hasOwnProperty(map_member_roomid_[sid]));
 
-		var room_id = rid;
-		var room = new Room(io, self);
-		var hasJoined = room.join(sid);
-		assert(hasJoined);
+            var room_id = map_member_roomid_[sid];
+            var room = map_id_rooms_[room_id];
+            room.leave(sid);
+            if (room.isEmpty()) {
+                delete map_id_rooms_[room_id];
+            }
+            map_member_roomid_[sid] = undefined;
+            self.notifyChanges();
+        };
 
-		map_member_roomid_[sid] = rid;
-		map_id_rooms_[room_id] = room;
-		self.notifyChanges();
-	};
+        // Acknowledge a room membership
+        this.ackRoomMember = function(sid, rid) {
+            assert(map_member_roomid_.hasOwnProperty(sid));
 
-	// User has left the manager
-	this.disconnect = function(sid) {
-		assert(map_member_roomid_.hasOwnProperty(sid));
-		assert(map_member_username_.hasOwnProperty(sid));
+            var room_id = rid;
+            var room = new Room(io, self);
+            var hasJoined = room.join(sid);
+            assert(hasJoined);
 
-		if (map_member_roomid_[sid] !== undefined) {
-			self.leaveRoom(sid);
-		}
-		delete map_member_roomid_[sid];
-		delete map_member_username_[sid];
-		delete map_member_address_[sid];
-	};
+            map_member_roomid_[sid] = rid;
+            map_id_rooms_[room_id] = room;
+            self.notifyChanges();
+        };
 
-	this.toDict = function(includeAddresses = false)
-	{
-		var players = {};
-		for (var sock in map_member_username_) {
-			assert(map_member_address_.hasOwnProperty(sock));
+        // User has left the manager
+        this.disconnect = function(sid) {
+            assert(map_member_roomid_.hasOwnProperty(sid));
+            assert(map_member_username_.hasOwnProperty(sid));
 
-			var player = {"username": map_member_username_[sock]};
+            if (map_member_roomid_[sid] !== undefined) {
+                self.leaveRoom(sid);
+            }
+            delete map_member_roomid_[sid];
+            delete map_member_username_[sid];
+            delete map_member_address_[sid];
+        };
 
-			if (map_member_roomid_.hasOwnProperty(sock))
-				// user is in room
-				player["room"] = map_member_roomid_[sock];
+        this.toDict = function(includeAddresses = false) {
+            var players = {};
+            for (var sock in map_member_username_) {
+                assert(map_member_address_.hasOwnProperty(sock));
 
-			if (includeAddresses === true)
-				player["address"] = map_member_address_[sock];
+                var player = { "username": map_member_username_[sock] };
 
-			players[sock] = player;
-		}
+                if (map_member_roomid_.hasOwnProperty(sock))
+                // user is in room
+                    player["room"] = map_member_roomid_[sock];
 
-		var dict = {
-			"rooms": map_id_rooms_,
-			"players": players
-		};
+                if (includeAddresses === true)
+                    player["address"] = map_member_address_[sock];
 
-		return dict;
-	};
-};
+                players[sock] = player;
+            }
 
-module.exports.RoomManager = RoomManager;
+            var dict = {
+                "rooms": map_id_rooms_,
+                "players": players
+            };
+
+            return dict;
+        };
+    };
+
+    module.exports.RoomManager = RoomManager;
 }());
-

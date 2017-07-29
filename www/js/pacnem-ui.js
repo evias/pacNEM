@@ -541,11 +541,21 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         var isMyRoom = false;
         for (var i = 0; i < roomdata['users'].length; i++) {
             var socketId = roomdata['users'][i];
-            var user = usersdata[socketId] ? usersdata[socketId] : socketId;
-            var xem = xemdata[socketId];
+            var user = socketId;
 
-            if (sid == socketId)
+            // get username
+            if (usersdata[socketId])
+                user = usersdata[socketId];
+            else if (roomdata['usernames'] && roomdata["usernames"][socketId])
+                user = roomdata["usernames"][socketId];
+
+            usersdata[socketId] ? usersdata[socketId] : socketId;
+            var xem = xemdata[socketId];
+            var isMe = sid == socketId;
+
+            if (isMe) {
                 isMyRoom = true; // user in this room
+            }
 
             $currentRow = $memberRow.clone()
                 .removeClass("hidden")
