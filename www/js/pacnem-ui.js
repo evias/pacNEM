@@ -231,6 +231,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @return GameUI
      */
     this.displayBoard = function(rawdata) {
+        this.preparePageChange();
+
         $("#game").show();
         $('html, body').animate({
             scrollTop: $("#game").offset().top
@@ -536,10 +538,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         players = [];
 
         // now create the members entries for this room
+        var isMyRoom = false;
         for (var i = 0; i < roomdata['users'].length; i++) {
             var socketId = roomdata['users'][i];
             var user = usersdata[socketId] ? usersdata[socketId] : socketId;
             var xem = xemdata[socketId];
+
+            if (sid == socketId)
+                isMyRoom = true; // user in this room
 
             $currentRow = $memberRow.clone()
                 .removeClass("hidden")
@@ -552,7 +558,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             players.push(user);
         }
 
-        if (players.length)
+        if (isMyRoom)
             ctrl_.setPlayers(players);
 
         self.configureRoomActions($thisRoom, roomdata);
@@ -808,6 +814,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 ui.resetSession(true);
                 return false;
             });
+
+            $("#player-authenticate-token").focus();
         };
 
         var self = this;
