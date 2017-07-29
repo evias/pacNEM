@@ -7,9 +7,9 @@
             </div>
             <div class="modal-body">
                 <p class="text-justify">{{t "security.explain_player_authenticate"}}</p>
-                <p class="text-justify">{{t "security.explain_player_authenticate_first"}}</p>
+                <p class="text-justify hidden-xs">{{t "security.explain_player_authenticate_first"}}</p>
 
-                <div class="text-left container-fluid">
+                <div class="text-left container-fluid hidden-xs">
                     <div class="col-md-1" style="padding-top: 12px; font-size: 32px;">
                         <i class="glyphicon glyphicon-question-sign text-primary"></i>
                     </div>
@@ -18,17 +18,17 @@
 
                 <p class="text-justify"><br />{{t "security.check_account_address"}}</p>
 
-                <div class="text-left container-fluid">
-                    <div class="col-md-1" style="padding-top: 5px;">
+                <div class="container-fluid">
+                    <div class="pull-left" style="padding-top: 5px;">
                         <img src="/img/NEM_100x100.png" style="height: 28px; padding-left: 5px;"/> 
                     </div>
-                    <div class="col-md-11" style="font-size: 18px; padding-top: 7px;">{{playerAddr}}</div>
+                    <div class="col-md-10" style="font-size: 18px; word-break: break-all;">{{playerAddr}}</div>
                 </div>
 
                 <div class="text-center container-fluid" style="margin-top: 20px; margin-bottom: 20px;">
                     <div class="row">
-                        <div class="col-md-5 col-md-offset-3">
-                            <div class="input-group">
+                        <div class="pull-left">
+                            <div class="input-group" style="max-width: 215px; margin-left: 12px;">
                                 <span class="input-group-addon" id="describe-token"><img src="/img/NEM_100x100.png" style="height: 20px;"/></span>
                                 <input id="player-authenticate-token" type="text" 
                                         class="form-control" 
@@ -38,7 +38,7 @@
                                         style="max-width: 170px;" />
                             </div>
                         </div>
-                        <div class="col-md-2" style="padding-left: 0px;">
+                        <div class="pull-right" style="padding-left: 0px;">
                             <button id="pacnem-player-authenticate-trigger" 
                                     class="btn btn-success" 
                                     role="button">

@@ -231,6 +231,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @return GameUI
      */
     this.displayBoard = function(rawdata) {
+        this.preparePageChange();
+
         $("#game").show();
         $('html, body').animate({
             scrollTop: $("#game").offset().top
@@ -536,10 +538,24 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         players = [];
 
         // now create the members entries for this room
+        var isMyRoom = false;
         for (var i = 0; i < roomdata['users'].length; i++) {
             var socketId = roomdata['users'][i];
-            var user = usersdata[socketId] ? usersdata[socketId] : socketId;
+            var user = socketId;
+
+            // get username
+            if (usersdata[socketId])
+                user = usersdata[socketId];
+            else if (roomdata['usernames'] && roomdata["usernames"][socketId])
+                user = roomdata["usernames"][socketId];
+
+            usersdata[socketId] ? usersdata[socketId] : socketId;
             var xem = xemdata[socketId];
+            var isMe = sid == socketId;
+
+            if (isMe) {
+                isMyRoom = true; // user in this room
+            }
 
             $currentRow = $memberRow.clone()
                 .removeClass("hidden")
@@ -552,7 +568,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             players.push(user);
         }
 
-        if (players.length)
+        if (isMyRoom)
             ctrl_.setPlayers(players);
 
         self.configureRoomActions($thisRoom, roomdata);
@@ -808,6 +824,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 ui.resetSession(true);
                 return false;
             });
+
+            $("#player-authenticate-token").focus();
         };
 
         var self = this;
@@ -1989,14 +2007,41 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      * @return GameUI
      */
     this.registerKeyListeners = function() {
+
+        var SPACE_ = 32;
+        var LEFT_ = 37;
+        var UP_ = 38;
+        var RIGHT_ = 39;
+        var DOWN_ = 40;
+
+        var canvas = document.getElementById("pacnem-canvas");
+        var manager = new Hammer(canvas);
+        manager.get("swipe").set({ direction: Hammer.DIRECTION_ALL });
+
+        manager.on("swipeleft", function(e) {
+            socket_.emit('keydown', LEFT_);
+        });
+
+        manager.on("swipeup", function(e) {
+            socket_.emit('keydown', UP_);
+        });
+
+        manager.on("swiperight", function(e) {
+            socket_.emit('keydown', RIGHT_);
+        });
+
+        manager.on("swipedown", function(e) {
+            socket_.emit('keydown', DOWN_);
+        });
+
         document.onkeydown = function(e) {
-            if ([37, 38, 39, 40].indexOf(e.keyCode) > -1)
+            if ([LEFT_, UP_, RIGHT_, DOWN_].indexOf(e.keyCode) > -1)
                 socket_.emit('keydown', e.keyCode);
         };
 
         window.addEventListener("keydown", function(e) {
             // space and arrow keys
-            if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1)
+            if ([SPACE_, LEFT_, UP_, RIGHT_, DOWN_].indexOf(e.keyCode) > -1)
                 e.preventDefault();
         }, false);
 
