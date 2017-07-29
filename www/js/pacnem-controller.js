@@ -434,24 +434,44 @@ var refreshRoomBoard = function(grid, data, frame) {
 };
 
 var refreshCharacters = function(data, canvas, ctx, frame, DOMCache) {
-    for (var i = 0; i != data['pacmans'].length; i++) {
-        var pacman = data['pacmans'][i];
-        drawPacMan(canvas, ctx, frame, pacman, data['pacmans'].length == 1 ? "#777700" : PACMAN_COLORS[i % PACMAN_COLORS.length]);
 
-        if (typeof pacman["score"] == "undefined" || typeof pacman["lifes"] == "undefined")
-            continue; // do not update with empty values
+    if (!data["pacmans"] || !data["pacmans"].length) {
+        // game did not start yet => 0 values
+        for (var r = 0; r < data["rooms"].length; r++) {
+            for (var curSid in data["rooms"][r]["usernames"]) {
+                var uname = data["rooms"][r]["usernames"][curSid];
 
-        var uname = pacman.username;
-        var score = pacman["score"] ? pacman["score"] : 0;
-        var lifes = pacman["lifes"] < 0 ? 0 : pacman["lifes"];
-        var combo = pacman["combo"] ? pacman["combo"] + 1 : 1;
+                if (DOMCache[uname]) {
+                    DOMCache[uname].score.text(0);
+                    DOMCache[uname].lifes.text(3);
+                    DOMCache[uname].combo.text("x1");
+                }
+            }
+        }
+    } else {
+        // iterate PACMANS (game started)
+        for (var i = 0; i != data['pacmans'].length; i++) {
+            var pacman = data['pacmans'][i];
+            drawPacMan(canvas, ctx, frame, pacman, data['pacmans'].length == 1 ? "#777700" : PACMAN_COLORS[i % PACMAN_COLORS.length]);
 
-        if (DOMCache[uname]) {
-            DOMCache[uname].score.text(score);
-            DOMCache[uname].lifes.text(lifes);
-            DOMCache[uname].combo.text("x" + combo);
+            if (typeof pacman["score"] == "undefined" || typeof pacman["lifes"] == "undefined")
+                continue; // do not update with empty values
+
+            var uname = pacman.username;
+            var score = pacman["score"] ? pacman["score"] : 0;
+            var lifes = pacman["lifes"] < 0 ? 0 : pacman["lifes"];
+            var combo = pacman["combo"] ? pacman["combo"] + 1 : 1;
+
+            if (DOMCache[uname]) {
+                DOMCache[uname].score.text(score);
+                DOMCache[uname].lifes.text(lifes);
+                DOMCache[uname].combo.text("x" + combo);
+            }
         }
     }
+
+    if (!data["ghosts"] || !data["ghosts"].length)
+        return false;
 
     for (var i = 0; i != data['ghosts'].length; i++) {
         drawGhost(canvas, ctx, frame, data['ghosts'][i], GHOSTS_COLORS[i % GHOSTS_COLORS.length]);
