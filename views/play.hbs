@@ -17,7 +17,7 @@
 
 
         // set blockchain network
-        $("#currentBlockchain-network").text("{{currentNetwork.label}}");
+        $(".currentBlockchain-network").text("{{currentNetwork.label}}");
     });
 </script>
 
@@ -33,7 +33,7 @@
         <i class="glyphicon glyphicon-cog"></i>&nbsp;{{t "guest.logged_in_title"}}
     </h4>
 
-    <div id="pacnem-current-player-details">
+    <div class="pacnem-current-player-details">
         <div class="panel panel-info">
             <div class="panel-heading hide-on-auth" style="text-align: left;">
                 <span class="glyphicon glyphicon-user"></span>&nbsp;
@@ -116,9 +116,9 @@
     <span id="pacnem-error-address-format" style="display: none;">{{t "forms.error_format_address"}}</span>
     <span id="pacnem-error-address-network" style="display: none;">{{t "forms.error_network_address"}}&nbsp;({{currentNetwork.label}})</span>
 
-    <div id="pacnem-scores-wrapper" class="container-fluid" style="display: none;">&nbsp;</div>
-    <div id="pacnem-invoice-history-wrapper" class="container-fluid" style="display: none;">&nbsp;</div>
-    <div id="pacnem-lounge-wrapper" class="container-fluid" style="display: none;">&nbsp;</div>
+    <div class="pacnem-scores-wrapper container-fluid" style="display: none;">&nbsp;</div>
+    <div class="pacnem-invoice-history-wrapper" class="container-fluid" style="display: none;">&nbsp;</div>
+    <div class="pacnem-lounge-wrapper" class="container-fluid" style="display: none;">&nbsp;</div>
 
     <div id="pacnem-game-wrapper" class="container-fluid" style="display: none;">
         <div class="container-fluid col-md-4">

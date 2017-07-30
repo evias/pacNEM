@@ -126,49 +126,55 @@ Handlebars.registerHelper("truncateAddress", function (address)
                     </div>
 
                     <div class="custom-navbar">
-                        <ul class="nav navbar-nav">
-                            <li id="currentUser" class="dropdown" style="display: none;">
+
+                        <a href="#" class="visible-xs" data-toggle="collapse" data-trigger="focus" data-target=".pacnem-menu">
+                            <i class="glyphicon glyphicon-th-list"></i>&nbsp;
+                            <span>{{t "menus.toggle_menu"}}</span>
+                        </a>
+
+                        <ul class="pacnem-menu nav navbar-nav hidden-xs">
+                            <li class="currentUser" class="dropdown" style="display: none;">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <span class="glyphicon glyphicon-user"></span>&nbsp;
-                                    <span id="currentUser-username"></span>&nbsp;
+                                    <span class="currentUser-username"></span>&nbsp;
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" id="pacnem-purge-trigger" class="text-danger"><span class="glyphicon glyphicon-log-out"></span>&nbsp;<span>{{t "menus.purge"}}</span></a></li>
+                                    <li>
+                                        <a href="#" class="pacnem-purge-trigger text-danger">
+                                            <span class="glyphicon glyphicon-log-out"></span>&nbsp;
+                                            <span>{{t "menus.purge"}}</span>
+                                        </a>
+                                    </li>
                                 </ul>
-                                <input type="hidden" id="pacNEM-sessionId" value="" />
-                                <input type="hidden" id="pacNEM-needs-payment" value="" />
+                                <input type="hidden" class="pacNEM-sessionId" value="" />
+                                <input type="hidden" class="pacNEM-needs-payment" value="" />
                             </li>
-                            <li id="currentHearts" style="display: none;">
+                            <li class="currentHearts" style="display: none;">
                                 <a href="#">
                                     <span class="glyphicon glyphicon-heart"></span>&nbsp;
-                                    <span id="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>&nbsp;
+                                    <span class="currentHearts-hearts"><img src="/img/loading.gif" style="max-height: 22px;"/></span>&nbsp;
                                 </a>
                             </li>
-                            <li id="playerPurchases" class="dropdown" style="display: none;">
+                            <li class="playerPurchases dropdown" style="display: none;">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <span class="glyphicon glyphicon-qrcode"></span>&nbsp;
                                     <span>{{t "menus.my_invoices"}}</span>
                                     <span class="caret pacnem-credits-submenu"></span>
                                 </a>
                                 <ul class="dropdown-menu pacnem-credits-submenu hidden">
-                                    <li><a href="#" id="pacnem-invoice-show-trigger" class="text-danger"><span class="glyphicon glyphicon-plus"></span>&nbsp;<span>{{t "menus.buy_credits"}}</span></a></li>
-                                    <li><a href="#" id="pacnem-invoice-history-trigger" class="text-danger"><span class="glyphicon glyphicon-time"></span>&nbsp;<span>{{t "menus.invoice_history"}}</span></a></li>
+                                    <li><a href="#" class="pacnem-invoice-show-trigger text-danger"><span class="glyphicon glyphicon-plus"></span>&nbsp;<span>{{t "menus.buy_credits"}}</span></a></li>
+                                    <li><a href="#" class="pacnem-invoice-history-trigger text-danger"><span class="glyphicon glyphicon-time"></span>&nbsp;<span>{{t "menus.invoice_history"}}</span></a></li>
                                 </ul>
                             </li>
-                            <li id="currentMosaics" style="display: none;"></li>
-                            <li id="fb-welcome"></li>
-                        </ul>
-                    </div>
-
-                    <div class="custom-navbar">
-                        <ul class="nav navbar-nav">
+                            <li class="currentMosaics" style="display: none;"></li>
+                            <li class="fb-welcome"></li>
                             <li class="active pacnem-back-to-play"><a href="/"><span class="glyphicon glyphicon-home"></span>&nbsp;<span>{{t "menus.play"}}</span></a></li>
-                            <li><a id="pacnem-scores-trigger" href="#" data-display="0"><span class="glyphicon glyphicon-calendar"></span>&nbsp;<span>{{t "menus.high_scores"}}</span></a></li>
-                            <li id="currentLanguage" class="dropdown">
+                            <li><a class="pacnem-scores-trigger" href="#" data-display="0"><span class="glyphicon glyphicon-calendar"></span>&nbsp;<span>{{t "menus.high_scores"}}</span></a></li>
+                            <li class="currentLanguage" class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <span class="glyphicon glyphicon-list-alt"></span>&nbsp;
-                                    <span id="currentLanguage-language">{{t "menus.language"}}: {{t "languages" currentLanguage}}</span>&nbsp;
+                                    <span class="currentLanguage-language">{{t "menus.language"}}: {{t "languages" currentLanguage}}</span>&nbsp;
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu countriesList">
@@ -177,10 +183,10 @@ Handlebars.registerHelper("truncateAddress", function (address)
                                     <li><a href="/fr"><img src="/img/flags/fr.png" alt="{{t "languages.fr"}}" />&nbsp;<span>{{t "languages.fr"}}</span></a></li>
                                 </ul>
                             </li>
-                            <li id="currentBlockchain">
+                            <li class="currentBlockchain">
                                 <a href="#">
                                     <span class="glyphicon glyphicon-globe"></span>&nbsp;
-                                    <span id="currentBlockchain-network"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
+                                    <span class="currentBlockchain-network"><img src="/img/loading.gif" style="max-height: 22px;"/></span>
                                 </a>
                             </li>
                             <li><a href="/sponsor"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;<span>{{t "menus.become_sponsor"}}</span></a></li>

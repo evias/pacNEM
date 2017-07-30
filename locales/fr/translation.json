@@ -23,7 +23,8 @@
         "buy_credits": "Acheter des Crédits",
         "invoice_history": "Historiques des Achats",
         "become_sponsor": "Devenez Sponsor!",
-        "my_invoices": "My Purchases"
+        "my_invoices": "My Purchases",
+        "toggle_menu": "Menu"
     },
     "guest": {
         "title_blue_box": "Jeu de Pacman Multiplayer",

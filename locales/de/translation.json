@@ -23,7 +23,8 @@
         "buy_credits": "Credits kaufen",
         "invoice_history": "Meine Bestellungen",
         "become_sponsor": "Sponsor werden!",
-        "my_invoices": "My Purchases"
+        "my_invoices": "My Purchases",
+        "toggle_menu": "Menu"
     },
     "guest": {
         "logged_in_title": "Ihre Details",

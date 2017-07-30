@@ -141,7 +141,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             var rooms = data["rooms"];
             var isAuth = $("#username").val().length > 0 && $("#address").val().length > 0;
 
-            $("#pacNEM-sessionId").val(sid);
+            $(".pacNEM-sessionId").val(sid);
 
             // clear UI
             $rooms.empty();
@@ -191,17 +191,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             // we will display the `data` (count of hearts available read from
             // blockchain) in the top bar.
-            var $wrap = $("#currentHearts").first();
-            var $data = $("#currentHearts-hearts").first();
+            var $wrap = $(".currentHearts").first();
+            var $data = $(".currentHearts-hearts").first();
 
             $wrap.show();
             self.animateHeartsCounter($data, 0, credits, " Credits");
 
             if (credits > 0) {
-                $("#pacNEM-needs-payment").val("0");
+                $(".pacNEM-needs-payment").val("0");
                 $(".pacnem-invoice-close-trigger").show();
             } else {
-                $("#pacNEM-needs-payment").val("1");
+                $(".pacNEM-needs-payment").val("1");
             }
 
             if (typeof session_ != 'undefined' && session_.details_.hearts != data) {
@@ -882,14 +882,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.displayPlayerUI = function() {
         // top navigation bar update
-        $("#currentUser-username").html("&nbsp;" + $("#username").val());
-        $("#currentUser").fadeIn("slow");
-        $("#pacnem-purge-trigger").parent().show();
+        $(".currentUser-username").html("&nbsp;" + $("#username").val());
+        $(".currentUser").fadeIn("slow");
+        $(".pacnem-purge-trigger").parent().show();
 
         // auth process effect (form disappears, rooms displayed)
         $(".hide-on-auth").hide();
         $(".show-on-auth").show();
-        $("#pacnem-current-player-details .panel").first().removeClass("panel-info");
+        $(".pacnem-current-player-details .panel").first().removeClass("panel-info");
         $("#spread-the-word").addClass("mt10");
 
         // form must now be disabled
@@ -899,7 +899,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
         // blockchain query uses Promises and is sent with
         // socket io "pacnem_heart_sync" event
-        $("#currentHearts").fadeIn("slow");
+        $(".currentHearts").fadeIn("slow");
 
         return this;
     };
@@ -1406,7 +1406,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 callback(self);
                 return false;
             });
-            //XXX $("#pacnem-invoice-show-trigger").off("click");
+            //XXX $(".pacnem-invoice-show-trigger").off("click");
         });
 
         // all configured, show.
@@ -1660,9 +1660,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                     $(".pacnem-credits-submenu").removeClass("hidden");
 
                     if (withPurchases == true)
-                        $("#playerPurchases").fadeIn("slow");
+                        $(".playerPurchases").fadeIn("slow");
                     else
-                        $("#playerPurchases").remove();
+                        $(".playerPurchases").remove();
                 };
 
                 if (ctrl_.isPlayMode("sponsored")) {
@@ -1702,7 +1702,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     this.initPurgeButton = function() {
         var self = this;
 
-        $("#pacnem-purge-trigger").click(function() {
+        $(".pacnem-purge-trigger").click(function() {
 
             API_.forgetPlayerIdentity(self.getPlayerDetails(), function(response) {
 
@@ -1781,7 +1781,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
         self.setLoadingUI();
         API_.fetchLoungeInformations(player, function(loungeData) {
-            $("#pacnem-lounge-wrapper").fadeIn("slow", function() {
+            $(".pacnem-lounge-wrapper").fadeIn("slow", function() {
                 self.unsetLoadingUI();
                 self.initTooltips();
             });
@@ -1797,7 +1797,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      */
     this.hideLounge = function(callback) {
         callback = typeof callback == 'undefined' ? null : callback;
-        $("#pacnem-lounge-wrapper").fadeOut("slow", function() {
+        $(".pacnem-lounge-wrapper").fadeOut("slow", function() {
             if (callback)
                 return callback();
         });
@@ -1813,7 +1813,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     this.initScoresButton = function() {
         var self = this;
 
-        $("#pacnem-scores-trigger").on("click", function() {
+        $(".pacnem-scores-trigger").on("click", function() {
             var flag = $(this).attr("data-display");
 
             if (flag == "0") {
@@ -1822,14 +1822,14 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 API_.fetchScores(function(scores) {
                     self.preparePageChange();
                     self.initBackToPlayButtons();
-                    $("#pacnem-current-player-details").hide();
-                    $("#pacnem-scores-wrapper").show();
+                    $(".pacnem-current-player-details").hide();
+                    $(".pacnem-scores-wrapper").show();
                     self.unsetLoadingUI();
                 });
             } else {
                 $(this).attr("data-display", "0");
-                $("#pacnem-scores-wrapper").hide();
-                $("#pacnem-current-player-details").show();
+                $(".pacnem-scores-wrapper").hide();
+                $(".pacnem-current-player-details").show();
                 self.displayLounge();
             }
 
@@ -1838,8 +1838,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     };
 
     this.preparePageChange = function() {
-        $("#pacnem-scores-wrapper").hide();
-        $("#pacnem-invoice-history-wrapper").hide();
+        $(".pacnem-scores-wrapper").hide();
+        $(".pacnem-invoice-history-wrapper").hide();
         this.hideLounge();
     };
 
@@ -1851,8 +1851,8 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     this.initPurchasesButtons = function() {
         var self = this;
 
-        $("#pacnem-invoice-history-trigger").off("click");
-        $("#pacnem-invoice-history-trigger").on("click", function() {
+        $(".pacnem-invoice-history-trigger").off("click");
+        $(".pacnem-invoice-history-trigger").on("click", function() {
             var flag = $(this).attr("data-display");
             var player = self.getPlayerDetails();
 
@@ -1865,22 +1865,22 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                     self.preparePageChange();
                     self.initInvoicesButtons();
                     self.initBackToPlayButtons();
-                    //$("#pacnem-current-player-details").hide();
-                    $("#pacnem-invoice-history-wrapper").show();
+                    //$(".pacnem-current-player-details").hide();
+                    $(".pacnem-invoice-history-wrapper").show();
                     self.unsetLoadingUI();
                 });
             } else {
                 $(this).attr("data-display", "0");
-                $("#pacnem-invoice-history-wrapper").hide();
-                //$("#pacnem-current-player-details").show();
+                $(".pacnem-invoice-history-wrapper").hide();
+                //$(".pacnem-current-player-details").show();
                 self.displayLounge();
             }
 
             return false;
         });
 
-        $("#pacnem-invoice-show-trigger").off("click");
-        $("#pacnem-invoice-show-trigger").on("click", function() {
+        $(".pacnem-invoice-show-trigger").off("click");
+        $(".pacnem-invoice-show-trigger").on("click", function() {
             $(".pacnem-credits-submenu").first().dropdown("toggle");
             self.setLoadingUI();
             self.prepareInvoiceBox(function(ui) {
@@ -1936,15 +1936,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             if ("sponsored" == thisMode)
                 self.setSponsoredUI(false, function(ui) {});
             else {
-                $("#playerPurchases a").first().attr("data-toggle", "dropdown");
-                self.unsetSponsoredUI();
-            }
-
-            if ("pay-per-play" == thisMode) {
-                $(".pacnem-credits-submenu").removeClass("hidden");
-                self.prepareInvoiceBox(function(ui) {});
-            } else {
-                $("#playerPurchases").remove();
+                $(".playerPurchases").remove();
             }
 
             // game mode choice has been done now, next is username and address.
@@ -2059,11 +2051,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
         $(".pacnem-back-to-play").off("click");
         $(".pacnem-back-to-play").on("click", function() {
-            $("#pacnem-scores-trigger").attr("data-display", "0");
-            $("#pacnem-scores-wrapper").hide();
-            $("#pacnem-invoice-history-trigger").attr("data-display", "0");
-            $("#pacnem-invoice-history-wrapper").hide();
-            $("#pacnem-current-player-details").show();
+            $(".pacnem-scores-trigger").attr("data-display", "0");
+            $(".pacnem-scores-wrapper").hide();
+            $(".pacnem-invoice-history-trigger").attr("data-display", "0");
+            $(".pacnem-invoice-history-wrapper").hide();
+            $(".pacnem-current-player-details").show();
 
             var sess = new GameSession(API_);
             if (sess.identified())
