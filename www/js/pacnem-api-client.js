@@ -110,7 +110,7 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
                 var scores = response.data;
 
                 self.template_.render("scores-container", function(compileWith) {
-                    $("#pacnem-scores-wrapper").html(compileWith(response));
+                    $(".pacnem-scores-wrapper").html(compileWith(response));
                     callback(scores);
                 });
             }
@@ -228,7 +228,7 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
                 var history = response.data;
 
                 self.template_.render("invoice-history-container", function(compileWith) {
-                    $("#pacnem-invoice-history-wrapper").html(compileWith(response));
+                    $(".pacnem-invoice-history-wrapper").html(compileWith(response));
                     callback(history);
                 });
             }
@@ -283,7 +283,7 @@ var GameAPI = function(config, socket, controller, $, jQFileTemplate) {
                 var loungeData = response.data;
 
                 self.template_.render("lounge-container", function(compileWith) {
-                    $("#pacnem-lounge-wrapper").html(compileWith(response.data));
+                    $(".pacnem-lounge-wrapper").html(compileWith(response.data));
                     return callback(loungeData);
                 });
             }

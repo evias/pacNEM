@@ -23,13 +23,16 @@
         "buy_credits": "Buy Credits",
         "invoice_history": "Purchases History",
         "become_sponsor": "Be a Sponsor!",
-        "my_invoices": "My Purchases"
+        "my_invoices": "My Purchases",
+        "toggle_menu": "Menu"
     },
     "guest": {
         "logged_in_title": "Your Details",
-        "title_blue_box": "NEM #blockchain meets Pacman (<a href='https://nem.io' target='_blank'>Read the Blog article about this Project</a>)",
+        "title_blue_box": "NEM #blockchain meets Pacman (<a href='http://bit.ly/DevelopNEMNodeJS' target='_blank'>Read the Blog article about this Project&nbsp;<i class='glyphicon glyphicon-globe'></i></a>)",
+        "title_blue_box_mobile": "(<a href='http://bit.ly/DevelopNEMNodeJS' target='_blank'>Blog article&nbsp;<i class='glyphicon glyphicon-globe'></i></a>)",
         "welcome_paragraph_1_1": "<span>Welcome to the </span><span>Pac</span><span class='NEMifiedText'>nem</span><span> Game. This game is a Free &amp; Open Source Node.js <b>Autonomous Game</b> using the <span class='NEMifiedText'>nem</span><span> Blockchain</span>.",
         "welcome_paragraph_1_2": "<span>This project uses the </span><span class='NEMifiedText'>nem</span><span> Blockchain to authenticate Players as well as for Managing Game Sponsors and Mosaics Payouts which are done with Multi Signature Accounts. The game will also store Game Credits and High Scores on the blockchain. This game will reflect how easy it is to use </span><span class='NEMifiedText'>nem</span><span> in your applications or games business layers and will emphasize the easy Setup for sponsoring and advertising Software in the Gaming industry using the </span><span class='NEMifiedText'>nem</span><span> Blockchain as well as Instant Payments.</span>",
+        "welcome_paragraph_1_1_mobile": "<span>Welcome to the PacNEM game. This game uses the <a href='https://nem.io' title='NEM Foundation Website'>NEM blockchain</a> to publish Tokens in realtime. Join the Fun!",
         "play_mode_explain": "PacNEM can be played in Sponsored Play or Pay per Play modes. In sponsored play mode you won't need to pay anything, you only need to watch the Sponsor Advertisement and will then be able to Play with one of our Sponsored Accounts! The Pay per Play mode lets you Buy <b>evias.pacnem:heart</b> Game Credits directly to your XEM Wallet. These different game modes were introduced to show the easiness of integration of the <span class='NEMifiedText'>nem</span> Blockchain in the Gaming Industry.",
         "play_type_sponsored": "<b>Sponsored Play</b>",
         "play_type_payperplay": "<b>Pay per Play</b>",

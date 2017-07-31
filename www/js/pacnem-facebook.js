@@ -82,7 +82,7 @@ var PacNEMFacebookUI = function(ui) {
 
                 //DEBUG console.log("[DEBUG] " + "Facebook /me Response: " + JSON.stringify(data));
 
-                var welcomeBlock = document.getElementById('fb-welcome');
+                var welcomeBlock = facebookCanvasUI__.getDOM(".fb-welcome")[0];
                 welcomeBlock.innerHTML = 'Welcome to PacNEM, ' + data.first_name + '!';
 
                 onSuccess(data);

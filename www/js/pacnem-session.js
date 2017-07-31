@@ -64,7 +64,7 @@ var GameSession = function(API, userName, xemAddress, gameMode) {
         var self = this;
         var storage = window.localStorage;
 
-        self.details_.sid = $("#pacNEM-sessionId").val();
+        self.details_.sid = $(".pacNEM-sessionId").val();
 
         if (!storage)
         //XXX display error message
@@ -80,7 +80,7 @@ var GameSession = function(API, userName, xemAddress, gameMode) {
         var self = this;
         var storage = window.localStorage;
         validateHeartsPerBlockchain = typeof validateHeartsPerBlockchain == 'undefined' ? true : validateHeartsPerBlockchain;
-        self.details_.sid = $("#pacNEM-sessionId").val();
+        self.details_.sid = $(".pacNEM-sessionId").val();
 
         if (!storage)
         //XXX display error message
@@ -99,7 +99,7 @@ var GameSession = function(API, userName, xemAddress, gameMode) {
             // issue db save in 3 seconds because rooms_update event
             // was not emitted yet. (we don't have a socket id yet)
             setTimeout(function() {
-                self.details_.sid = $("#pacNEM-sessionId").val();
+                self.details_.sid = $(".pacNEM-sessionId").val();
                 self.API_.storeSession(self.details_, function(response) {
                     self.model = response.item;
                 }, validateHeartsPerBlockchain);

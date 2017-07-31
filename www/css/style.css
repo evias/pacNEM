@@ -411,3 +411,29 @@ blockquote.bq-minimal-centered {
     width: 32px;
     height: 32px;
 }
+
+#pacnem-menu.in,
+#pacnem-menu.collapsing {
+    display: block!important;
+}
+
+#pacnem-menu-trigger {
+    max-width: 100px;
+    margin: auto;
+}
+
+
+/** Mobile customizations **/
+
+@media screen and (max-width: 600px) {
+    #pacnem-menu li {
+        float: none;
+        text-align: left;
+    }
+    footer p {
+        font-size: 0.7em;
+    }
+    .mosaics-details-list {
+        margin-left: 40px;
+    }
+}
