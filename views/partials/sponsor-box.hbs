@@ -1,5 +1,5 @@
 
-<div class="modal fade pacnem-sponsor-modal" style="display: none;" data-sponsor="{{sponsor.slug}}">
+<div class="modal fade pacnem-sponsor-modal" style="display: none; z-index: 9999;" data-sponsor="{{sponsor.slug}}">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -8,12 +8,17 @@
             <div class="modal-body">
                 <p class="text-center">
                     {{#if content.isImage}}
-                        <img src="{{content.url}}" alt="{{sponsor.sponsorName}}" title="{{sponsor.sponsorName}}" />
+                        <img src="{{content.url}}" 
+                             alt="{{sponsor.sponsorName}}" 
+                             title="{{sponsor.sponsorName}}"
+                             class="sponsor-content" />
                     {{/if}}
 
                     {{#if content.isVideo}}
-                        <video class="video-stream" x-webkit-airplay="allow"
-                            src="{{content.url}}"></video>
+                        <video class="video-stream" 
+                               x-webkit-airplay="allow"
+                               src="{{content.url}}"
+                               class="sponsor-content"></video>
                     {{/if}}
                 </p>
                 <p class="text-left">{{sponsor.description}}</p>
