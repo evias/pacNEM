@@ -1936,6 +1936,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             if ("sponsored" == thisMode)
                 self.setSponsoredUI(false, function(ui) {});
             else {
+                $("#address").removeAttr("disabled").val("");
                 $(".playerPurchases").remove();
             }
 

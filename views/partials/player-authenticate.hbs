@@ -27,18 +27,18 @@
 
                 <div class="text-center container-fluid" style="margin-top: 20px; margin-bottom: 20px;">
                     <div class="row">
-                        <div class="pull-left">
+                        <div class="col-md-5 col-xs-8">
                             <div class="input-group" style="max-width: 215px; margin-left: 12px;">
                                 <span class="input-group-addon" id="describe-token"><img src="/img/NEM_100x100.png" style="height: 20px;"/></span>
                                 <input id="player-authenticate-token" type="text" 
                                         class="form-control" 
-                                        placeholder="{{t "security.token_placeholder"}} ({{t "networks" currentNetwork.label}})"
+                                        placeholder="{{t "security.token_placeholder"}}"
                                         aria-describedby="describe-token" 
                                         maxlength="6"
                                         style="max-width: 170px;" />
                             </div>
                         </div>
-                        <div class="pull-right" style="padding-left: 0px;">
+                        <div class="col-md-3 col-xs-4" style="padding-left: 0px;">
                             <button id="pacnem-player-authenticate-trigger" 
                                     class="btn btn-success" 
                                     role="button">

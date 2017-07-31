@@ -127,12 +127,12 @@ Handlebars.registerHelper("truncateAddress", function (address)
 
                     <div class="custom-navbar">
 
-                        <a href="#" class="visible-xs" data-toggle="collapse" data-trigger="focus" data-target=".pacnem-menu">
+                        <a href="#" id="pacnem-menu-trigger" class="visible-xs" data-toggle="collapse" data-trigger="focus" data-target="#pacnem-menu">
                             <i class="glyphicon glyphicon-th-list"></i>&nbsp;
                             <span>{{t "menus.toggle_menu"}}</span>
                         </a>
 
-                        <ul class="pacnem-menu nav navbar-nav hidden-xs">
+                        <ul id="pacnem-menu" class="nav navbar-nav hidden-xs">
                             <li class="currentUser" class="dropdown" style="display: none;">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <span class="glyphicon glyphicon-user"></span>&nbsp;

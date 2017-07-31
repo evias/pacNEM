@@ -35,19 +35,31 @@
 
     <div class="pacnem-current-player-details">
         <div class="panel panel-info">
-            <div class="panel-heading hide-on-auth" style="text-align: left;">
-                <span class="glyphicon glyphicon-user"></span>&nbsp;
-                <div style="display: inline;"><span>Pac</span><span class="NEMifiedText">nem</span><span>&nbsp; {{t "guest.title_blue_box"}}</span></div>
+            <div class="panel-heading hide-on-auth">
+                <div class="hidden-xs" style="text-align: left;">
+                    <span class="glyphicon glyphicon-user"></span>&nbsp;
+                    <div style="display: inline;"><span>Pac</span><span class="NEMifiedText">nem</span><span>&nbsp; {{t "guest.title_blue_box"}}</span></div>
+                </div>
+                <div class="visible-xs">
+                    <span class="glyphicon glyphicon-user"></span>&nbsp;
+                    <div style="display: inline;"><span>Pac</span><span class="NEMifiedText">nem</span><span>&nbsp; {{t "guest.title_blue_box_mobile"}}</span></div>
+                </div>
             </div>
             <div class="panel-body">
-                <p class="text-justify hide-on-auth">
+                <p class="text-justify hide-on-auth hidden-xs">
                     {{t "guest.welcome_paragraph_1_1"}}
                     {{t "guest.welcome_paragraph_1_2"}}<br />
                 </p>
-                <div class="row hide-on-auth">
+                <p class="text-justify hide-on-auth xs-only">
+                    {{t "guest.welcome_paragraph_1_1_mobile"}}<br />
+                </p>
+                <div class="row hide-on-auth hidden-xs">
                     <div class="col-md-10 col-md-offset-1 text-left">
                         <ul style="list-style: none; margin: 0; padding: 0;">
-                            <li class="text-danger" style="margin: 0; padding: 0;"><span class="glyphicon glyphicon-warning-sign"></span>&nbsp;{{t "guest.security_paragraph_1"}}</li>
+                            <li class="text-danger" style="margin: 0; padding: 0;">
+                                <span class="glyphicon glyphicon-warning-sign"></span>&nbsp;
+                                {{t "guest.security_paragraph_1"}}
+                            </li>
                         </ul>
                     </div>
                     <br />
@@ -61,7 +73,7 @@
                 <div class="row hide-on-auth" style="margin-top: 20px;">
                     <div class="col-md-12 text-center pacnem-game-mode-wrapper">
                         <ul style="list-style: none; margin: 0; padding: 0;">
-                            <li style="display: inline-block;">
+                            <li style="display: inline-block; margin-bottom: 10px;">
                                 <button class="btn btn-lg btn-primary pacnem-gamemode-trigger" data-value="sponsored">
                                     <img class="fake-checkbox unchecked" src="/img/checkbox_unchecked.png" alt="{{t guest.check_sponsor_play}}" />
                                     <img style="display: none;" class="fake-checkbox checked" src="/img/checkbox_checked.png" alt="{{t guest.check_sponsor_play}}" />
@@ -85,7 +97,7 @@
                     {{t "guest.enter_data_to_join"}}
                 </p>
                 <div class="user-form form form-horizontal">
-                    <div class="col-md-3">
+                    <div class="col-md-3" style="margin-bottom: 5px;">
                         <div class="input-group">
                             <span class="input-group-addon" id="describe-username"><span class="glyphicon glyphicon-user"></span></span>
                             <input id="username" type="text" class="form-control" placeholder="{{t "forms.username_placeholder"}}" aria-describedby="describe-username" maxlength="20" />
@@ -95,7 +107,7 @@
                             <span class="error"></span>
                         </div>
                     </div>
-                    <div class="col-md-7">
+                    <div class="col-md-7" style="margin-bottom: 5px;">
                         <div class="input-group">
                             <span class="input-group-addon" id="describe-address"><img src="/img/NEM_100x100.png" style="height: 20px;"/></span>
                             <input id="address" type="text" class="form-control xem-address" placeholder="{{t "forms.address_placeholder"}} ({{t "networks" currentNetwork.label}})" aria-describedby="describe-address" maxlength="46" />
@@ -168,7 +180,7 @@
 
 </div>
 
-<div class="col-md-3">
+<div class="col-md-3 col-xs-10 col-xs-offset-1">
     <div class="row">
         <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-tasks"></i>&nbsp;{{t "player.rooms_title"}}</h4>
         <div id="rooms"></div>
