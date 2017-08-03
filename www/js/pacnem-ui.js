@@ -702,11 +702,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
      *
      * @return GameUI
      */
-    this.createSession = function(session) {
+    this.createSession = function(session, callback) {
         var self = this;
         var details = this.getPlayerDetails();
 
-        if (typeof session != 'undefined')
+        if (session)
         // use saved session
             session_ = session;
         else
@@ -728,6 +728,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                     // and finally, emit the session creation
                     socket_.emit('change_username', JSON.stringify(details));
                     socket_.emit("notify");
+
+                    if (typeof callback == "function")
+                        return callback();
                 });
             });
 
@@ -745,6 +748,9 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
                 if ($(".pacnem-player-authenticate-modal").length) {
                     $(".pacnem-player-authenticate-modal").first().modal("hide");
                 }
+
+                if (typeof callback == "function")
+                    return callback();
             }, function(response) {
 
                 //DEBUG console.log("[DEBUG] " + "Authentication Failed - Response Code: " + response.code);
@@ -856,7 +862,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             // display authenticate form modal box
             if ($(".pacnem-invoice-modal").length) {
                 $(".pacnem-invoice-modal").first().modal("hide");
-                $(".modal-backdrop").first().remove();
                 $(".pacnem-invoice-modal").first().remove();
             }
 
@@ -1653,16 +1658,17 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             if (self.formValidate()) {
 
                 var postPaymentCallback = function(ui, withPurchases) {
-                    ui.createSession();
-                    ui.displayPlayerUI();
-                    ui.displayLounge();
-                    $("#rooms").parent().show();
-                    $(".pacnem-credits-submenu").removeClass("hidden");
+                    ui.createSession(null, function() {
+                        ui.displayPlayerUI();
+                        ui.displayLounge();
+                        $("#rooms").parent().show();
+                        $(".pacnem-credits-submenu").removeClass("hidden");
 
-                    if (withPurchases == true)
-                        $(".playerPurchases").fadeIn("slow");
-                    else
-                        $(".playerPurchases").remove();
+                        if (withPurchases == true)
+                            $(".playerPurchases").fadeIn("slow");
+                        else
+                            $(".playerPurchases").remove();
+                    });
                 };
 
                 if (ctrl_.isPlayMode("sponsored")) {
@@ -1974,19 +1980,33 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         if (session_.identified()) {
             // post page-load reload from localStorage
             self.updateUserFormWithSession(session_);
-            self.createSession(session_);
-            self.displayPlayerUI();
-            self.displayLounge();
+            self.createSession(session_, function() {
+                self.displayPlayerUI();
+                self.displayLounge();
 
-            $("#rooms").parent().show();
+                $("#rooms").parent().show();
 
-            if (session_.details_.type == "pay-per-play") {
-                $(".pacnem-credits-submenu").removeClass("hidden");
-            }
+                if (session_.details_.type == "pay-per-play") {
+                    $(".pacnem-credits-submenu").removeClass("hidden");
+                }
 
-            // XXX + check game mode and enable/disable buttons with error messages
+                // XXX + check game mode and enable/disable buttons with error messages
+            });
         } else
             $("#rooms").parent().hide();
+
+        // @see https://stackoverflow.com/a/24914782
+        // fixes bootstrap multi modal box backdrop bug
+        $(document).on('show.bs.modal', '.modal', function() {
+            var zIndex = 1040 + (10 * $('.modal:visible').length);
+            $(this).css('z-index', zIndex);
+            setTimeout(function() {
+                $('.modal-backdrop')
+                    .not('.modal-stack')
+                    .css('z-index', zIndex - 1)
+                    .addClass('modal-stack');
+            }, 0);
+        });
 
         return this;
     };

@@ -422,6 +422,10 @@ blockquote.bq-minimal-centered {
     margin: auto;
 }
 
+.sponsor-content {
+    width: 100%;
+}
+
 
 /** Mobile customizations **/
 
@@ -435,5 +439,38 @@ blockquote.bq-minimal-centered {
     }
     .mosaics-details-list {
         margin-left: 40px;
+    }
+    .sponsor-content {
+        max-width: 330px;
+    }
+    #pacnem-menu li {
+        font-size: 0.8em;
+        border-bottom: 1px solid #000;
+        width: 80%;
+        margin: auto;
+    }
+    #pacnem-menu li:hover {
+        cursor: pointer;
+    }
+    #pacnem-menu li ul li {
+        border-bottom: 0px;
+    }
+    .roomActionPlay,
+    .roomActionLeave,
+    .roomActionCancel,
+    .roomActionJoin {
+        max-width: 200px;
+        margin: auto;
+        margin-bottom: 2px;
+    }
+    canvas#pacnem-canvas {
+        max-width: 300px;
+    }
+    .label-bigger {
+        font-size: 75%;
+    }
+    .pacnem-rooms-wrapper {
+        min-width: 150px;
+        padding-top: 20px;
     }
 }
