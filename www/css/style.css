@@ -464,9 +464,13 @@ blockquote.bq-minimal-centered {
         margin-bottom: 2px;
     }
     canvas#pacnem-canvas {
-        max-width: 340px;
+        max-width: 300px;
     }
     .label-bigger {
         font-size: 75%;
+    }
+    .pacnem-rooms-wrapper {
+        min-width: 150px;
+        padding-top: 20px;
     }
 }

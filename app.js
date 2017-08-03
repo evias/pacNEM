@@ -270,6 +270,14 @@ handlebars.registerHelper('t', function(key, sub) {
 });
 
 /**
+ * Handlebars counter() helper implementation for frontend
+ * templates
+ */
+handlebars.registerHelper("time", function() {
+    return new handlebars.SafeString("" + new Date().valueOf());
+});
+
+/**
  * Third Party static asset serving
  * - Bootstrap
  * - Handlebars

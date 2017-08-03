@@ -180,12 +180,15 @@
 
 </div>
 
-<div class="col-md-3 col-xs-10 col-xs-offset-1">
-    <div class="row">
+<div class="col-md-3 col-md-offset-0 col-xs-10 col-xs-offset-1">
+    <div class="pacnem-rooms-wrapper row">
         <h4 class="wrapper-title text-left"><i class="glyphicon glyphicon-tasks"></i>&nbsp;{{t "player.rooms_title"}}</h4>
         <div id="rooms"></div>
 
-        <a href="#" class="btn btn-block btn-success roomCreateNew hidden"><i class="glyphicon glyphicon-plus-sign"></i>&nbsp;{{t "player.create_room_button"}}</a>
+        <a href="#" class="btn btn-lg btn-block btn-success roomCreateNew hidden">
+            <i class="glyphicon glyphicon-plus-sign"></i>&nbsp;
+            {{t "player.create_room_button"}}
+        </a>
     </div>
 
     <div id="spread-the-word" class="row">
