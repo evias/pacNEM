@@ -851,27 +851,31 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             var html = $("#pacnem-modal-wrapper").html();
             $("#pacnem-modal-wrapper").html(html + compileWith(authFormData));
 
-            //console.log("[DEBUG] [UI] " + "Now displaying player-authenticate modal");
-
             var isAuth = !$(".pacnem-player-authenticate-modal").length;
             if (isAuth) {
                 var checksum = $("#pacnem-session-checksum").text();
                 return onSuccess({ item: checksum });
             }
 
-            // display authenticate form modal box
+            // hide invoice from step before
             if ($(".pacnem-invoice-modal").length) {
                 $(".pacnem-invoice-modal").first().modal("hide");
                 $(".pacnem-invoice-modal").first().remove();
             }
 
-            $(".pacnem-player-authenticate-modal").first().modal({
-                backdrop: "static",
-                keyboard: false,
-                show: true
-            });
+            // display authenticate form modal box
+            setTimeout(function() {
+                //console.log("[DEBUG] [UI] " + "Now displaying player-authenticate modal");
+                $(".pacnem-player-authenticate-modal").on("shown.bs.modal", function() {
+                    //console.log("[DEBUG] [UI] " + "shown.bs.modal()");
 
-            registerAuthFormListeners(self, onSuccess, onFailure);
+                    registerAuthFormListeners(self, onSuccess, onFailure);
+                }).modal({
+                    backdrop: "static",
+                    keyboard: false,
+                    show: true
+                });
+            }, 500);
         });
 
         return self;
