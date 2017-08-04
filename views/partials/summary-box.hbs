@@ -5,10 +5,10 @@
             <div class="modal-header">
                 <div class="modal-title">
                     <blockquote class="row bq-minimal-centered text-left">
-                        <div class="col-md-2">
+                        <div class="col-md-2 col-xs-4">
                             <img src="/img/yoda_white.png" style="height: 52px;" alt="Master Yoda" title="Master Yoda" />
                         </div>
-                        <div class="col-md-10">
+                        <div class="col-md-10 col-xs-8">
                             <div>{{t yodaQuote}} – Yoda</div>
                         </div>
                     </blockquote>
@@ -17,24 +17,16 @@
             <div class="modal-body">
 
                 {{#if isWinner}}
-                    <div class="summary-bg-wrapper">&nbsp;</div>
-                    <p class="text-success text-justify">
-                        <h4>{{t "summary.congratulations"}}</h4>
-                    </p>
+                    <div class="summary-bg-wrapper hidden-xs">&nbsp;</div>
                 {{/if}}
 
-                {{#if isLoser}}
-                    <p class="text-danger text-justify">
-                        <h4>{{t "summary.maybe_next_time"}}</h4>
-                    </p>
-                {{/if}}
-                <hr />
+                <hr class="hidden-xs" />
 
                 <table class="table table-striped">
                     <thead>
                         <th>#</th>
                         <th>{{t "summary.label_score"}}</th>
-                        <th>{{t "summary.label_username"}}</th>
+                        <th class="hidden-xs">{{t "summary.label_username"}}</th>
                         <th>{{t "summary.label_address"}}</th>
                     </thead>
                     <tbody>
@@ -48,12 +40,12 @@
                                 </span>
                             </td>
 
-                            <td>{{username}}</td>
+                            <td class="hidden-xs">{{username}}</td>
 
                             <td>
                                 <a class="label label-sm label-info"
                                     target="_blank"
-                                    href="http://bob.nem.ninja:7890/account/get?address={{address}}">
+                                    href="http://bigalice2.nem.ninja:7890/account/get?address={{address}}">
                                         <i class="glyphicon glyphicon-search"></i>&nbsp;
                                         <span>{{truncateAddress address}}</span>
                                 </a>

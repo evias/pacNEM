@@ -23,12 +23,14 @@
         "buy_credits": "Acheter des Crédits",
         "invoice_history": "Historiques des Achats",
         "become_sponsor": "Devenez Sponsor!",
-        "my_invoices": "My Purchases"
+        "my_invoices": "My Purchases",
+        "toggle_menu": "Menu"
     },
     "guest": {
         "title_blue_box": "Jeu de Pacman Multiplayer",
         "welcome_paragraph_1_1": "<span>Bienvenue sur le jeu </span><span>Pac</span><span class='NEMifiedText'>nem</span><span>. Il s'agit d'un jeu gratuit &amp; Open Source pour votre Navigateur, développé à l'aide de Node.js et de la Blockchain </span><span class='NEMifiedText'>nem</span><span>.</span>",
         "welcome_paragraph_1_2": "<span>Ce projet utilise la Blockchain </span><span class='NEMifiedText'>nem</span><span> afin d'identifier les Joueurs ainsi que pour gérer le Sponsoring des sessions de Jeu et enfin pour sauvegarder les Records sur la Blockchain. Ce jeu propose un code source simple et à pour but de mettre en avant la facilité et la rapidité d'intégration que propose </span><span class='NEMifiedText'>nem</span><span> pour l'industrie du Gaming et des Applications Web ainsi que le potentiel marché de Sponsoring / Advertising en concordance avec la Blockchain </span><span class='NEMifiedText'>nem</span><span> et les paiements instantanés.</span>",
+        "welcome_paragraph_1_1_mobile": "<span>Bienvenue sur le jeu PacNEM. Ce jeu utilise la <a href='https://nem.io' title='Site de la NEM Foundation'>blockchain NEM</a> afin de publier des Tokens en temps réel. Joins toi à l'expérience!",
         "play_mode_explain": "PacNEM propose plusieurs type de Jeu: le Jeu Sponsorisé et le Jeu par Paiement. Le mode de Jeu Sponsorisé est gratuit et ne requiert que l'affichage pendant 10 secondes de la publicité de l'un de nos Sponsor. Vous pourrez ensuite jouer avec l'un de nos Comptes Sponsorisés! Le mode de Jeu par Paiement vous permet d'acheter des Crédits de Jeu <b>evias.pacnem:heart</b> pour votre Wallet XEM. Ces différents modes de Jeu montre la facilité que propose la Blockchain <span class='NEMifiedText'>nem</span> à être intégrée dans l'industrie des Jeux Vidéos.",
         "play_type_sponsored": "<b>Joue Gratuitement</b>",
         "play_type_payperplay": "ou <b>Joue avec ton Wallet!</b>",

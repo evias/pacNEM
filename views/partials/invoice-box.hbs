@@ -6,7 +6,7 @@
                 <h4 class="modal-title">{{t "invoices.buy_hearts_title"}}</h4>
             </div>
             <div class="modal-body">
-                <div class="row">
+                <div class="row hidden-xs">
                     <p class="col-md-12 text-justify">{{t "invoices.buy_hearts_explain"}}</p>
                 </div>
 
@@ -45,7 +45,7 @@
                             <div class="form-group row mb5">
                                 <label class="control-label col-md-3" for="{{invoicePrefix}}-recipient">{{t "invoices.label_recipient"}}</label>
                                 <div class="col-md-9">
-                                    <pre id="{{invoicePrefix}}-recipient" style="font-weight: 700; font-size: 110%;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
+                                    <pre id="{{invoicePrefix}}-recipient" style="font-weight: 700;"><img src="/img/loading.gif" style="max-height: 22px;"/></pre>
                                 </div>
                             </div>
                             <div class="form-group row mb5">
@@ -63,7 +63,7 @@
                             <div class="form-group row mb5">
                                 <label class="control-label col-md-3" for="{{invoicePrefix}}-receiving">{{t "invoices.label_receiving"}}</label>
                                 <div class="col-md-9 text-left" style="padding-top: 7px;">
-                                    <div id="{{invoicePrefix}}-receiving"><img src="/img/loading.gif" style="max-height: 22px;"/></div>
+                                    <div id="{{invoicePrefix}}-receiving" class="mosaics-details-list"><img src="/img/loading.gif" style="max-height: 22px;"/></div>
                                 </div>
                             </div>
                             <div id="{{invoicePrefix}}-status-wrapper" class="form-group row mb5">
@@ -78,7 +78,7 @@
                     </div>
             </div>
             <div class="modal-footer" style="border: 0;">
-                <div class="row text-justify">
+                <div class="row text-justify hidden-xs">
                     <p>{{t "invoices.flow_after_paid_explain"}}</p>
                 </div>
 
