@@ -999,7 +999,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             var sponsor = data.sponsor;
             var content = data.content;
 
-            //console.log("[DEBUG] " + "getRandomSponsor: " + JSON.stringify(data));
+            console.log("[DEBUG] " + "getRandomSponsor: " + JSON.stringify(data));
 
             if (autoSwitch === true) {
                 var engine = new SponsorEngine(API_);
@@ -1046,8 +1046,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
         $("#address").val("");
         $("#address").prop("disabled", false);
         $("#address").attr("data-sponsor", "0");
-        $("#username").attr("data-sponsor", "");
-
+        ctrl_.unsponsorizeName();
         return this;
     };
 
@@ -1066,10 +1065,6 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     this.prepareSponsoredJoin = function(data, callback) {
         var self = this;
         var sponsor = data.sponsor;
-
-        if ($(".pacnem-sponsor-modal[data-sponsor='" + sponsor.slug + "']").length)
-        // sponsor window already available
-            return this;
 
         template_.render("sponsor-box", function(compileWith) {
             // add server side generated sponsor HTML to a modal
@@ -1662,22 +1657,23 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
             if (self.formValidate()) {
 
                 var postPaymentCallback = function(ui, withPurchases) {
-                    ui.createSession(null, function() {
-                        ui.displayPlayerUI();
-                        ui.displayLounge();
-                        $("#rooms").parent().show();
-                        $(".pacnem-credits-submenu").removeClass("hidden");
+                    ui.createSession();
+                    ui.displayPlayerUI();
+                    ui.displayLounge();
+                    $("#rooms").parent().show();
+                    $(".pacnem-credits-submenu").removeClass("hidden");
 
-                        if (withPurchases == true)
-                            $(".playerPurchases").fadeIn("slow");
-                        else
-                            $(".playerPurchases").remove();
-                    });
+                    if (withPurchases == true)
+                        $(".playerPurchases").fadeIn("slow");
+                    else
+                        $(".playerPurchases").remove();
                 };
 
                 if (ctrl_.isPlayMode("sponsored")) {
                     ctrl_.sponsorizeName(ctrl_.getSponsor());
                     ctrl_.setAdvertised(true);
+
+                    //console.log("[DEBUG] [UI] " + "Now displaying sponsor advertisement..");
 
                     self.displaySponsorAdvertisement(ctrl_.getSponsor(), function() {
                         postPaymentCallback(self, false);
@@ -1926,6 +1922,7 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
     this.initGameModes = function() {
         var self = this;
 
+        $(".pacnem-gamemode-trigger").off("click");
         $(".pacnem-gamemode-trigger").on("click", function() {
             var $button = $(this);
 
@@ -1943,10 +1940,11 @@ var GameUI = function(config, socket, controller, $, jQFileTemplate) {
 
             ctrl_.setPlayMode(thisMode);
 
-            if ("sponsored" == thisMode)
+            if ("sponsored" == thisMode) {
+                //console.log("[DEBUG] [UI] " + "Configuring sponsored UI..");
                 self.setSponsoredUI(false, function(ui) {});
-            else {
-                $("#address").removeAttr("disabled").val("");
+            } else {
+                self.unsetSponsoredUI();
                 $(".playerPurchases").remove();
             }
 

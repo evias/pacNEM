@@ -305,7 +305,13 @@ var GameController = function(config, socket, nem, chainId) {
         var sName = sponsor.slug + rHex + "-" + uname;
 
         $("#username").attr("data-is-sponsored", 1);
+        $("#username").attr("data-origin", $("#username").val());
         $("#username").val(sName);
+    };
+
+    this.unsponsorizeName = function() {
+        $("#username").removeAttr("data-is-sponsored");
+        $("#username").val($("#username").attr("data-origin") || "");
     };
 
     this.setSponsor = function(sponsor) {
