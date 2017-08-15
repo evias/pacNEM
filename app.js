@@ -1204,8 +1204,8 @@ app.get("/api/v1/lounge/get", function(req, res) {
         if (err || !summary)
             return res.send(JSON.stringify({ "status": "ok", "data": loungeData }));
 
-        loungeData["lounge"]["mosaics"] = summary.mosaics;
-        loungeData["lounge"]["cntMosaics"] = Object.getOwnPropertyNames(summary.mosaics).length;
+        loungeData["lounge"]["mosaics"] = summary.mosaics ? summary.mosaics : {};
+        loungeData["lounge"]["cntMosaics"] = summary.mosaics ? Object.getOwnPropertyNames(summary.mosaics).length : 0;
         return res.send(JSON.stringify({ "status": "ok", "data": loungeData }));
     });
 });
