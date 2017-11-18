@@ -297,6 +297,11 @@ app.get('/js/*', function(req, res) {
     return serveStaticFile(req, res, "/www/js/");
 });
 
+// SSL Certificate Verification
+app.get('/.well-known/acme-challenge/*', function(req, res) {
+    return serveStaticFile(req, res, "/www/ssl-verification/");
+});
+
 /**
  * Static Files (assets) Serving
  *
