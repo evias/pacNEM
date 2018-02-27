@@ -346,7 +346,7 @@
                     }
                 })
                 .catch(function(err) { 
-                    self.logger_.error("[NEM] [PAY-HISTORY] ", __line, "An error happened: ", err);
+                    self.logger_.error("[NEM] [PAY-HISTORY] ", __line, "An error happened: " + JSON.stringify(err));
                 }); 
         };
 
