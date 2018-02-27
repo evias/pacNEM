@@ -344,7 +344,10 @@
                         //DEBUG self.logger_.info("[NEM] [PAY-FALLBACK] ", __line, "read a total of " + Object.getOwnPropertyNames(paymentTransactionHistory_.byHash).length + " transactions from " + self.blockchain_.getVendorWallet() + ".");
                         return callback(paymentTransactionHistory_.byInvoice);
                     }
-                });
+                })
+                .catch(function(err) { 
+                    self.logger_.error("[NEM] [PAY-HISTORY] ", __line, "An error happened: ", err);
+                }); 
         };
 
         this.saveIncomingPaymentsHistory = function(transactions) {
