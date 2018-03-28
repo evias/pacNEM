@@ -49,7 +49,7 @@ https://pacnem.com
 
 If you like the initiative, and for the sake of good mood, I recommend you take a few minutes to Donate a beer or Three [because belgians like that] by sending some XEM (or whatever Mosaic you think pays me a few beers someday!) to my Wallet:
 
-NCK34K5LIXL4OMPDLVGPTWPZMGFTDRZQEBRS5Q2S
+NB72EM6TTSX72O47T3GQFL345AB5WYKIDODKPPYW
 
 ### License
 
@@ -57,4 +57,3 @@ This software is released under the [MIT](LICENSE) License.
 
 © 2017 Grégory Saive greg@evias.be, All rights reserved.
 © 2014 Nicolas DUBIEN, https://github.com/dubzzz/js-pacman.
-
