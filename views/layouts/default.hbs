@@ -11,98 +11,116 @@
 
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
 
+    <!-- region: meta facebook -->
+    <meta property="og:url" content="https://www.pacnem.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:type" content="{{t "meta.title"}}" />
+    <meta property="og:description" content="{{t "meta.description"}}" />
+    <meta property="og:image" content="https://www.pacnem.com/img/pacnem_logo.png" />
+    <meta property="og:image:type" content="image/png" />
+    <!-- endregion: meta facebook -->
+
+    <!-- region: meta twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@PacNEM_Game" />
+    <meta name="twitter:creator" content="@eVias" />
+    <meta name="twitter:title" content="{{t "meta.title"}}" />
+    <meta name="twitter:description" content="{{t "meta.description"}}" />
+    <meta name="twitter:image" content="https://www.pacnem.com/img/pacnem_logo.png" />
+    <!-- endregion: meta twitter -->
+
+    {{#if PacNEM_Frontend_Config.facebookAppId.length}}
+    <meta property="fb:app_id" content="{{PacNEM_Frontend_Config.facebookAppId}}" />
+    {{/if}}
+
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
-    <link rel="stylesheet" href="/assets/css/bootstrap-3.3.7/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/3rdparty/bootstrap-3.3.7/css/bootstrap.min.css" />
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link href="/css/style.css?nocache={{time}}" type="text/css" rel="stylesheet" media="all" />
 
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link href="/assets/css/style.css?nocache={{time}}" type="text/css" rel="stylesheet" media="all" />
-
-    <script src="/assets/js/nem2pay-deps.min.js"></script>
-    <script src="/assets/js/nem-sdk.min.js"></script>
-    <script src="/assets/js/kjua.min.js"></script>
-    <script src="/assets/js/hammer.min.js"></script>
-    <script src="/assets/js/nem2pay.min.js?nocache={{time}}"></script>
+    <script src="/3rdparty/pacnem-deps.min.js"></script>
+    <script src="/js/nem-sdk.min.js"></script>
+    <script src="/3rdparty/kjua.min.js"></script>
+    <script src="/js/hammer.min.js"></script>
+    <script src="/js/pacnem.min.js?nocache={{time}}"></script>
+    <script src="/js/pacnem-facebook.js?nocache={{time}}"></script>
     <script src="/socket.io/socket.io.js"></script>
   </head>
     <body>
-      <img src="/assets/img/logo.png?nocache=1" alt="{{t "meta.title"}}" title="{{t "meta.title"}}" style="display: none;" />
+      <img src="/img/pacnem_logo.png?nocache=1" alt="{{t "meta.title"}}" title="{{t "meta.title"}}" style="display: none;" />
       <h1 style="display: none;">{{t "meta.title"}}</h1>
       <p style="display: none;">{{t "meta.description"}}</p>
 
-      <script type="text/javascript">
-        /**
-        * Specification for localization object so that Asynchronously
-        * loaded Templates can also contain translations and use
-        * the t() custom handlebars template from nem2pay.
-        *
-        * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
-        * @link    https://github.com/evias/nem2pay
-        */
-        var NEM2Pay_i18n = function() {
-            this.get = function(key) {
-                var json = '{{{ NEM2Pay_Frontend_Config.localesJSON }}}';
-                var locales = JSON.parse(json);
-                var lang = locales["{{currentLanguage}}"];
+        <script type="text/javascript">
+/**
+ * Specification for localization object so that Asynchronously
+ * loaded Templates can also contain translations and use
+ * the t() custom handlebars template from pacNEM.
+ *
+ * @author  Grégory Saive <greg@evias.be> (https://github.com/evias)
+ * @link    https://github.com/evias/pacNEM
+ */
+var PacNEM_i18n = function() {
+    this.get = function(key) {
+        var json = '{{{ PacNEM_Frontend_Config.localesJSON }}}';
+        var locales = JSON.parse(json);
+        var lang = locales["{{currentLanguage}}"];
+        var subs = key.split(".");
+ 
+        if (!subs.length && !lang.hasOwnProperty(key))
+            return key;
+ 
+        var object = lang[subs[0]];
+        for (var i = 1; i < subs.length; i++) {
+            object = object[subs[i]];
+        }
+        return object;
+    };
+};
 
-                var subs = key.split(".");
+/**
+* Handlebars t() helper implementation for frontend
+* templates.
+*/
+Handlebars.registerHelper('t', function(key, sub)
+{
+    if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
+        // dynamic subnamespace
+        var key = key + "." + sub;
 
-                if (!subs.length && !lang.hasOwnProperty(key))
-                    return key;
-
-                var object = lang[subs[0]];
-                for (var i = 1; i < subs.length; i++) {
-                    object = object[subs[i]];
-                }
-                return object;
-            };
-        };
-
-        /**
-        * Handlebars t() helper implementation for frontend
-        * templates.
-        */
-        Handlebars.registerHelper('t', function(key, sub)
-        {
-            if (typeof sub != "undefined" && sub !== undefined && typeof sub === "string" && sub.length)
-                // dynamic subnamespace
-                var key = key + "." + sub;
-
-            return new Handlebars.SafeString((new NEM2Pay_i18n()).get(key));
-        });
-
-        /**
-        * Handlebars counter() helper implementation for frontend
-        * templates
-        */
-        Handlebars.registerHelper("counter", function (index)
-        {
-            return index + 1;
-        });
-
-        /**
-        * Handlebars counter() helper implementation for frontend
-        * templates
-        */
-        Handlebars.registerHelper("time", function ()
-        {
-            return new Handlebars.SafeString("" + new Date().valueOf());
-        });
-
-        /**
-        * Handlebars truncateAddress() helper implementation for frontend
-        * templates - truncate a NEM address in following format:
-        *  TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU
-        *  will be truncated as:
-        *  TCTIMU-...-MPSU
-        */
-        Handlebars.registerHelper("truncateAddress", function (address)
-        {
-            var truncated = address.substring(0, 6) + "-...-" + address.substring(address.length - 4);
-            return truncated;
-        });
+    return new Handlebars.SafeString((new PacNEM_i18n()).get(key));
+});
+/**
+* Handlebars counter() helper implementation for frontend
+* templates
+*/
+Handlebars.registerHelper("counter", function (index)
+{
+    return index + 1;
+});
+/**
+* Handlebars counter() helper implementation for frontend
+* templates
+*/
+Handlebars.registerHelper("time", function ()
+{
+    return new Handlebars.SafeString("" + new Date().valueOf());
+});
+ 
+/**
+* Handlebars truncateAddress() helper implementation for frontend
+* templates - truncate a NEM address in following format:
+*  TCTIMURL5LPKNJYF3OB3ACQVAXO3GK5IU2BJMPSU
+*  will be truncated as:
+*  TCTIMU-...-MPSU
+*/
+Handlebars.registerHelper("truncateAddress", function (address)
+{
+    var truncated = address.substring(0, 6) + "-...-" + address.substring(address.length - 4);
+    return truncated;
+});
       </script>
 
       <script src="/js/jquery-hbs-file-template.js"></script>
