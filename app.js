@@ -820,6 +820,25 @@ app.get("/api/v1/sponsors/random", function(req, res) {
             return res.send(500);
         }
 
+        if (!sponsors || !sponsors.length) {
+            sponsors = [
+                {
+                    "xem": "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ",
+                    "slug": "eVias Services",
+                    "email": "info@evias.be",
+                    "realName": "eVias Services",
+                    "sponsorName": "evias-services",
+                    "description": "eVias Services was founded in 2015 and is characterized by expertise in the field of Software development services, for the Web and Embedded devices. Specialized in the domain of Blockchain and Distributed Ledger Technology since 2010, eVias Services is part of the pioneering development community around the Bitcoin protocol and the technology that comes along with it.",
+                    "content": "eVias Services was founded in 2015 and is characterized by expertise in the field of Software development services, for the Web and Embedded devices. Specialized in the domain of Blockchain and Distributed Ledger Technology since 2010, eVias Services is part of the pioneering development community around the Bitcoin protocol and the technology that comes along with it.",
+                    "websiteUrl": "https://evias.be",
+                    "advertType": "image",
+                    "contentUrl": "https://evias.be/wp-content/themes/chilly/images/slider.jpg",
+                    "isApprove": true,
+                    "countAdViews": 0
+                }
+            ];
+        }
+
         var cntSponsors = sponsors.length;
         var randomIdx = Math.floor(Math.random() * cntSponsors);
         var randSponsor = !sponsors[randomIdx] ? sponsors[0] : sponsors[randomIdx];
