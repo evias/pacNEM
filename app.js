@@ -868,6 +868,9 @@ app.post("/api/v1/sponsors/watch", function(req, res) {
         "username": req.body.player
     };
 
+    //XXX NO-BREAK HERE
+    return res.send(JSON.stringify({ "status": "ok", "item": { "total": 0 } }));
+
     // find sponsor then check if reward should be paid
     var query = { "slug": input.slug };
     PacNEMDB.NEMSponsor.findOne(query, function(err, sponsor) {
