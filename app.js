@@ -821,32 +821,30 @@ app.get("/api/v1/sponsors/random", function(req, res) {
         }
 
         if (!sponsors || !sponsors.length) {
-            sponsors = [
-                {
-                    "xem": "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ",
-                    "slug": "eVias Services",
-                    "email": "info@evias.be",
-                    "realName": "eVias Services",
-                    "sponsorName": "evias-services",
-                    "description": "eVias Services was founded in 2015 and is characterized by expertise in the field of Software development services, for the Web and Embedded devices. Specialized in the domain of Blockchain and Distributed Ledger Technology since 2010, eVias Services is part of the pioneering development community around the Bitcoin protocol and the technology that comes along with it.",
-                    "content": "eVias Services was founded in 2015 and is characterized by expertise in the field of Software development services, for the Web and Embedded devices. Specialized in the domain of Blockchain and Distributed Ledger Technology since 2010, eVias Services is part of the pioneering development community around the Bitcoin protocol and the technology that comes along with it.",
-                    "websiteUrl": "https://evias.be",
-                    "advertType": "image",
-                    "contentUrl": "https://evias.be/wp-content/themes/chilly/images/slider.jpg",
-                    "isApprove": true,
-                    "countAdViews": 0
-                }
-            ];
+            sponsor = new PacNEMDB.NEMSponsor({
+                slug: "evias-services",
+                realName: "eVias Services",
+                xem: "TDWZ55R5VIHSH5WWK6CEGAIP7D35XVFZ3RU2S5UQ",
+                sponsorName: "evias-services",
+                email: "info@evias.be",
+                description: "eVias Services was founded in 2015 and is characterized by expertise in the field of Software development services, for the Web and Embedded devices. Specialized in the domain of Blockchain and Distributed Ledger Technology since 2010, eVias Services is part of the pioneering development community around the Bitcoin protocol and the technology that comes along with it.",
+                websiteUrl: "https://evias.be",
+                contentUrl: "https://evias.be/wp-content/themes/chilly/images/slider.jpg",
+                advertType: "image",
+                createdAt: new Date().valueOf()
+            });
+
+            sponsor.save();
+            sponsors.push(sponsor);
         }
 
         var cntSponsors = sponsors.length;
-        var randomIdx = Math.floor(Math.random() * cntSponsors);
-        var randSponsor = !sponsors[randomIdx] ? sponsors[0] : sponsors[randomIdx];
+        var randSponsor = sponsors[0];
 
         // XXX content per sponsor..
         var content = {
             "type": "image",
-            "url": "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300",
+            "url": randSponsor.contentUrl || "https://placeholdit.imgix.net/~text?txtsize=47&txt=500%C3%97300&w=500&h=300",
             "isImage": true,
             "isVideo": false
         };
