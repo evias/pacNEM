@@ -141,7 +141,7 @@ app.get('/*', function(req, res, next) {
         host = req.headers.host,
         href;
 
-    if (!req.headers.host.match(/^(www|m)\./)) {
+    if (req.headers.host.match(/pacnem\.com$/) && !req.headers.host.match(/^(www|m)\./)) {
         var newHost = protocol + 'www.pacnem.com';
 
         res.statusCode = 301;
