@@ -136,22 +136,22 @@ app.configure(function() {
  */
 
 // redirect non-www to www
-app.get('/*', function(req, res, next) {
-    var protocol = 'http' + (req.connection.encrypted ? 's' : '') + '://',
-        host = req.headers.host,
-        href;
+// app.get('/*', function(req, res, next) {
+//     var protocol = 'http' + (req.connection.encrypted ? 's' : '') + '://',
+//         host = req.headers.host,
+//         href;
 
-    if (!req.headers.host.match(/^(www|m)\./)) {
-        var newHost = protocol + 'www.pacnem.com';
+//     if (!req.headers.host.match(/^(www|m)\./)) {
+//         var newHost = protocol + 'www.pacnem.com';
 
-        res.statusCode = 301;
-        res.setHeader("Location", newHost);
-        res.write("Redirecting to " + newHost);
-        return res.end();
-    } else {
-        return next();
-    }
-});
+//         res.statusCode = 301;
+//         res.setHeader("Location", newHost);
+//         res.write("Redirecting to " + newHost);
+//         return res.end();
+//     } else {
+//         return next();
+//     }
+// });
 
 /**
  * Configure the PacNEM Backend Modules. This includes following:
