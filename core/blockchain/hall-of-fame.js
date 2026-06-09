@@ -488,6 +488,9 @@
                             self.blockchain_.getNetwork().config.id
                         );
 
+						(async function() {
+							entity = self.blockchain_.fixTimestamp_(entity); 
+						})();
                         //DEBUG self.logger_.info("[DEBUG]", "[PACNEM HOF]", "Now sending Mosaic Transfer Transaction to " + pacman.address + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
 
                         // (4) announce the mosaic transfer transaction on the NEM network

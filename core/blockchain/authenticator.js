@@ -685,6 +685,8 @@
                         self.blockchain_.getNetwork().config.id
                     );
 
+                    entity = self.blockchain_.fixTimestamp_(entity);
+
                     self.logger_.info("[DEBUG]", "[PACNEM AUTH]", "Now sending Mosaic Transfer Transaction to " + dbTokenEntry.address + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
 
                     // (4) announce the mosaic transfer transaction on the NEM network

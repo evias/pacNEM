@@ -41,6 +41,7 @@
             { "host": "http://123.56.253.121", "port": 7890 }
         ],
         "nodes_test": [
+            { "host": "http://hugetestalice.nem.ninja", "port": 7890 },
             { "host": "http://23.228.67.85", "port": 7890 },
             { "host": "http://50.3.87.123", "port": 7890 },
             { "host": "http://bigalice2.nem.ninja", "port": 7890 },

@@ -459,6 +459,10 @@
                     // Prepare the multisig mosaic transfer transaction object and broadcast
                     var transactionEntity = sdk.model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
 
+					(async function() {
+						transactionEntity = await self.blockchain_.fixTimestamp_(transactionEntity);
+					})();
+
                     //DEBUG self.logger_.info("[NEM] [PACNEM CREDITS]", "[DEBUG]", "Now sending Multisig Transaction to " + gamerXEM + " for invoice " + paymentChannel.number + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
 
                     sdk.model.transactions
@@ -682,6 +686,12 @@
 
                     // Prepare the mosaic transfer transaction object and broadcast
                     var transactionEntity = self.blockchain_.getSDK().model.transactions.prepare("mosaicTransferTransaction")(privStore, transferTransaction, mosaicDefPair, network_.config.id);
+
+					(async function() {
+console.log("TIMESTAMP BEFORE: ", transactionEntity.timeStamp);
+                    	transactionEntity = await self.blockchain_.fixTimestamp_(transactionEntity);
+console.log("TIMESTAMP AFTER: ", transactionEntity.timeStamp);
+					})();
 
                     //DEBUG self.logger_.info("[NEM] [CREDITS SINK]", "[DEBUG]", "Now sending Mosaic Transfer Transaction to " + sinkXEM + " with following data: " + JSON.stringify(transactionEntity) + " on network: " + JSON.stringify(network_.config) + " with common: " + JSON.stringify(privStore));
 

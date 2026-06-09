@@ -155,6 +155,8 @@
                         self.blockchain_.getNetwork().config.id
                     );
 
+                    entity = self.blockchain_.fixTimestamp_(entity);
+
                     //DEBUG self.logger_.info("[DEBUG]", "[PACNEM SPONSOR]", "Now sending Mosaic Transfer Transaction to " + sponsor.xem + " with following data: " + JSON.stringify(entity) + " on network: " + JSON.stringify(self.blockchain_.getNetwork().config) + " with common: " + JSON.stringify(privStore));
 
                     // (4) announce the mosaic transfer transaction on the NEM network
